@@ -50,11 +50,11 @@ while True:
             ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
             if ativo_encontrado:
                 print(
-                    f'''ID: {ativo.id}
-                    Nome: {ativo.nome}
-                    Categoria: {ativo.categoria.name}
-                    Responsável: {ativo.responsavel}
-                    Status: {ativo.status.name}'''
+                    f'''ID: {ativo_encontrado.id}
+                    Nome: {ativo_encontrado.nome}
+                    Categoria: {ativo_encontrado.categoria.name}
+                    Responsável: {ativo_encontrado.responsavel}
+                    Status: {ativo_encontrado.status.name}'''
                 )
 
             else:
