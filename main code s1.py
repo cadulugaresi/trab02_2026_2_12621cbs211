@@ -38,8 +38,9 @@ while True:
                     print(
                         f'''ID: {ativo.id}
                         Nome: {ativo.nome}
-                        Status: {ativo.status.name}
-                        Responsável: {ativo.responsavel}'''
+                        Categoria: {ativo.categoria.name}
+                        Responsável: {ativo.responsavel}
+                        Status: {ativo.status.name}'''
                     )
             else:
                 print('Nenhum ativo cadastrado.')
@@ -49,10 +50,11 @@ while True:
             ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
             if ativo_encontrado:
                 print(
-                    f'''ID: {ativo_encontrado.id}
-                    Nome: {ativo_encontrado.nome}
-                    Status: {ativo_encontrado.status.name}
-                    Responsável: {ativo_encontrado.responsavel}'''
+                    f'''ID: {ativo.id}
+                    Nome: {ativo.nome}
+                    Categoria: {ativo.categoria.name}
+                    Responsável: {ativo.responsavel}
+                    Status: {ativo.status.name}'''
                 )
 
             else:

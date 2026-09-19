@@ -16,9 +16,10 @@ class Vulnerabilidade:
 
 class Ativo:
 
-    def __init__(self, id, nome, responsavel, status):
+    def __init__(self, id, nome, categoria, responsavel, status):
         self.id = id
         self.nome = nome
+        self.categoria = categoria
         self.responsavel = responsavel
         self.status = status
         self.vulnerabilidades = []
@@ -27,6 +28,7 @@ class Ativo:
         return {
             'id': self.id,
             'nome': self.nome,
+            'categoria': self.categoria.value,
             'responsavel': self.responsavel,
             'status': self.status.value,
             'vulnerabilidades': [
@@ -46,6 +48,12 @@ class NivelDaVulnerabilidade(Enum):
     BAIXO = 1
     MEDIO = 2
     ALTO = 3
+
+class Categorias(Enum):
+    NOTEBOOK = 1
+    SERVIDOR = 2
+    ROTEADOR = 3
+    IMPRESSORA = 4
 
 def validar_nome_responsavel(nome):
         
@@ -75,6 +83,7 @@ def pedir_status(mensagem):
     while status is None:
 
         try:
+            print('Status: ')
             print(f'''ATIVO - 1 \n INATIVO - 2 \n EM_MANUTENCAO - 3''')
 
             status_digitado = input(mensagem).strip()
@@ -129,21 +138,51 @@ def pedir_id_disponivel(ativos):
         else:
             return ID_do_ativo
 
+def pedir_categoria(mensagem):
+
+    categoria = None
+
+    while categoria is None:
+
+        try: 
+            print('Categorias disponíveis: ')
+            print(f'''NOTEBOOK - 1 \n SERVIDOR - 2 \n ROTEADOR - 3 \n IMPRESSORA - 4''')
+
+            categoria_digitada = input(mensagem).strip()
+
+            if categoria_digitada == '1':
+                categoria = Categorias.NOTEBOOK
+            elif categoria_digitada == '2':
+                categoria=Categorias.SERVIDOR
+            elif categoria_digitada == '3':
+                categoria=Categorias.ROTEADOR
+            elif categoria_digitada == '4':
+                categoria=Categorias.IMPRESSORA
+            else:
+                raise DadoInvalidoError('Dado inválido. Tente novamente.')
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return categoria
+
 def cadastrar_ativo(ativos):
 
     ID_do_ativo = pedir_id_disponivel(ativos)
     nome_ativo = pedir_info('Digite o nome do ativo: ')
+    categoria = pedir_categoria('Digite a categoria do ativo: ')
     responsavel = pedir_info('Digite o nome do responsável pelo ativo: ')
     status = pedir_status('Digite o status do ativo: ')
 
     print(f'''Ativo cadastrado com sucesso!
     Ativo cadastrado:ID {ID_do_ativo}
     Nome {nome_ativo}
+    Categoria {categoria}
     Responsável {responsavel}
     Status {status.name}
     ''')
 
-    return Ativo(ID_do_ativo, nome_ativo, responsavel, status)
+    return Ativo(ID_do_ativo, nome_ativo, categoria, responsavel, status)
 
 def encontrar_ativo_por_id(ID, ativos):
     for ativo in ativos:
@@ -235,7 +274,6 @@ def salvar_dados(ativos):
     try:
         with open(ARQUIVO_DADOS, 'w', encoding='utf-8') as arquivo:
             json.dump(lista_para_salvar, arquivo, indent=4, ensure_ascii=False)
-
     except PermissionError:
         print('Erro de Persistência: Sem permissão para gravar no arquivo no computador.')
     except IOError:
@@ -263,6 +301,7 @@ def carregar_dados():
                 novo_ativo = Ativo(
                     ativo_dicionario['id'],
                     ativo_dicionario['nome'],
+                    Categorias(ativo_dicionario['categoria']),
                     ativo_dicionario['responsavel'],
                     StatusDoAtivo(ativo_dicionario['status'])
                 )
