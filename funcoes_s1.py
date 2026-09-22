@@ -4,14 +4,16 @@ from enum import Enum
 ARQUIVO_DADOS = 'ativos.json'
 
 class Vulnerabilidade:
-    def __init__(self, nome_vulnerabilidade, nivel):
+    def __init__(self, nome_vulnerabilidade, nivel, status_tratamento):
         self.nome_vulnerabilidade = nome_vulnerabilidade
         self.nivel = nivel
+        self.status_tratamento = status_tratamento
 
     def para_dicionario(self):
         return {
             'nome da vulnerabilidade': self.nome_vulnerabilidade,
-            'nivel': self.nivel.value
+            'nivel': self.nivel.value,
+            'status_tratamento': self.status_tratamento.value
         }
 
 class Ativo:
@@ -54,6 +56,12 @@ class Categorias(Enum):
     SERVIDOR = 2
     ROTEADOR = 3
     IMPRESSORA = 4
+
+class StatusDaVuln(Enum):
+    ABERTA = 1
+    EM_TRATAMENTO = 2
+    CORRIGIDA = 3
+    ACEITA = 4
 
 def validar_nome_responsavel(nome):
         
@@ -252,6 +260,49 @@ def confirmar_exclusao(ativo):
     else:
         return False
 
+def nivel_vulnerabilidade():
+
+    nivel = None
+    while nivel is None:
+        print(f'''BAIXO - 1 \n MEDIO - 2 \n ALTO - 3''')
+
+        nivel_digitado = input('Digite o nível da vulnerabilidade: ').strip()
+
+        if nivel_digitado == '1':
+            nivel = NivelDaVulnerabilidade.BAIXO
+        elif nivel_digitado == '2':
+            nivel = NivelDaVulnerabilidade.MEDIO
+        elif nivel_digitado == '3':
+            nivel = NivelDaVulnerabilidade.ALTO
+        else:
+            print('Nível inválido. Tente novamente.')
+            continue
+
+    return nivel
+
+def status_vulnerabilidade():
+
+    status_tratamento = None
+    while status_tratamento is None:
+        print(f'''ABERTA - 1 \n EM TRATAMENTO - 2 \n CORRIGIDA - 3 \n ACEITA - 4''')
+
+        status_digitado = input('Digite o status atual da vulnerabilidade: ').strip()
+
+        if status_digitado == '1':
+            status_tratamento = StatusDaVuln.ABERTA
+        elif status_digitado == '2':
+            status_tratamento = StatusDaVuln.EM_TRATAMENTO
+        elif status_digitado == '3':
+            status_tratamento = StatusDaVuln.CORRIGIDA
+        elif status_digitado == '4':
+            status_tratamento = StatusDaVuln.ACEITA
+
+        else:
+            print('Status inválido. Tente novamente.')
+            continue
+
+    return status_tratamento
+
 def salvar_dados(ativos):
 
     lista_para_salvar = []
@@ -282,7 +333,8 @@ def carregar_dados():
                 for vulnerabilidade_dicionario in ativo_dicionario['vulnerabilidades']:
                     nova_vulnerabilidade = Vulnerabilidade(
                         vulnerabilidade_dicionario['nome da vulnerabilidade'],
-                        NivelDaVulnerabilidade(vulnerabilidade_dicionario['nivel'])
+                        NivelDaVulnerabilidade(vulnerabilidade_dicionario['nivel']),
+                        StatusDaVuln(vulnerabilidade_dicionario['status_tratamento'])
                     )
                     vulnerabilidades_carregadas.append(nova_vulnerabilidade)
 
