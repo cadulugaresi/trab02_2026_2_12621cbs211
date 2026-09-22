@@ -124,19 +124,13 @@ def pedir_id(mensagem):
 
 def pedir_id_disponivel(ativos):
 
-    ID_do_ativo = pedir_id('Digite o ID do ativo: ')
-
     while True:
-        try:
-            if encontrar_ativo_por_id(ID_do_ativo, ativos) is not None:
-                raise DadoInvalidoError('Já existe um ativo cadastrado com este ID. Tente outro.')
-            
-        except DadoInvalidoError as erro:
-            print(erro)
-            ID_do_ativo = pedir_id('Digite o ID do ativo: ')
 
-        else:
+        ID_do_ativo = pedir_id('Digite o ID do ativo: ')
+        if encontrar_ativo_por_id(ID_do_ativo, ativos) is None:
             return ID_do_ativo
+        
+        print('Já existe um ativo cadastrado com este ID. Tente outro.')
 
 def pedir_categoria(mensagem):
 
