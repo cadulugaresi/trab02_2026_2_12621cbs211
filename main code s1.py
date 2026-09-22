@@ -19,10 +19,6 @@ while True:
         print('Programa encerrado pelo usuário.')
         break
 
-    except ValueError:
-        print('Escolha uma opção válida.')
-        continue
-
     if opcao == '1':
         novo_ativo = cadastrar_ativo(ativos)
         ativos[novo_ativo.id] = novo_ativo
@@ -30,42 +26,58 @@ while True:
 
     elif opcao == '2':
 
-        todos_um = input('Deseja listar todos os ativos ou apenas um específico? (todos/um): ').strip()
+        todos_um = ''
 
-        if todos_um == 'todos':
-            if ativos:
-                print('Listando ativos por ID, nome e responsável...')
-                for ativo in ativos.values():
-                    print(
-                        f'''ID: {ativo.id}
-                        Nome: {ativo.nome}
-                        Categoria: {ativo.categoria.name}
-                        Setor: {ativo.setor.name}
-                        Responsável: {ativo.responsavel}
-                        Status: {ativo.status.name}'''
-                    )
+        while todos_um not in ('todos', 'um'):
+            todos_um = input('Deseja listar todos os ativos ou apenas um específico? (todos/um): ').strip().lower()
+
+            if todos_um == 'todos':
+                if ativos:
+                    print('Listando ativos por ID, nome e responsável...')
+                    for ativo in ativos.values():
+                        print(
+                            f'''ID: {ativo.id}
+                            Nome: {ativo.nome}
+                            Categoria: {ativo.categoria.name}
+                            Setor: {ativo.setor.name}
+                            Responsável: {ativo.responsavel}
+                            Status: {ativo.status.name}'''
+                        )
+                else:
+                    print('Nenhum ativo cadastrado.')
+
+            elif todos_um == 'um':
+
+                nome_ou_id = ''
+
+                while nome_ou_id not in ('nome', 'id'):
+                    nome_ou_id = input('Deseja buscar ativo por NOME ou ID? (nome/id) ').strip().lower()
+
+                    if nome_ou_id == 'nome':
+
+                        nome = pedir_info('Digite o nome do ativo que deseja listar: ')
+                        encontrados = encontrar_ativo_por_nome(nome, ativos)
+
+                        if encontrados:
+                            for ativo in encontrados:
+                                mostrar_ativo(ativo)
+                        else:
+                            print('Nenhum ativo encontrado.')
+                    elif nome_ou_id == 'id':
+
+                        id_ativo = pedir_id('Digite o ID do ativo que deseja listar: ')
+                        ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
+
+                        if ativo_encontrado:
+                            mostrar_ativo(ativo_encontrado)
+                        else:
+                            print('Nenhum ativo encontrado.')
+                    else:
+                        print('Opção inválida. Digite "nome" ou "id".')
+
             else:
-                print('Nenhum ativo cadastrado.')
-
-        elif todos_um == 'um':
-            id_ativo = pedir_id('Digite o ID do ativo que deseja listar: ')
-            ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
-            if ativo_encontrado:
-                print(
-                    f'''ID: {ativo_encontrado.id}
-                    Nome: {ativo_encontrado.nome}
-                    Categoria: {ativo_encontrado.categoria.name}
-                    Setor: {ativo_encontrado.setor.name}
-                    Responsável: {ativo_encontrado.responsavel}
-                    Status: {ativo_encontrado.status.name}'''
-                )
-
-            else:
-                print('Ativo não encontrado.')
-
-        else:
-            print('Opção inválida. Tente novamente.')
-
+                print('Opção inválida. Digite "todos" ou "um".')
+                
     elif opcao == '3':
         excluir_ativo(ativos)
 
@@ -91,6 +103,8 @@ while True:
 
             if opcao_vulnerabilidade == '1':
                 print('Listando vulnerabilidades...')
+
+                
                 todas_um = input('Deseja listar todas as vulnerabilidades ou apenas as de um ativo específico? (todas/um): ').strip()
 
                 if todas_um == 'todas':
@@ -106,6 +120,7 @@ while True:
                                 for vulnerabilidade in ativo.vulnerabilidades:
                                     print(
                                         f'''  Vulnerabilidade: {vulnerabilidade.nome_vulnerabilidade}
+                                        Tipo: {vulnerabilidade.tipo}
                                         Nível: {vulnerabilidade.nivel.name.lower()}
                                         Status: {vulnerabilidade.status_tratamento.name.lower()}'''
                                     )
@@ -130,6 +145,7 @@ while True:
                             for vulnerabilidade in ativo_encontrado.vulnerabilidades:
                                 print(
                                     f'''Vulnerabilidade: {vulnerabilidade.nome_vulnerabilidade}
+                                    Tipo: {vulnerabilidade.tipo}
                                     Nível: {vulnerabilidade.nivel.name.lower()}
                                     Status: {vulnerabilidade.status_tratamento.name.lower()}'''
                                 )
@@ -155,15 +171,17 @@ while True:
                     else:
 
                         nivel = nivel_vulnerabilidade()
+                        tipo = pedir_info('Digite o tipo da vulnerabilidade: ')
                         status_tratamento = status_vulnerabilidade()
                         ativo_encontrado.vulnerabilidades.append(
-                            Vulnerabilidade(nome_da_vulnerabilidade, nivel, status_tratamento)
+                            Vulnerabilidade(nome_da_vulnerabilidade, tipo, nivel, status_tratamento)
                         )
 
                         salvar_dados(ativos)
 
                         print(f'''Informações adicionadas com sucesso!
                               Vulnerabilidade: "{nome_da_vulnerabilidade}"
+                              Tipo: "{tipo}"
                               Nível: "{nivel.name.lower()}"
                               Status: "{status_tratamento.name.lower()}" ''')
 

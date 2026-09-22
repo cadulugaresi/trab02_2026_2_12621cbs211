@@ -4,14 +4,16 @@ from enum import Enum
 ARQUIVO_DADOS = 'ativos.json'
 
 class Vulnerabilidade:
-    def __init__(self, nome_vulnerabilidade, nivel, status_tratamento):
+    def __init__(self, nome_vulnerabilidade, tipo, nivel, status_tratamento):
         self.nome_vulnerabilidade = nome_vulnerabilidade
+        self.tipo = tipo
         self.nivel = nivel
         self.status_tratamento = status_tratamento
 
     def para_dicionario(self):
         return {
             'nome da vulnerabilidade': self.nome_vulnerabilidade,
+            'tipo': self.tipo,
             'nivel': self.nivel.value,
             'status_tratamento': self.status_tratamento.value
         }
@@ -242,6 +244,26 @@ def cadastrar_ativo(ativos):
 def encontrar_ativo_por_id(ID, ativos):
     return ativos.get(ID)
 
+def encontrar_ativo_por_nome(nome, ativos):
+
+    encontrados = []
+
+    for ativo in ativos.values():
+        if nome.lower() in ativo.nome.lower():
+            encontrados.append(ativo)
+
+    return encontrados
+
+def mostrar_ativo(ativo):
+    print(f'''
+    ID: {ativo.id}
+    Nome: {ativo.nome}
+    Categoria: {ativo.categoria.name}
+    Setor: {ativo.setor.name}
+    Responsável: {ativo.responsavel}
+    Status: {ativo.status.name}
+    ''')
+
 def editar_ativo(ativos):
 
     id_ativo = pedir_id('Digite o ID do ativo que deseja editar: ')
@@ -396,6 +418,7 @@ def carregar_dados():
                 for vulnerabilidade_dicionario in ativo_dicionario['vulnerabilidades']:
                     nova_vulnerabilidade = Vulnerabilidade(
                         vulnerabilidade_dicionario['nome da vulnerabilidade'],
+                        vulnerabilidade_dicionario['tipo'],
                         NivelDaVulnerabilidade(vulnerabilidade_dicionario['nivel']),
                         StatusDaVuln(vulnerabilidade_dicionario['status_tratamento'])
                     )
