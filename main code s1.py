@@ -14,7 +14,7 @@ while True:
 
     try:
         opcao = input('Escolha uma opção: ').strip()
-        
+  
     except (EOFError, KeyboardInterrupt):
         print('Programa encerrado pelo usuário.')
         break
@@ -24,7 +24,8 @@ while True:
         continue
 
     if opcao == '1':
-        ativos.append(cadastrar_ativo(ativos))
+        novo_ativo = cadastrar_ativo(ativos)
+        ativos[novo_ativo.id] = novo_ativo
         salvar_dados(ativos)
 
     elif opcao == '2':
@@ -67,7 +68,7 @@ while True:
         excluir_ativo(ativos)
 
     elif opcao == '4':
-        
+
         while True:
             print('Menu de vulnerabilidades:')
             print('1 - Listar vulnerabilidades')
