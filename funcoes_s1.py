@@ -124,19 +124,13 @@ def pedir_id(mensagem):
 
 def pedir_id_disponivel(ativos):
 
-    ID_do_ativo = pedir_id('Digite o ID do ativo: ')
-
     while True:
-        try:
-            if encontrar_ativo_por_id(ID_do_ativo, ativos) is not None:
-                raise DadoInvalidoError('Já existe um ativo cadastrado com este ID. Tente outro.')
-            
-        except DadoInvalidoError as erro:
-            print(erro)
-            ID_do_ativo = pedir_id('Digite o ID do ativo: ')
 
-        else:
+        ID_do_ativo = pedir_id('Digite o ID do ativo: ')
+        if encontrar_ativo_por_id(ID_do_ativo, ativos) is None:
             return ID_do_ativo
+        
+        print('Já existe um ativo cadastrado com este ID. Tente outro.')
 
 def pedir_categoria(mensagem):
 
@@ -185,12 +179,7 @@ def cadastrar_ativo(ativos):
     return Ativo(ID_do_ativo, nome_ativo, categoria, responsavel, status)
 
 def encontrar_ativo_por_id(ID, ativos):
-    for ativo in ativos:
-
-        if ativo.id == ID:
-            return ativo
-
-    return None
+    return ativos.get(ID)
 
 def editar_ativo(ativos):
 
@@ -241,7 +230,7 @@ def excluir_ativo(ativos):
         if ativo_encontrado:
 
             if confirmar_exclusao(ativo_encontrado):
-                ativos.remove(ativo_encontrado)
+                del ativos[ativo_encontrado.id]
                 salvar_dados(ativos)
                 print('Ativo excluído com sucesso!')
             else:
@@ -267,8 +256,7 @@ def salvar_dados(ativos):
 
     lista_para_salvar = []
 
-    for ativo in ativos:
-
+    for ativo in ativos.values():
         lista_para_salvar.append(ativo.para_dicionario())
 
     try:
@@ -285,7 +273,7 @@ def carregar_dados():
         with open(ARQUIVO_DADOS, 'r', encoding='utf-8') as arquivo:
             dados_brutos = json.load(arquivo)
 
-            ativos_carregados = []
+            ativos_carregados = {}
 
             for ativo_dicionario in dados_brutos:
 
@@ -308,13 +296,13 @@ def carregar_dados():
 
                 novo_ativo.vulnerabilidades = vulnerabilidades_carregadas
 
-                ativos_carregados.append(novo_ativo)
+                ativos_carregados[novo_ativo.id] = novo_ativo
 
             return ativos_carregados
 
     except FileNotFoundError:
-        return []
+        return {}
 
     except json.JSONDecodeError:
         print('Aviso: ocorreu um erro no arquivo de dados. Criando um novo arquivo...')
-        return []
+        return {}

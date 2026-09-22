@@ -14,7 +14,7 @@ while True:
 
     try:
         opcao = input('Escolha uma opção: ').strip()
-        
+  
     except (EOFError, KeyboardInterrupt):
         print('Programa encerrado pelo usuário.')
         break
@@ -24,7 +24,8 @@ while True:
         continue
 
     if opcao == '1':
-        ativos.append(cadastrar_ativo(ativos))
+        novo_ativo = cadastrar_ativo(ativos)
+        ativos[novo_ativo.id] = novo_ativo
         salvar_dados(ativos)
 
     elif opcao == '2':
@@ -34,7 +35,7 @@ while True:
         if todos_um == 'todos':
             if ativos:
                 print('Listando ativos por ID, nome e responsável...')
-                for ativo in ativos:
+                for ativo in ativos.values():
                     print(
                         f'''ID: {ativo.id}
                         Nome: {ativo.nome}
@@ -67,7 +68,7 @@ while True:
         excluir_ativo(ativos)
 
     elif opcao == '4':
-        
+
         while True:
             print('Menu de vulnerabilidades:')
             print('1 - Listar vulnerabilidades')
@@ -93,9 +94,11 @@ while True:
                 if todas_um == 'todas':
                     if ativos:
                         print('Listando todas as vulnerabilidades...')
+                        encontrou_alguma = False
 
-                        for ativo in ativos:
+                        for ativo in ativos.values():
                             if ativo.vulnerabilidades:
+                                encontrou_alguma = True
                                 print(f"Ativo: {ativo.nome}")
 
                                 for vulnerabilidade in ativo.vulnerabilidades:
@@ -104,9 +107,8 @@ while True:
                                         Nível: {vulnerabilidade.nivel.name.lower()}'''
                                     )
 
-                            else: 
-                                print('Nenhuma vulnerabilidade cadastrada nos ativos.')
-                                
+                        if not encontrou_alguma:
+                            print('Nenhuma vulnerabilidade cadastrada nos ativos.')
                     else:
                         print('Nenhum ativo cadastrado.')
 
