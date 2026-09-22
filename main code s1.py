@@ -40,6 +40,7 @@ while True:
                         f'''ID: {ativo.id}
                         Nome: {ativo.nome}
                         Categoria: {ativo.categoria.name}
+                        Setor: {ativo.setor.name}
                         Responsável: {ativo.responsavel}
                         Status: {ativo.status.name}'''
                     )
@@ -54,6 +55,7 @@ while True:
                     f'''ID: {ativo_encontrado.id}
                     Nome: {ativo_encontrado.nome}
                     Categoria: {ativo_encontrado.categoria.name}
+                    Setor: {ativo_encontrado.setor.name}
                     Responsável: {ativo_encontrado.responsavel}
                     Status: {ativo_encontrado.status.name}'''
                 )
@@ -160,9 +162,9 @@ while True:
 
                         salvar_dados(ativos)
 
-                        print(f'''Informações adicionadas com sucesso! \n
-                              Vulnerabilidade: "{nome_da_vulnerabilidade}" \n
-                              Nível: "{nivel.name.lower()}" \n
+                        print(f'''Informações adicionadas com sucesso!
+                              Vulnerabilidade: "{nome_da_vulnerabilidade}"
+                              Nível: "{nivel.name.lower()}"
                               Status: "{status_tratamento.name.lower()}" ''')
 
                 else:
@@ -180,9 +182,9 @@ while True:
                     else:
                         print('Vulnerabilidades cadastradas:')
                         for vulnerabilidade in ativo_encontrado.vulnerabilidades:
-                            print(f'''{vulnerabilidade.nome_vulnerabilidade} \n
-                            (nível {vulnerabilidade.nivel.name.lower()}) \n
-                            (status {vulnerabilidade.status_tratamento.name.lower()}''')
+                            print(f'''{vulnerabilidade.nome_vulnerabilidade}
+                            (nível {vulnerabilidade.nivel.name.lower()})
+                            (status {vulnerabilidade.status_tratamento.name.lower()})''')
 
                         nome_a_remover = input('Digite o nome da vulnerabilidade que deseja remover: ').strip()
 

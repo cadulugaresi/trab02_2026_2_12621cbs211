@@ -18,10 +18,11 @@ class Vulnerabilidade:
 
 class Ativo:
 
-    def __init__(self, id, nome, categoria, responsavel, status):
+    def __init__(self, id, nome, categoria, setor, responsavel, status):
         self.id = id
         self.nome = nome
         self.categoria = categoria
+        self.setor = setor
         self.responsavel = responsavel
         self.status = status
         self.vulnerabilidades = []
@@ -31,6 +32,7 @@ class Ativo:
             'id': self.id,
             'nome': self.nome,
             'categoria': self.categoria.value,
+            'setor': self.setor.value,
             'responsavel': self.responsavel,
             'status': self.status.value,
             'vulnerabilidades': [
@@ -63,6 +65,13 @@ class StatusDaVuln(Enum):
     CORRIGIDA = 3
     ACEITA = 4
 
+class Setor(Enum):
+    TI = 1
+    FINANCEIRO = 2
+    MARKETING = 3
+    RH = 4
+    JURIDICO = 5
+
 def validar_nome_responsavel(nome):
         
     if not nome:
@@ -92,7 +101,10 @@ def pedir_status(mensagem):
 
         try:
             print('Status: ')
-            print(f'''ATIVO - 1 \n INATIVO - 2 \n EM_MANUTENCAO - 3''')
+            print(f'''
+            ATIVO - 1
+            INATIVO - 2
+            EM_MANUTENCAO - 3''')
 
             status_digitado = input(mensagem).strip()
 
@@ -109,6 +121,41 @@ def pedir_status(mensagem):
             print(erro)
 
     return status
+
+def pedir_setor(mensagem):
+
+    setor = None
+
+    while setor is None:
+
+        try:
+            print('Setor: ')
+            print(f'''
+            TI - 1
+            FINANCEIRO - 2
+            MARKETING - 3
+            RH - 4
+            JURIDICO - 5''')
+
+            setor_digitado = input(mensagem).strip()
+
+            if setor_digitado == '1':
+                setor = Setor.TI
+            elif setor_digitado == '2':
+                setor = Setor.FINANCEIRO
+            elif setor_digitado == '3':
+                setor = Setor.MARKETING
+            elif setor_digitado == '4':
+                setor = Setor.RH
+            elif setor_digitado == '5':
+                setor = Setor.JURIDICO
+            else:
+                raise DadoInvalidoError('Setor inválido. Tente novamente.')
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return setor
 
 def pedir_id(mensagem):
 
@@ -148,7 +195,11 @@ def pedir_categoria(mensagem):
 
         try: 
             print('Categorias disponíveis: ')
-            print(f'''NOTEBOOK - 1 \n SERVIDOR - 2 \n ROTEADOR - 3 \n IMPRESSORA - 4''')
+            print(f'''
+            NOTEBOOK - 1
+            SERVIDOR - 2
+            ROTEADOR - 3
+            IMPRESSORA - 4''')
 
             categoria_digitada = input(mensagem).strip()
 
@@ -173,18 +224,20 @@ def cadastrar_ativo(ativos):
     ID_do_ativo = pedir_id_disponivel(ativos)
     nome_ativo = pedir_info('Digite o nome do ativo: ')
     categoria = pedir_categoria('Digite a categoria do ativo: ')
+    setor = pedir_setor('Digite o setor do ativo: ')
     responsavel = pedir_info('Digite o nome do responsável pelo ativo: ')
     status = pedir_status('Digite o status do ativo: ')
 
     print(f'''Ativo cadastrado com sucesso!
     Ativo cadastrado:ID {ID_do_ativo}
     Nome {nome_ativo}
-    Categoria {categoria}
+    Categoria {categoria.name}
+    Setor {setor.name}
     Responsável {responsavel}
     Status {status.name}
     ''')
 
-    return Ativo(ID_do_ativo, nome_ativo, categoria, responsavel, status)
+    return Ativo(ID_do_ativo, nome_ativo, categoria, setor, responsavel, status)
 
 def encontrar_ativo_por_id(ID, ativos):
     return ativos.get(ID)
@@ -203,13 +256,18 @@ def editar_ativo(ativos):
     ID: {ativo_encontrado.id}
     Nome: {ativo_encontrado.nome}
     Responsável: {ativo_encontrado.responsavel}
+    Categoria: {ativo_encontrado.categoria.name}
+    Setor: {ativo_encontrado.setor.name}
     Status: {ativo_encontrado.status.name}
     ''')
 
     while True:
-        print('1 - Editar responsável')
-        print('2 - Editar status')
-        print('3 - Voltar')
+        print(f'''
+        MENU DE EDIÇÃO
+        1 - Editar responsável
+        2 - Editar status
+        3 - Editar setor
+        4 - Voltar''')
 
         opcao = input('Escolha uma opção: ').strip()
 
@@ -221,9 +279,14 @@ def editar_ativo(ativos):
         elif opcao == '2':
             novo_status=pedir_status('Digite o novo status do ativo: ')
             ativo_encontrado.status = novo_status
-            print(f'Status do ativo atualizado com sucesso. Status atual: {novo_status.name}')
+            print(f'Status do ativo atualizado com sucesso. Status atual: {novo_status.name}.')
 
         elif opcao == '3':
+            novo_setor=pedir_setor('Digite o novo setor do ativo: ')
+            ativo_encontrado.setor = novo_setor
+            print(f'Setor do ativo atualizado com sucesso. Setor atual: {novo_setor.name}.')
+
+        elif opcao == '4':
             print('Voltando...')
             break
 
@@ -342,6 +405,7 @@ def carregar_dados():
                     ativo_dicionario['id'],
                     ativo_dicionario['nome'],
                     Categorias(ativo_dicionario['categoria']),
+                    Setor(ativo_dicionario['setor']),
                     ativo_dicionario['responsavel'],
                     StatusDoAtivo(ativo_dicionario['status'])
                 )
