@@ -19,10 +19,6 @@ while True:
         print('Programa encerrado pelo usuário.')
         break
 
-    except ValueError:
-        print('Escolha uma opção válida.')
-        continue
-
     if opcao == '1':
         novo_ativo = cadastrar_ativo(ativos)
         ativos[novo_ativo.id] = novo_ativo
@@ -30,40 +26,58 @@ while True:
 
     elif opcao == '2':
 
-        todos_um = input('Deseja listar todos os ativos ou apenas um específico? (todos/um): ').strip()
+        todos_um = ''
 
-        if todos_um == 'todos':
-            if ativos:
-                print('Listando ativos por ID, nome e responsável...')
-                for ativo in ativos.values():
-                    print(
-                        f'''ID: {ativo.id}
-                        Nome: {ativo.nome}
-                        Categoria: {ativo.categoria.name}
-                        Responsável: {ativo.responsavel}
-                        Status: {ativo.status.name}'''
-                    )
+        while todos_um not in ('todos', 'um'):
+            todos_um = input('Deseja listar todos os ativos ou apenas um específico? (todos/um): ').strip().lower()
+
+            if todos_um == 'todos':
+                if ativos:
+                    print('Listando ativos por ID, nome e responsável...')
+                    for ativo in ativos.values():
+                        print(
+                            f'''ID: {ativo.id}
+                            Nome: {ativo.nome}
+                            Categoria: {ativo.categoria.name}
+                            Setor: {ativo.setor.name}
+                            Responsável: {ativo.responsavel}
+                            Status: {ativo.status.name}'''
+                        )
+                else:
+                    print('Nenhum ativo cadastrado.')
+
+            elif todos_um == 'um':
+
+                nome_ou_id = ''
+
+                while nome_ou_id not in ('nome', 'id'):
+                    nome_ou_id = input('Deseja buscar ativo por NOME ou ID? (nome/id) ').strip().lower()
+
+                    if nome_ou_id == 'nome':
+
+                        nome = pedir_info('Digite o nome do ativo que deseja listar: ')
+                        encontrados = encontrar_ativo_por_nome(nome, ativos)
+
+                        if encontrados:
+                            for ativo in encontrados:
+                                mostrar_ativo(ativo)
+                        else:
+                            print('Nenhum ativo encontrado.')
+                    elif nome_ou_id == 'id':
+
+                        id_ativo = pedir_id('Digite o ID do ativo que deseja listar: ')
+                        ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
+
+                        if ativo_encontrado:
+                            mostrar_ativo(ativo_encontrado)
+                        else:
+                            print('Nenhum ativo encontrado.')
+                    else:
+                        print('Opção inválida. Digite "nome" ou "id".')
+
             else:
-                print('Nenhum ativo cadastrado.')
-
-        elif todos_um == 'um':
-            id_ativo = pedir_id('Digite o ID do ativo que deseja listar: ')
-            ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
-            if ativo_encontrado:
-                print(
-                    f'''ID: {ativo_encontrado.id}
-                    Nome: {ativo_encontrado.nome}
-                    Categoria: {ativo_encontrado.categoria.name}
-                    Responsável: {ativo_encontrado.responsavel}
-                    Status: {ativo_encontrado.status.name}'''
-                )
-
-            else:
-                print('Ativo não encontrado.')
-
-        else:
-            print('Opção inválida. Tente novamente.')
-
+                print('Opção inválida. Digite "todos" ou "um".')
+                
     elif opcao == '3':
         excluir_ativo(ativos)
 
@@ -89,6 +103,8 @@ while True:
 
             if opcao_vulnerabilidade == '1':
                 print('Listando vulnerabilidades...')
+
+                
                 todas_um = input('Deseja listar todas as vulnerabilidades ou apenas as de um ativo específico? (todas/um): ').strip()
 
                 if todas_um == 'todas':
@@ -104,7 +120,9 @@ while True:
                                 for vulnerabilidade in ativo.vulnerabilidades:
                                     print(
                                         f'''  Vulnerabilidade: {vulnerabilidade.nome_vulnerabilidade}
-                                        Nível: {vulnerabilidade.nivel.name.lower()}'''
+                                        Tipo: {vulnerabilidade.tipo}
+                                        Nível: {vulnerabilidade.nivel.name.lower()}
+                                        Status: {vulnerabilidade.status_tratamento.name.lower()}'''
                                     )
 
                         if not encontrou_alguma:
@@ -127,7 +145,9 @@ while True:
                             for vulnerabilidade in ativo_encontrado.vulnerabilidades:
                                 print(
                                     f'''Vulnerabilidade: {vulnerabilidade.nome_vulnerabilidade}
-                                    Nível: {vulnerabilidade.nivel.name.lower()}'''
+                                    Tipo: {vulnerabilidade.tipo}
+                                    Nível: {vulnerabilidade.nivel.name.lower()}
+                                    Status: {vulnerabilidade.status_tratamento.name.lower()}'''
                                 )
                         
                     else:
@@ -147,29 +167,24 @@ while True:
 
                     if not nome_da_vulnerabilidade:
                         print('Vulnerabilidade não pode ser vazia. Tente novamente.')
+
                     else:
-                        nivel = None
 
-                        while nivel is None:
-                            print(f'''BAIXO - 1 \n MEDIO - 2 \n ALTO - 3''')
-
-                            nivel_digitado = input('Digite o nível da vulnerabilidade: ').strip()
-
-                            if nivel_digitado == '1':
-                                nivel = NivelDaVulnerabilidade.BAIXO
-                            elif nivel_digitado == '2':
-                                nivel = NivelDaVulnerabilidade.MEDIO
-                            elif nivel_digitado == '3':
-                                nivel = NivelDaVulnerabilidade.ALTO
-                            else:
-                                print('Nível inválido. Tente novamente.')
-                                continue
-
+                        nivel = nivel_vulnerabilidade()
+                        tipo = pedir_info('Digite o tipo da vulnerabilidade: ')
+                        status_tratamento = status_vulnerabilidade()
                         ativo_encontrado.vulnerabilidades.append(
-                            Vulnerabilidade(nome_da_vulnerabilidade, nivel)
+                            Vulnerabilidade(nome_da_vulnerabilidade, tipo, nivel, status_tratamento)
                         )
+
                         salvar_dados(ativos)
-                        print(f'Vulnerabilidade "{nome_da_vulnerabilidade}" de nível "{nivel.name.lower()}" adicionada ao ativo {ativo_encontrado.nome} com sucesso!')
+
+                        print(f'''Informações adicionadas com sucesso!
+                              Vulnerabilidade: "{nome_da_vulnerabilidade}"
+                              Tipo: "{tipo}"
+                              Nível: "{nivel.name.lower()}"
+                              Status: "{status_tratamento.name.lower()}" ''')
+
                 else:
                     print('Ativo não encontrado.')
 
@@ -185,7 +200,9 @@ while True:
                     else:
                         print('Vulnerabilidades cadastradas:')
                         for vulnerabilidade in ativo_encontrado.vulnerabilidades:
-                            print(f"- {vulnerabilidade.nome_vulnerabilidade} (nível {vulnerabilidade.nivel.name.lower()})")
+                            print(f'''{vulnerabilidade.nome_vulnerabilidade}
+                            (nível {vulnerabilidade.nivel.name.lower()})
+                            (status {vulnerabilidade.status_tratamento.name.lower()})''')
 
                         nome_a_remover = input('Digite o nome da vulnerabilidade que deseja remover: ').strip()
 

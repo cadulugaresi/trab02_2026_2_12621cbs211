@@ -4,22 +4,27 @@ from enum import Enum
 ARQUIVO_DADOS = 'ativos.json'
 
 class Vulnerabilidade:
-    def __init__(self, nome_vulnerabilidade, nivel):
+    def __init__(self, nome_vulnerabilidade, tipo, nivel, status_tratamento):
         self.nome_vulnerabilidade = nome_vulnerabilidade
+        self.tipo = tipo
         self.nivel = nivel
+        self.status_tratamento = status_tratamento
 
     def para_dicionario(self):
         return {
             'nome da vulnerabilidade': self.nome_vulnerabilidade,
-            'nivel': self.nivel.value
+            'tipo': self.tipo,
+            'nivel': self.nivel.value,
+            'status_tratamento': self.status_tratamento.value
         }
 
 class Ativo:
 
-    def __init__(self, id, nome, categoria, responsavel, status):
+    def __init__(self, id, nome, categoria, setor, responsavel, status):
         self.id = id
         self.nome = nome
         self.categoria = categoria
+        self.setor = setor
         self.responsavel = responsavel
         self.status = status
         self.vulnerabilidades = []
@@ -29,6 +34,7 @@ class Ativo:
             'id': self.id,
             'nome': self.nome,
             'categoria': self.categoria.value,
+            'setor': self.setor.value,
             'responsavel': self.responsavel,
             'status': self.status.value,
             'vulnerabilidades': [
@@ -54,6 +60,19 @@ class Categorias(Enum):
     SERVIDOR = 2
     ROTEADOR = 3
     IMPRESSORA = 4
+
+class StatusDaVuln(Enum):
+    ABERTA = 1
+    EM_TRATAMENTO = 2
+    CORRIGIDA = 3
+    ACEITA = 4
+
+class Setor(Enum):
+    TI = 1
+    FINANCEIRO = 2
+    MARKETING = 3
+    RH = 4
+    JURIDICO = 5
 
 def validar_nome_responsavel(nome):
         
@@ -84,7 +103,10 @@ def pedir_status(mensagem):
 
         try:
             print('Status: ')
-            print(f'''ATIVO - 1 \n INATIVO - 2 \n EM_MANUTENCAO - 3''')
+            print(f'''
+            ATIVO - 1
+            INATIVO - 2
+            EM_MANUTENCAO - 3''')
 
             status_digitado = input(mensagem).strip()
 
@@ -101,6 +123,41 @@ def pedir_status(mensagem):
             print(erro)
 
     return status
+
+def pedir_setor(mensagem):
+
+    setor = None
+
+    while setor is None:
+
+        try:
+            print('Setor: ')
+            print(f'''
+            TI - 1
+            FINANCEIRO - 2
+            MARKETING - 3
+            RH - 4
+            JURIDICO - 5''')
+
+            setor_digitado = input(mensagem).strip()
+
+            if setor_digitado == '1':
+                setor = Setor.TI
+            elif setor_digitado == '2':
+                setor = Setor.FINANCEIRO
+            elif setor_digitado == '3':
+                setor = Setor.MARKETING
+            elif setor_digitado == '4':
+                setor = Setor.RH
+            elif setor_digitado == '5':
+                setor = Setor.JURIDICO
+            else:
+                raise DadoInvalidoError('Setor inválido. Tente novamente.')
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return setor
 
 def pedir_id(mensagem):
 
@@ -140,7 +197,11 @@ def pedir_categoria(mensagem):
 
         try: 
             print('Categorias disponíveis: ')
-            print(f'''NOTEBOOK - 1 \n SERVIDOR - 2 \n ROTEADOR - 3 \n IMPRESSORA - 4''')
+            print(f'''
+            NOTEBOOK - 1
+            SERVIDOR - 2
+            ROTEADOR - 3
+            IMPRESSORA - 4''')
 
             categoria_digitada = input(mensagem).strip()
 
@@ -165,21 +226,43 @@ def cadastrar_ativo(ativos):
     ID_do_ativo = pedir_id_disponivel(ativos)
     nome_ativo = pedir_info('Digite o nome do ativo: ')
     categoria = pedir_categoria('Digite a categoria do ativo: ')
+    setor = pedir_setor('Digite o setor do ativo: ')
     responsavel = pedir_info('Digite o nome do responsável pelo ativo: ')
     status = pedir_status('Digite o status do ativo: ')
 
     print(f'''Ativo cadastrado com sucesso!
     Ativo cadastrado:ID {ID_do_ativo}
     Nome {nome_ativo}
-    Categoria {categoria}
+    Categoria {categoria.name}
+    Setor {setor.name}
     Responsável {responsavel}
     Status {status.name}
     ''')
 
-    return Ativo(ID_do_ativo, nome_ativo, categoria, responsavel, status)
+    return Ativo(ID_do_ativo, nome_ativo, categoria, setor, responsavel, status)
 
 def encontrar_ativo_por_id(ID, ativos):
     return ativos.get(ID)
+
+def encontrar_ativo_por_nome(nome, ativos):
+
+    encontrados = []
+
+    for ativo in ativos.values():
+        if nome.lower() in ativo.nome.lower():
+            encontrados.append(ativo)
+
+    return encontrados
+
+def mostrar_ativo(ativo):
+    print(f'''
+    ID: {ativo.id}
+    Nome: {ativo.nome}
+    Categoria: {ativo.categoria.name}
+    Setor: {ativo.setor.name}
+    Responsável: {ativo.responsavel}
+    Status: {ativo.status.name}
+    ''')
 
 def editar_ativo(ativos):
 
@@ -195,13 +278,18 @@ def editar_ativo(ativos):
     ID: {ativo_encontrado.id}
     Nome: {ativo_encontrado.nome}
     Responsável: {ativo_encontrado.responsavel}
+    Categoria: {ativo_encontrado.categoria.name}
+    Setor: {ativo_encontrado.setor.name}
     Status: {ativo_encontrado.status.name}
     ''')
 
     while True:
-        print('1 - Editar responsável')
-        print('2 - Editar status')
-        print('3 - Voltar')
+        print(f'''
+        MENU DE EDIÇÃO
+        1 - Editar responsável
+        2 - Editar status
+        3 - Editar setor
+        4 - Voltar''')
 
         opcao = input('Escolha uma opção: ').strip()
 
@@ -213,9 +301,14 @@ def editar_ativo(ativos):
         elif opcao == '2':
             novo_status=pedir_status('Digite o novo status do ativo: ')
             ativo_encontrado.status = novo_status
-            print(f'Status do ativo atualizado com sucesso. Status atual: {novo_status.name}')
+            print(f'Status do ativo atualizado com sucesso. Status atual: {novo_status.name}.')
 
         elif opcao == '3':
+            novo_setor=pedir_setor('Digite o novo setor do ativo: ')
+            ativo_encontrado.setor = novo_setor
+            print(f'Setor do ativo atualizado com sucesso. Setor atual: {novo_setor.name}.')
+
+        elif opcao == '4':
             print('Voltando...')
             break
 
@@ -252,6 +345,49 @@ def confirmar_exclusao(ativo):
     else:
         return False
 
+def nivel_vulnerabilidade():
+
+    nivel = None
+    while nivel is None:
+        print(f'''BAIXO - 1 \n MEDIO - 2 \n ALTO - 3''')
+
+        nivel_digitado = input('Digite o nível da vulnerabilidade: ').strip()
+
+        if nivel_digitado == '1':
+            nivel = NivelDaVulnerabilidade.BAIXO
+        elif nivel_digitado == '2':
+            nivel = NivelDaVulnerabilidade.MEDIO
+        elif nivel_digitado == '3':
+            nivel = NivelDaVulnerabilidade.ALTO
+        else:
+            print('Nível inválido. Tente novamente.')
+            continue
+
+    return nivel
+
+def status_vulnerabilidade():
+
+    status_tratamento = None
+    while status_tratamento is None:
+        print(f'''ABERTA - 1 \n EM TRATAMENTO - 2 \n CORRIGIDA - 3 \n ACEITA - 4''')
+
+        status_digitado = input('Digite o status atual da vulnerabilidade: ').strip()
+
+        if status_digitado == '1':
+            status_tratamento = StatusDaVuln.ABERTA
+        elif status_digitado == '2':
+            status_tratamento = StatusDaVuln.EM_TRATAMENTO
+        elif status_digitado == '3':
+            status_tratamento = StatusDaVuln.CORRIGIDA
+        elif status_digitado == '4':
+            status_tratamento = StatusDaVuln.ACEITA
+
+        else:
+            print('Status inválido. Tente novamente.')
+            continue
+
+    return status_tratamento
+
 def salvar_dados(ativos):
 
     lista_para_salvar = []
@@ -282,7 +418,9 @@ def carregar_dados():
                 for vulnerabilidade_dicionario in ativo_dicionario['vulnerabilidades']:
                     nova_vulnerabilidade = Vulnerabilidade(
                         vulnerabilidade_dicionario['nome da vulnerabilidade'],
-                        NivelDaVulnerabilidade(vulnerabilidade_dicionario['nivel'])
+                        vulnerabilidade_dicionario['tipo'],
+                        NivelDaVulnerabilidade(vulnerabilidade_dicionario['nivel']),
+                        StatusDaVuln(vulnerabilidade_dicionario['status_tratamento'])
                     )
                     vulnerabilidades_carregadas.append(nova_vulnerabilidade)
 
@@ -290,6 +428,7 @@ def carregar_dados():
                     ativo_dicionario['id'],
                     ativo_dicionario['nome'],
                     Categorias(ativo_dicionario['categoria']),
+                    Setor(ativo_dicionario['setor']),
                     ativo_dicionario['responsavel'],
                     StatusDoAtivo(ativo_dicionario['status'])
                 )
