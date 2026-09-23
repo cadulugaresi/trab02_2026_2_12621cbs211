@@ -102,27 +102,35 @@ def pedir_status(mensagem):
     while status is None:
 
         try:
-            print('Status: ')
             print(f'''
+            Status:
+
             ATIVO - 1
             INATIVO - 2
-            EM_MANUTENCAO - 3''')
+            EM_MANUTENCAO - 3
+            ''')
 
             status_digitado = input(mensagem).strip()
-
-            if status_digitado == '1':
-                status = StatusDoAtivo.ATIVO
-            elif status_digitado == '2':
-                status = StatusDoAtivo.INATIVO
-            elif status_digitado == '3':
-                status = StatusDoAtivo.EM_MANUTENCAO
-            else:
-                raise DadoInvalidoError('Status inválido. Tente novamente.')
+            status = validar_status(status_digitado)
 
         except DadoInvalidoError as erro:
             print(erro)
 
     return status
+
+def validar_status(status_digitado):
+
+    if status_digitado == '1':
+        return StatusDoAtivo.ATIVO
+    
+    elif status_digitado == '2':
+        return StatusDoAtivo.INATIVO
+    
+    elif status_digitado == '3':
+        return StatusDoAtivo.EM_MANUTENCAO
+    
+    else:
+        raise DadoInvalidoError('Status inválido. Tente novamente.')
 
 def pedir_setor(mensagem):
 
@@ -131,33 +139,43 @@ def pedir_setor(mensagem):
     while setor is None:
 
         try:
-            print('Setor: ')
             print(f'''
+            Setor:
+
             TI - 1
             FINANCEIRO - 2
             MARKETING - 3
             RH - 4
-            JURIDICO - 5''')
+            JURIDICO - 5
+            ''')
 
             setor_digitado = input(mensagem).strip()
-
-            if setor_digitado == '1':
-                setor = Setor.TI
-            elif setor_digitado == '2':
-                setor = Setor.FINANCEIRO
-            elif setor_digitado == '3':
-                setor = Setor.MARKETING
-            elif setor_digitado == '4':
-                setor = Setor.RH
-            elif setor_digitado == '5':
-                setor = Setor.JURIDICO
-            else:
-                raise DadoInvalidoError('Setor inválido. Tente novamente.')
+            setor = validar_setor(setor_digitado)
 
         except DadoInvalidoError as erro:
             print(erro)
 
     return setor
+
+def validar_setor(setor_digitado):
+
+    if setor_digitado == '1':
+        return Setor.TI
+    
+    elif setor_digitado == '2':
+        return Setor.FINANCEIRO
+    
+    elif setor_digitado == '3':
+        return Setor.MARKETING
+    
+    elif setor_digitado == '4':
+        return Setor.RH
+    
+    elif setor_digitado == '5':
+        return Setor.JURIDICO
+    
+    else:
+        raise DadoInvalidoError('Setor inválido. Tente novamente.')
 
 def pedir_id(mensagem):
 
@@ -196,30 +214,39 @@ def pedir_categoria(mensagem):
     while categoria is None:
 
         try: 
-            print('Categorias disponíveis: ')
             print(f'''
+            Categorias:
+
             NOTEBOOK - 1
             SERVIDOR - 2
             ROTEADOR - 3
-            IMPRESSORA - 4''')
+            IMPRESSORA - 4
+            ''')
 
             categoria_digitada = input(mensagem).strip()
-
-            if categoria_digitada == '1':
-                categoria = Categorias.NOTEBOOK
-            elif categoria_digitada == '2':
-                categoria=Categorias.SERVIDOR
-            elif categoria_digitada == '3':
-                categoria=Categorias.ROTEADOR
-            elif categoria_digitada == '4':
-                categoria=Categorias.IMPRESSORA
-            else:
-                raise DadoInvalidoError('Dado inválido. Tente novamente.')
+            categoria = validar_categoria(categoria_digitada)
 
         except DadoInvalidoError as erro:
             print(erro)
 
     return categoria
+
+def validar_categoria(categoria_digitada):
+
+    if categoria_digitada == '1':
+        return Categorias.NOTEBOOK
+        
+    elif categoria_digitada == '2':
+        return Categorias.SERVIDOR
+
+    elif categoria_digitada == '3':
+        return Categorias.ROTEADOR
+
+    elif categoria_digitada == '4':
+        return Categorias.IMPRESSORA
+
+    else:
+        raise DadoInvalidoError('Dado inválido. Tente novamente.')
 
 def cadastrar_ativo(ativos):
 
@@ -264,6 +291,15 @@ def mostrar_ativo(ativo):
     Status: {ativo.status.name}
     ''')
 
+def mostrar_vulnerabilidade(vulnerabilidade):
+
+    print(f'''
+    Vulnerabilidade: {vulnerabilidade.nome_vulnerabilidade}
+    Tipo: {vulnerabilidade.tipo}
+    Nível: {vulnerabilidade.nivel.name.lower()}
+    Status: {vulnerabilidade.status_tratamento.name.lower()}
+    ''')
+
 def editar_ativo(ativos):
 
     id_ativo = pedir_id('Digite o ID do ativo que deseja editar: ')
@@ -289,7 +325,8 @@ def editar_ativo(ativos):
         1 - Editar responsável
         2 - Editar status
         3 - Editar setor
-        4 - Voltar''')
+        4 - Editar categoria
+        5 - Voltar''')
 
         opcao = input('Escolha uma opção: ').strip()
 
@@ -309,6 +346,11 @@ def editar_ativo(ativos):
             print(f'Setor do ativo atualizado com sucesso. Setor atual: {novo_setor.name}.')
 
         elif opcao == '4':
+            nova_categ = pedir_categoria('Digite a nova categoria do ativo: ')
+            ativo_encontrado.categoria = nova_categ
+            print(f'Categoria do ativo atualizada com sucesso. Categoria atual: {nova_categ.name}.')
+
+        elif opcao == '5':
             print('Voltando...')
             break
 
