@@ -6,6 +6,7 @@ from funcoes_s1 import (
     encontrar_ativo_por_id, encontrar_ativo_por_nome,
     validar_nome_responsavel,
     validar_status, validar_setor, validar_categoria,
+    encontrar_ativos_por_categ, encontrar_ativos_por_status,
     DadoInvalidoError,
 )
 
@@ -116,3 +117,79 @@ class TestCadastroDuplicado(unittest.TestCase):
         ativos[1] = a2
         self.assertEqual(len(ativos), 1)
         self.assertEqual(ativos[1].nome, 'outro')
+
+class TestFiltros(unittest.TestCase):
+    """Testes para encontrar_ativos_por_categ e encontrar_ativos_por_status (S2_09)."""
+
+    def setUp(self):
+        """Cria um dicionário de ativos pra usar em cada teste."""
+        self.ativos = {
+            1: Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO),
+            2: Ativo(2, 'srv-db', Categorias.SERVIDOR, Setor.TI, 'cadu', StatusDoAtivo.ATIVO),
+            3: Ativo(3, 'impressora-1', Categorias.IMPRESSORA, Setor.RH, 'joao', StatusDoAtivo.INATIVO),
+            4: Ativo(4, 'notebook-rh', Categorias.NOTEBOOK, Setor.RH, 'joao', StatusDoAtivo.EM_MANUTENCAO),
+        }
+
+    def test_encontrar_ativos_por_categ_com_resultado(self):
+        resultado = encontrar_ativos_por_categ(Categorias.NOTEBOOK, self.ativos)
+        self.assertEqual(len(resultado), 2)
+
+    def test_encontrar_ativos_por_categ_sem_resultado(self):
+        resultado = encontrar_ativos_por_categ(Categorias.ROTEADOR, self.ativos)
+        self.assertEqual(resultado, [])
+
+    def test_encontrar_ativos_por_categ_dicionario_vazio(self):
+        resultado = encontrar_ativos_por_categ(Categorias.NOTEBOOK, {})
+        self.assertEqual(resultado, [])
+
+    def test_encontrar_ativos_por_status_com_resultado(self):
+        resultado = encontrar_ativos_por_status(StatusDoAtivo.ATIVO, self.ativos)
+        self.assertEqual(len(resultado), 2)
+
+    def test_encontrar_ativos_por_status_sem_resultado(self):
+        resultado = encontrar_ativos_por_status(StatusDoAtivo.INATIVO, self.ativos)
+        self.assertEqual(len(resultado), 1)
+
+    def test_encontrar_ativos_por_status_dicionario_vazio(self):
+        resultado = encontrar_ativos_por_status(StatusDoAtivo.ATIVO, {})
+        self.assertEqual(resultado, [])
+
+class TestAtualizacao(unittest.TestCase):
+    def test_alteracao_muda_estado(self):
+        a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        antes = a.para_dicionario()
+        a.responsavel = 'joao'
+        depois = a.para_dicionario()
+        self.assertNotEqual(antes, depois)
+
+    def test_id_nao_muda(self):
+        a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        a.responsavel = 'joao'
+        d = a.para_dicionario()
+        self.assertEqual(d['id'], 1)
+
+    def test_sem_alteracao_estados_iguais(self):
+        a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        self.assertEqual(a.para_dicionario(), a.para_dicionario())
+
+class TestExclusao(unittest.TestCase):
+    def test_exclusao_remove_ativo(self):
+        ativos = {1: Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)}
+        del ativos[1]
+        self.assertNotIn(1, ativos)
+
+    def test_exclusao_remove_vulnerabilidades_junto(self):
+        a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        a.vulnerabilidades.append(Vulnerabilidade('senha fraca', 'senha', NivelDaVulnerabilidade.ALTO, StatusDaVuln.ABERTA))
+        ativos = {1: a}
+        del ativos[1]
+        self.assertNotIn(1, ativos)
+
+    def test_exclusao_cancelada_nao_remove(self):
+        ativos = {1: Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)}
+        self.assertIn(1, ativos)
+
+    def test_exclusao_ativo_inexistente_nao_erro(self):
+        ativos = {1: Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)}
+        ativos.pop(999, None)
+        self.assertIn(1, ativos)

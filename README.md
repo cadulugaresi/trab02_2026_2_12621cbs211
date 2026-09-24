@@ -71,6 +71,17 @@ Separation between business rules and I/O
 Error handling that doesn't expose internal details
 User input validation
 
-✨ License
+✨ ## Deletion Policy
+
+The system uses **physical deletion**: when an asset is removed, the record is permanently erased from `ativos.json`, along with its associated vulnerabilities.
+
+**Rationale:**
+- The project scope does not require audit or removal history;
+- Keeping deleted records would increase complexity without clear benefit;
+- The user must confirm deletion before removal (mitigation against accidental deletion).
+
+**Logical deletion** (marking as inactive instead of erasing) was considered but discarded as it is outside the scope of Assignment 1.
+
+🫧 License
 
 Study project, free to use for educational purposes.
