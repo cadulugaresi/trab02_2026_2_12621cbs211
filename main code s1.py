@@ -25,8 +25,8 @@ while True:
 
             todos_um = ''
 
-            while todos_um not in ('todos', 'um'):
-                todos_um = input('Deseja listar todos os ativos ou apenas um específico? (todos/um): ').strip().lower()
+            while todos_um not in ('todos', 'um', 'filtrar'):
+                todos_um = input('Deseja listar todos os ativos, filtra-los ou mostrar apenas um específico? (todos/filtrar/um): ').strip().lower()
 
                 if todos_um == 'todos':
                     if ativos:
@@ -35,6 +35,32 @@ while True:
                             mostrar_ativo(ativo)
                     else:
                         print('Nenhum ativo cadastrado.')
+
+                elif todos_um == 'filtrar':
+
+                    if not ativos:
+                        print('Nenhum ativo cadastrado.')
+                        continue
+
+                    filtro = input('Filtrar por: 1-Categoria / 2-Status: ').strip()
+
+                    if filtro == '1':
+                        categoria = pedir_categoria('Qual categoria de ativos deseja listar? ')
+                        encontrados = encontrar_ativos_por_categ(categoria, ativos)
+                        
+                    elif filtro == '2':
+                        status = pedir_status('Qual status de ativos deseja listar? ')
+                        encontrados = encontrar_ativos_por_status(status, ativos)
+                    else:
+                        print('Opção inválida.')
+                        continue
+
+                    if encontrados:
+                        for ativo in encontrados:
+                            mostrar_ativo(ativo)
+
+                    else:
+                        print('Nenhum ativo encontrado com este filtro.')
 
                 elif todos_um == 'um':
 

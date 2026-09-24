@@ -6,6 +6,7 @@ from funcoes_s1 import (
     encontrar_ativo_por_id, encontrar_ativo_por_nome,
     validar_nome_responsavel,
     validar_status, validar_setor, validar_categoria,
+    encontrar_ativos_por_categ, encontrar_ativos_por_status,
     DadoInvalidoError,
 )
 
@@ -116,3 +117,39 @@ class TestCadastroDuplicado(unittest.TestCase):
         ativos[1] = a2
         self.assertEqual(len(ativos), 1)
         self.assertEqual(ativos[1].nome, 'outro')
+
+class TestFiltros(unittest.TestCase):
+    """Testes para encontrar_ativos_por_categ e encontrar_ativos_por_status (S2_09)."""
+
+    def setUp(self):
+        """Cria um dicionário de ativos pra usar em cada teste."""
+        self.ativos = {
+            1: Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO),
+            2: Ativo(2, 'srv-db', Categorias.SERVIDOR, Setor.TI, 'cadu', StatusDoAtivo.ATIVO),
+            3: Ativo(3, 'impressora-1', Categorias.IMPRESSORA, Setor.RH, 'joao', StatusDoAtivo.INATIVO),
+            4: Ativo(4, 'notebook-rh', Categorias.NOTEBOOK, Setor.RH, 'joao', StatusDoAtivo.EM_MANUTENCAO),
+        }
+
+    def test_encontrar_ativos_por_categ_com_resultado(self):
+        resultado = encontrar_ativos_por_categ(Categorias.NOTEBOOK, self.ativos)
+        self.assertEqual(len(resultado), 2)
+
+    def test_encontrar_ativos_por_categ_sem_resultado(self):
+        resultado = encontrar_ativos_por_categ(Categorias.ROTEADOR, self.ativos)
+        self.assertEqual(resultado, [])
+
+    def test_encontrar_ativos_por_categ_dicionario_vazio(self):
+        resultado = encontrar_ativos_por_categ(Categorias.NOTEBOOK, {})
+        self.assertEqual(resultado, [])
+
+    def test_encontrar_ativos_por_status_com_resultado(self):
+        resultado = encontrar_ativos_por_status(StatusDoAtivo.ATIVO, self.ativos)
+        self.assertEqual(len(resultado), 2)
+
+    def test_encontrar_ativos_por_status_sem_resultado(self):
+        resultado = encontrar_ativos_por_status(StatusDoAtivo.INATIVO, self.ativos)
+        self.assertEqual(len(resultado), 1)
+
+    def test_encontrar_ativos_por_status_dicionario_vazio(self):
+        resultado = encontrar_ativos_por_status(StatusDoAtivo.ATIVO, {})
+        self.assertEqual(resultado, [])

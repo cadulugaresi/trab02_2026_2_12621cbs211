@@ -281,6 +281,21 @@ def encontrar_ativo_por_nome(nome, ativos):
 
     return encontrados
 
+def encontrar_ativos_por_categ(categoria, ativos):
+    encontrados = []
+    for ativo in ativos.values():
+        if ativo.categoria == categoria:
+            encontrados.append(ativo)
+    return encontrados
+
+
+def encontrar_ativos_por_status(status, ativos):
+    encontrados = []
+    for ativo in ativos.values():
+        if ativo.status == status:
+            encontrados.append(ativo)
+    return encontrados
+
 def mostrar_ativo(ativo):
     print(f'''
     ID: {ativo.id}
