@@ -75,6 +75,17 @@ Separação entre regras de negócio e entrada/saída
 Tratamento de erros sem exposição de dados internos
 Validação de entradas do usuário
 
-✨ Licença
+✨ Política de Exclusão
+
+O sistema adota **exclusão física**: ao remover um ativo, o registro é apagado permanentemente do arquivo `ativos.json`, junto com suas vulnerabilidades associadas.
+
+**Justificativa:**
+- O escopo do projeto não exige auditoria ou histórico de remoções;
+- Manter registros deletados aumentaria a complexidade sem benefício claro;
+- O usuário deve confirmar a exclusão antes de removê-la (mitigação de remoção acidental).
+
+**Exclusão lógica** (marcar como inativo em vez de apagar) foi considerada, mas descartada por não estar no escopo do Trabalho 1.
+
+🫧 Licença
 
 Projeto de estudo, livre para uso educacional.

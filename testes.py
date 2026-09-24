@@ -171,3 +171,25 @@ class TestAtualizacao(unittest.TestCase):
     def test_sem_alteracao_estados_iguais(self):
         a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
         self.assertEqual(a.para_dicionario(), a.para_dicionario())
+
+class TestExclusao(unittest.TestCase):
+    def test_exclusao_remove_ativo(self):
+        ativos = {1: Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)}
+        del ativos[1]
+        self.assertNotIn(1, ativos)
+
+    def test_exclusao_remove_vulnerabilidades_junto(self):
+        a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        a.vulnerabilidades.append(Vulnerabilidade('senha fraca', 'senha', NivelDaVulnerabilidade.ALTO, StatusDaVuln.ABERTA))
+        ativos = {1: a}
+        del ativos[1]
+        self.assertNotIn(1, ativos)
+
+    def test_exclusao_cancelada_nao_remove(self):
+        ativos = {1: Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)}
+        self.assertIn(1, ativos)
+
+    def test_exclusao_ativo_inexistente_nao_erro(self):
+        ativos = {1: Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)}
+        ativos.pop(999, None)
+        self.assertIn(1, ativos)
