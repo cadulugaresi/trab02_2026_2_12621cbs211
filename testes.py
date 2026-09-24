@@ -153,3 +153,21 @@ class TestFiltros(unittest.TestCase):
     def test_encontrar_ativos_por_status_dicionario_vazio(self):
         resultado = encontrar_ativos_por_status(StatusDoAtivo.ATIVO, {})
         self.assertEqual(resultado, [])
+
+class TestAtualizacao(unittest.TestCase):
+    def test_alteracao_muda_estado(self):
+        a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        antes = a.para_dicionario()
+        a.responsavel = 'joao'
+        depois = a.para_dicionario()
+        self.assertNotEqual(antes, depois)
+
+    def test_id_nao_muda(self):
+        a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        a.responsavel = 'joao'
+        d = a.para_dicionario()
+        self.assertEqual(d['id'], 1)
+
+    def test_sem_alteracao_estados_iguais(self):
+        a = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        self.assertEqual(a.para_dicionario(), a.para_dicionario())
