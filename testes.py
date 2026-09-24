@@ -105,3 +105,14 @@ class TestBusca(unittest.TestCase):
 
 if __name__ == '__main__':
     unittest.main()
+
+class TestCadastroDuplicado(unittest.TestCase):
+    def test_id_duplicado_sobrescreve(self):
+        """Simula comportamento de ID duplicado no dicionário."""
+        ativos = {}
+        a1 = Ativo(1, 'macbook', Categorias.NOTEBOOK, Setor.TI, 'cadu', StatusDoAtivo.ATIVO)
+        a2 = Ativo(1, 'outro', Categorias.SERVIDOR, Setor.RH, 'joao', StatusDoAtivo.INATIVO)
+        ativos[1] = a1
+        ativos[1] = a2
+        self.assertEqual(len(ativos), 1)
+        self.assertEqual(ativos[1].nome, 'outro')
