@@ -29,14 +29,22 @@ Aplicação de linha de comando (CLI) em Python para cadastro e gerenciamento de
 - Módulos da biblioteca padrão: `json`, `enum`
 
 ## ✨ Estrutura do projeto
+
+```
 .
-├── main code s1.py # Ponto de entrada: menu interativo e fluxo principal
-├── funcoes_s1.py # Classes de domínio, validações, regras de negócio e persistência
+├── main code s1.py
+├── funcoes_s1.py
+├── testes.py
+├── docs/
+│   ├── requisitos.md
+│   ├── validacoes.md
+│   ├── criterios_aceitacao.md
+│   ├── especificacao.md
+│   └── relatorio_testes.md
 ├── .gitignore
 ├── README.md
 └── README.pt-br.md
-
-text
+```
 
 > O arquivo `ativos.json` (dados salvos) é gerado automaticamente na primeira execução e não é versionado.
 
@@ -44,10 +52,11 @@ text
 
 Pré-requisito: Python 3.8 ou superior instalado.
 
-```bash
-git clone https://github.com/byuwarn/it-asset-vulnerability-manager.git
+```
+git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
 cd it-asset-vulnerability-manager
 python "main code s1.py"
+```
 
 O programa abre um menu interativo no terminal. Basta seguir as opções numeradas para cadastrar ativos, gerenciar vulnerabilidades e salvar os dados.
 
