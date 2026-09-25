@@ -27,12 +27,22 @@ A command-line (CLI) application in Python for registering and managing IT asset
 - Standard library modules: `json`, `enum`
 
 ## ✨ Project Structure
+
+```
 .
-├── main code s1.py # Entry point: interactive menu and program flow
-├── funcoes_s1.py # Domain classes, validation, business logic, and persistence
+├── main code s1.py
+├── funcoes_s1.py
+├── testes.py
+├── docs/
+│   ├── requisitos.md
+│   ├── validacoes.md
+│   ├── criterios_aceitacao.md
+│   ├── especificacao.md
+│   └── relatorio_testes.md
 ├── .gitignore
 ├── README.md
 └── README.pt-br.md
+```
 
 > The `ativos.json` file (saved data) is generated automatically on first run and is not version-controlled.
 
@@ -40,10 +50,11 @@ A command-line (CLI) application in Python for registering and managing IT asset
 
 Requirement: Python 3.8 or higher.
 
-```bash
-git clone https://github.com/byuwarn/it-asset-vulnerability-manager.git
+```
+git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
 cd it-asset-vulnerability-manager
 python "main code s1.py"
+```
 
 The program opens an interactive menu in the terminal. Follow the numbered options to register assets, manage vulnerabilities, and persist data.
 
