@@ -1,4 +1,5 @@
 from enum import Enum
+from funcoes_t2 import *
 
 class StatusDoAtivo(Enum):
     ATIVO = 1
@@ -9,12 +10,6 @@ class NivelDaVulnerabilidade(Enum):
     BAIXO = 1
     MEDIO = 2
     ALTO = 3
-
-class Categorias(Enum):
-    NOTEBOOK = 1
-    SERVIDOR = 2
-    ROTEADOR = 3
-    IMPRESSORA = 4
 
 class StatusDaVuln(Enum):
     ABERTA = 1
@@ -134,7 +129,6 @@ class Roteador(Ativo):
             dicionario_do_ativo['velocidade']
         )
 
-
 class Servidor(Ativo):
     def __init__(self, id, nome, setor, responsavel, status, ram, armazenamento):
         super().__init__(id, nome, setor, responsavel, status)
@@ -213,38 +207,155 @@ OPCOES_MENU = {
     '4': 'Impressora'
 }
 
-def listar_ativos_por_tipo(ativos):
-    tipo_digitado = input('Qual tipo? ').strip()
-    
-    encontrados = filtrar_ativos_por_tipo(tipo_digitado, ativos)
-    
-    if not encontrados:
-        print('Nenhum ativo cadastrado com esse tipo.')
-        return
-    
-    for ativo in encontrados:
-        print(ativo.exibir_detalhes())
+def pedir_tipo(mensagem):
 
-def filtrar_ativos_por_tipo(tipo_digitado, ativos):
-    if not tipo_digitado:
-        return []
+    tipo = None
+
+    while tipo is None:
+
+        try:
+            print('Tipos de ativo:')
+            for numero, nome in OPCOES_MENU.items():
+                print(f'{numero} - {nome}')
+
+            tipo_digitado = input(mensagem).strip()
+            tipo = validar_tipo(tipo_digitado)
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return tipo
+
+def validar_tipo(tipo_digitado):
+
+    if tipo_digitado == '1':
+        return Notebook
     
-    classes_encontradas = []
-    for nome_tipo, classe in MAPA_DE_TIPOS.items():
-        if tipo_digitado.lower() in nome_tipo.lower():
-            classes_encontradas.append(classe)
+    elif tipo_digitado == '2':
+        return Servidor
     
-    if not classes_encontradas:
-        return []
+    elif tipo_digitado == '3':
+        return Roteador
     
-    encontrados = []
-    for ativo in ativos.values():
-        for classe in classes_encontradas:
-            if isinstance(ativo, classe):
-                encontrados.append(ativo)
-                break
+    elif tipo_digitado == '4':
+        return Impressora
     
-    return encontrados
+    else:
+        raise DadoInvalidoError('Tipo inválido. Tente novamente.')
+
+def cadastro_notebook():
+
+    so = pedir_info('Digite o sistema operacional do ativo: ')
+    tela = pedir_float('Digite o tamanho da tela em polegadas: ')
+
+    return so, tela    
+
+def cadastro_roteador():
+
+    portas = pedir_int('Digite a quantidade de portas do roteador: ')
+    velocidade = pedir_int('Digite a velocidade do roteador em MB: ')
+
+    return portas, velocidade
+
+def cadastro_servidor():
+
+    ram = pedir_int('Digite a quantidade de RAM do Servidor em GB: ')
+    armazenamento = pedir_float('Digite a quantidade de armazenamento do Servidor em T: ')
+
+    return ram, armazenamento
+
+def validar_cor(opcao):
+
+    if opcao == '1':
+        return Cor.COLORIDA
+    elif opcao == '2':
+        return Cor.PRETA_E_BRANCA
+    
+    else:
+        raise DadoInvalidoError('Cor inválida. Tente novamente.')
+
+def pedir_cor():
+
+    cor = None
+    while cor is None:
+
+        try:
+            print('''
+            Qual é a cor do cartucho da impressora?
+
+            1 - Colorido
+            2 - Preto e branco
+            ''')
+            opcao_cor = input('Escolha: ').strip()
+            cor = validar_cor(opcao_cor)
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return cor
+
+def validar_tecnologia(opcao_tec):
+
+    if opcao_tec == '1':
+        return Tecnologia.TINTA
+    elif opcao_tec == '2':
+        return Tecnologia.LASER
+    else:
+        raise DadoInvalidoError('Tecnologia inválida. Tente novamente.')
+
+def pedir_tecnologia():
+
+    tecnologia = None
+    while tecnologia is None:
+
+        try:
+            print('''
+            Tecnologias de impressão:
+            
+            1 - Tinta
+            2 - Laser
+            ''')
+            opcao_tec = input('Qual é a tecnologia da impressão? ')
+            tecnologia = validar_tecnologia(opcao_tec)
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return tecnologia
+
+def cadastro_impressora():
+    cor = pedir_cor()
+    tecnologia = pedir_tecnologia()
+    return cor, tecnologia
+
+def cadastrar_ativo(ativos):
+
+    tipo = pedir_tipo('Digite o tipo do ativo: ')
+    ID_do_ativo = pedir_id_disponivel(ativos)
+    nome_ativo = pedir_info('Digite o nome do ativo: ')
+    setor = pedir_setor('Digite o setor do ativo: ')
+    responsavel = pedir_info('Digite o nome do responsável pelo ativo: ')
+    status = pedir_status('Digite o status do ativo: ')
+
+    if tipo is Notebook:
+        so, tela = cadastro_notebook()
+        ativo = Notebook(ID_do_ativo, nome_ativo, setor, responsavel, status, so, tela)
+
+    elif tipo is Roteador:
+        portas, velocidade = cadastro_roteador()
+        ativo = Roteador(ID_do_ativo, nome_ativo, setor, responsavel, status, portas, velocidade)
+
+    elif tipo is Servidor:
+        ram, armazenamento = cadastro_servidor()
+        ativo = Servidor(ID_do_ativo, nome_ativo, setor, responsavel, status, ram, armazenamento)
+    
+    elif tipo is Impressora:
+        cor, tecnologia = cadastro_impressora()
+        ativo = Impressora(ID_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
+
+    print('Ativo cadastrado com sucesso!')
+    print(ativo.exibir_detalhes())
+    return ativo
 
 #Testes:
 if __name__ == '__main__':

@@ -6,13 +6,16 @@ while True:
 
     try:
 
-        print('MENU')
-        print('1 - Cadastrar ativo')
-        print('2 - Listar ativos')
-        print('3 - Excluir ativo')
-        print('4 - Editar vulnerabilidades')
-        print('5 - Editar ativo')
-        print('6 - Sair')
+        print('''
+        MENU
+        
+        1 - Cadastrar ativo
+        2 - Listar ativo
+        3 - Excluir ativo
+        4 - Menu de vulnerabilidades
+        5 - Editar ativo
+        6 - Sair
+        ''')
 
         opcao = input('Escolha uma opção: ').strip()
 
@@ -26,13 +29,14 @@ while True:
             todos_um = ''
 
             while todos_um not in ('todos', 'um', 'filtrar'):
+                
                 todos_um = input('Deseja listar todos os ativos, filtra-los ou mostrar apenas um específico? (todos/filtrar/um): ').strip().lower()
 
                 if todos_um == 'todos':
                     if ativos:
-                        print('Listando ativos por ID, nome e responsável...')
+                        print('Listando todos os ativos...')
                         for ativo in ativos.values():
-                            mostrar_ativo(ativo)
+                            print(ativo.exibir_detalhes())
                     else:
                         print('Nenhum ativo cadastrado.')
 
@@ -42,22 +46,28 @@ while True:
                         print('Nenhum ativo cadastrado.')
                         continue
 
-                    filtro = input('Filtrar por: 1-Categoria / 2-Status: ').strip()
+                    print('''
+                    1 - Tipo
+                    2 - Status
+                    ''')
+
+                    filtro = input('Deseja filtrar por TIPO ou STATUS do ativo?').strip()
 
                     if filtro == '1':
-                        categoria = pedir_categoria('Qual categoria de ativos deseja listar? ')
-                        encontrados = encontrar_ativos_por_categ(categoria, ativos)
-                        
+                        tipo = pedir_tipo('Qual tipo de ativos deseja listar? ')
+                        encontrados = listar_ativos_por_tipo(tipo, ativos)
+
                     elif filtro == '2':
                         status = pedir_status('Qual status de ativos deseja listar? ')
                         encontrados = encontrar_ativos_por_status(status, ativos)
+
                     else:
                         print('Opção inválida.')
                         continue
 
                     if encontrados:
                         for ativo in encontrados:
-                            mostrar_ativo(ativo)
+                            print(ativo.exibir_detalhes())
 
                     else:
                         print('Nenhum ativo encontrado com este filtro.')
@@ -76,16 +86,16 @@ while True:
 
                             if encontrados:
                                 for ativo in encontrados:
-                                    mostrar_ativo(ativo)
+                                    print(ativo.exibir_detalhes())
                             else:
                                 print('Nenhum ativo encontrado.')
                         elif nome_ou_id == 'id':
 
-                            id_ativo = pedir_id('Digite o ID do ativo que deseja listar: ')
+                            id_ativo = pedir_int('Digite o ID do ativo que deseja listar: ')
                             ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
 
                             if ativo_encontrado:
-                                mostrar_ativo(ativo_encontrado)
+                                print(ativo_encontrado.exibir_detalhes())
                             else:
                                 print('Nenhum ativo encontrado.')
                         else:
@@ -135,7 +145,7 @@ while True:
 
                     elif todas_um == 'um':
 
-                        id_ativo_vulneravel = pedir_id('Digite o ID do ativo que deseja listar as vulnerabilidades: ')
+                        id_ativo_vulneravel = pedir_int('Digite o ID do ativo que deseja listar as vulnerabilidades: ')
                         ativo_encontrado = encontrar_ativo_por_id(id_ativo_vulneravel, ativos)
 
                         if ativo_encontrado:
@@ -157,7 +167,7 @@ while True:
                 elif opcao_vulnerabilidade == '2':
                     print('Adicionando vulnerabilidade...')
 
-                    id_ativo_add_vuln = pedir_id('Digite o ID do ativo que deseja adicionar a vulnerabilidade: ')
+                    id_ativo_add_vuln = pedir_int('Digite o ID do ativo que deseja adicionar a vulnerabilidade: ')
                     ativo_encontrado = encontrar_ativo_por_id(id_ativo_add_vuln, ativos)
 
                     if ativo_encontrado:
@@ -189,7 +199,7 @@ while True:
                 elif opcao_vulnerabilidade == '3':
                     print('Removendo vulnerabilidade...')
 
-                    id_ativo_del_vuln = pedir_id('Digite o ID do ativo que deseja remover a vulnerabilidade: ')
+                    id_ativo_del_vuln = pedir_int('Digite o ID do ativo que deseja remover a vulnerabilidade: ')
                     ativo_encontrado = encontrar_ativo_por_id(id_ativo_del_vuln, ativos)
 
                     if ativo_encontrado:

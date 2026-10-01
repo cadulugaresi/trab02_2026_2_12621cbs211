@@ -133,7 +133,7 @@ Especificar os requisitos funcionais e não funcionais do sistema de gerenciamen
 
 ### 9.5. Funções de exibição
 
-- `mostrar_ativo(ativo)`
+- `Ativo.exibir_detalhes()`
 - `mostrar_vulnerabilidade(vulnerabilidade)`
 
 ### 9.6. Funções de persistência

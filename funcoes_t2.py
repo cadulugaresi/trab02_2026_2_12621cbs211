@@ -20,20 +20,29 @@ class Vulnerabilidade:
 
 class Ativo:
 
-    def __init__(self, id, nome, categoria, setor, responsavel, status):
+    def __init__(self, id, nome, setor, responsavel, status):
         self.id = id
         self.nome = nome
-        self.categoria = categoria
         self.setor = setor
         self.responsavel = responsavel
         self.status = status
         self.vulnerabilidades = []
 
+    def exibir_detalhes(self):
+        return f'''
+            ID: {self.id}
+            Nome: {self.nome}
+            Tipo: {type(self).__name__}
+            Setor: {self.setor.name}
+            Responsável: {self.responsavel}
+            Status: {self.status.name}
+            '''
+
     def para_dicionario(self):
         return {
             'id': self.id,
             'nome': self.nome,
-            'categoria': self.categoria.value,
+            'tipo': type(self).__name__,
             'setor': self.setor.value,
             'responsavel': self.responsavel,
             'status': self.status.value,
@@ -41,6 +50,134 @@ class Ativo:
                 vulnerabilidade.para_dicionario() for vulnerabilidade in self.vulnerabilidades
             ]
         }
+
+class Notebook(Ativo):
+    def __init__ (self, id, nome, setor, responsavel, status, sistema_operacional, tela):
+        super().__init__(id, nome, setor, responsavel, status)
+        self.sistema_operacional = sistema_operacional
+        self.tela = tela
+
+    def exibir_detalhes(self):
+        detalhes_base = super().exibir_detalhes()
+        return f'''
+            {detalhes_base}
+            Sistema operacional: {self.sistema_operacional}
+            Tamanho da tela: {self.tela} polegadas
+            '''
+
+    def para_dicionario(self):
+        dicionario_base = super().para_dicionario()
+        dicionario_base['sistema_operacional'] = self.sistema_operacional
+        dicionario_base['tela'] = self.tela
+        return dicionario_base
+
+    @classmethod
+    def de_dicionario(cls, dicionario_do_ativo):
+        return cls(
+            dicionario_do_ativo['id'],
+            dicionario_do_ativo['nome'],
+            Setor(dicionario_do_ativo['setor']),
+            dicionario_do_ativo['responsavel'],
+            StatusDoAtivo(dicionario_do_ativo['status']),
+            dicionario_do_ativo['sistema_operacional'],
+            dicionario_do_ativo['tela']
+        )
+
+class Roteador(Ativo):
+    def __init__(self, id, nome, setor, responsavel, status, portas, velocidade):
+        super().__init__(id, nome, setor, responsavel, status)
+        self.portas = portas
+        self.velocidade = velocidade
+
+    def exibir_detalhes(self):
+        detalhes_base = super().exibir_detalhes()
+        return f'''
+            {detalhes_base}
+            Qtde de portas: {self.portas}
+            Velocidade: {self.velocidade}MB
+            '''
+
+    def para_dicionario(self):
+        dicionario_base = super().para_dicionario()
+        dicionario_base['portas'] = self.portas
+        dicionario_base['velocidade'] = self.velocidade
+        return dicionario_base
+
+    @classmethod
+    def de_dicionario(cls, dicionario_do_ativo):
+        return cls(
+            dicionario_do_ativo['id'],
+            dicionario_do_ativo['nome'],
+            Setor(dicionario_do_ativo['setor']),
+            dicionario_do_ativo['responsavel'],
+            StatusDoAtivo(dicionario_do_ativo['status']),
+            dicionario_do_ativo['portas'],
+            dicionario_do_ativo['velocidade']
+        )
+
+class Servidor(Ativo):
+    def __init__(self, id, nome, setor, responsavel, status, ram, armazenamento):
+        super().__init__(id, nome, setor, responsavel, status)
+        self.ram = ram
+        self.armazenamento = armazenamento
+
+    def exibir_detalhes(self):
+        detalhes_base = super().exibir_detalhes()
+        return f'''
+            {detalhes_base}
+            Memória RAM: {self.ram}GB
+            Qtde armazenamento: {self.armazenamento}T
+            '''
+
+    def para_dicionario(self):
+        dicionario_base = super().para_dicionario()
+        dicionario_base['ram'] = self.ram
+        dicionario_base['armazenamento'] = self.armazenamento
+        return dicionario_base
+
+    @classmethod
+    def de_dicionario(cls, dicionario_do_ativo):
+        return cls(
+            dicionario_do_ativo['id'],
+            dicionario_do_ativo['nome'],
+            Setor(dicionario_do_ativo['setor']),
+            dicionario_do_ativo['responsavel'],
+            StatusDoAtivo(dicionario_do_ativo['status']),
+            dicionario_do_ativo['ram'],
+            dicionario_do_ativo['armazenamento']
+        )
+
+class Impressora(Ativo):
+    def __init__(self, id, nome, setor, responsavel, status, cor, tecnologia):
+        super().__init__(id, nome, setor, responsavel, status)
+        self.cor = cor
+        self.tecnologia = tecnologia
+
+    def exibir_detalhes(self):
+        detalhes_base = super().exibir_detalhes()
+        return f'''
+            {detalhes_base}
+            Cor: {self.cor.name}
+            Tecnologia: {self.tecnologia.name}
+            '''
+
+    def para_dicionario(self):
+        dicionario_base = super().para_dicionario()
+        dicionario_base['cor'] = self.cor.value
+        dicionario_base['tecnologia'] = self.tecnologia.value
+        return dicionario_base
+
+    @classmethod
+    def de_dicionario(cls, dicionario_do_ativo):
+        return cls(
+            dicionario_do_ativo['id'],
+            dicionario_do_ativo['nome'],
+            Setor(dicionario_do_ativo['setor']),
+            dicionario_do_ativo['responsavel'],
+            StatusDoAtivo(dicionario_do_ativo['status']),
+            Cor(dicionario_do_ativo['cor']),
+            Tecnologia(dicionario_do_ativo['tecnologia'])
+        )
 
 class DadoInvalidoError(Exception):
     pass
@@ -55,12 +192,6 @@ class NivelDaVulnerabilidade(Enum):
     MEDIO = 2
     ALTO = 3
 
-class Categorias(Enum):
-    NOTEBOOK = 1
-    SERVIDOR = 2
-    ROTEADOR = 3
-    IMPRESSORA = 4
-
 class StatusDaVuln(Enum):
     ABERTA = 1
     EM_TRATAMENTO = 2
@@ -73,6 +204,28 @@ class Setor(Enum):
     MARKETING = 3
     RH = 4
     JURIDICO = 5
+
+class Cor(Enum):
+    COLORIDA = 1
+    PRETA_E_BRANCA = 2
+
+class Tecnologia(Enum):
+    TINTA = 1
+    LASER = 2
+
+MAPA_DE_TIPOS = {
+    'Notebook': Notebook,
+    'Servidor': Servidor,
+    'Roteador': Roteador,
+    'Impressora': Impressora
+    }
+
+OPCOES_MENU = {
+    '1': 'Notebook',
+    '2': 'Servidor',
+    '3': 'Roteador',
+    '4': 'Impressora'
+}
 
 def validar_nome_responsavel(nome):
         
@@ -177,19 +330,38 @@ def validar_setor(setor_digitado):
     else:
         raise DadoInvalidoError('Setor inválido. Tente novamente.')
 
-def pedir_id(mensagem):
+def pedir_float(mensagem):
+    while True:
+        try:
+            numero=input(mensagem).strip()
+
+            if not numero:
+                raise DadoInvalidoError('Este campo não pode ser vazio. Tente novamente.')
+
+            if float(numero) <= 0:
+                raise DadoInvalidoError('Este campo não pode ser nulo ou negativo. Tente novamente.')
+
+            return float(numero)
+
+        except ValueError:
+            print('Digite um número válido')
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+def pedir_int(mensagem):
 
     while True:
         try:
-            id_texto=input(mensagem).strip()
+            numero_int=input(mensagem).strip()
 
-            if not id_texto:
+            if not numero_int:
                 raise DadoInvalidoError('Este campo não pode ser vazio. Tente novamente.')
 
-            if int(id_texto) <= 0:
-                raise DadoInvalidoError('O ID não pode ser nulo ou negativo. Tente novamente.')
+            if int(numero_int) <= 0:
+                raise DadoInvalidoError('Este campo não pode ser nulo ou negativo. Tente novamente.')
 
-            return int(id_texto)
+            return int(numero_int)
 
         except ValueError:
             print('Digite um número válido')
@@ -201,72 +373,161 @@ def pedir_id_disponivel(ativos):
 
     while True:
 
-        ID_do_ativo = pedir_id('Digite o ID do ativo: ')
+        ID_do_ativo = pedir_int('Digite o ID do ativo: ')
         if encontrar_ativo_por_id(ID_do_ativo, ativos) is None:
             return ID_do_ativo
         
         print('Já existe um ativo cadastrado com este ID. Tente outro.')
 
-def pedir_categoria(mensagem):
+def pedir_tipo(mensagem):
 
-    categoria = None
+    tipo = None
 
-    while categoria is None:
+    while tipo is None:
 
-        try: 
-            print(f'''
-            Categorias:
+        try:
+            print('Tipos de ativo:')
+            for numero, nome in OPCOES_MENU.items():
+                print(f'{numero} - {nome}')
 
-            NOTEBOOK - 1
-            SERVIDOR - 2
-            ROTEADOR - 3
-            IMPRESSORA - 4
-            ''')
-
-            categoria_digitada = input(mensagem).strip()
-            categoria = validar_categoria(categoria_digitada)
+            tipo_digitado = input(mensagem).strip()
+            tipo = validar_tipo(tipo_digitado)
 
         except DadoInvalidoError as erro:
             print(erro)
 
-    return categoria
+    return tipo
 
-def validar_categoria(categoria_digitada):
+def validar_tipo(tipo_digitado):
 
-    if categoria_digitada == '1':
-        return Categorias.NOTEBOOK
-        
-    elif categoria_digitada == '2':
-        return Categorias.SERVIDOR
-
-    elif categoria_digitada == '3':
-        return Categorias.ROTEADOR
-
-    elif categoria_digitada == '4':
-        return Categorias.IMPRESSORA
-
+    if tipo_digitado == '1':
+        return Notebook
+    
+    elif tipo_digitado == '2':
+        return Servidor
+    
+    elif tipo_digitado == '3':
+        return Roteador
+    
+    elif tipo_digitado == '4':
+        return Impressora
+    
     else:
-        raise DadoInvalidoError('Dado inválido. Tente novamente.')
+        raise DadoInvalidoError('Tipo inválido. Tente novamente.')
+
+def cadastro_notebook():
+
+    so = pedir_info('Digite o sistema operacional do ativo: ')
+    tela = pedir_float('Digite o tamanho da tela em polegadas: ')
+
+    return so, tela    
+
+def cadastro_roteador():
+
+    portas = pedir_int('Digite a quantidade de portas do roteador: ')
+    velocidade = pedir_int('Digite a velocidade do roteador em MB: ')
+
+    return portas, velocidade
+
+def cadastro_servidor():
+
+    ram = pedir_int('Digite a quantidade de RAM do Servidor em GB: ')
+    armazenamento = pedir_float('Digite a quantidade de armazenamento do Servidor em T: ')
+
+    return ram, armazenamento
+
+def validar_cor(opcao):
+
+    if opcao == '1':
+        return Cor.COLORIDA
+    elif opcao == '2':
+        return Cor.PRETA_E_BRANCA
+    
+    else:
+        raise DadoInvalidoError('Cor inválida. Tente novamente.')
+
+def pedir_cor():
+
+    cor = None
+    while cor is None:
+
+        try:
+            print('''
+            Qual é a cor do cartucho da impressora?
+
+            1 - Colorido
+            2 - Preto e branco
+            ''')
+            opcao_cor = input('Escolha: ').strip()
+            cor = validar_cor(opcao_cor)
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return cor
+
+def validar_tecnologia(opcao_tec):
+
+    if opcao_tec == '1':
+        return Tecnologia.TINTA
+    elif opcao_tec == '2':
+        return Tecnologia.LASER
+    else:
+        raise DadoInvalidoError('Tecnologia inválida. Tente novamente.')
+
+def pedir_tecnologia():
+
+    tecnologia = None
+    while tecnologia is None:
+
+        try:
+            print('''
+            Tecnologias de impressão:
+            
+            1 - Tinta
+            2 - Laser
+            ''')
+            opcao_tec = input('Qual é a tecnologia da impressão? ')
+            tecnologia = validar_tecnologia(opcao_tec)
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return tecnologia
+
+def cadastro_impressora():
+    cor = pedir_cor()
+    tecnologia = pedir_tecnologia()
+    return cor, tecnologia
 
 def cadastrar_ativo(ativos):
 
+    tipo = pedir_tipo('Digite o tipo do ativo: ')
     ID_do_ativo = pedir_id_disponivel(ativos)
     nome_ativo = pedir_info('Digite o nome do ativo: ')
-    categoria = pedir_categoria('Digite a categoria do ativo: ')
     setor = pedir_setor('Digite o setor do ativo: ')
     responsavel = pedir_info('Digite o nome do responsável pelo ativo: ')
     status = pedir_status('Digite o status do ativo: ')
 
-    print(f'''Ativo cadastrado com sucesso!
-    Ativo cadastrado:ID {ID_do_ativo}
-    Nome {nome_ativo}
-    Categoria {categoria.name}
-    Setor {setor.name}
-    Responsável {responsavel}
-    Status {status.name}
-    ''')
+    if tipo is Notebook:
+        so, tela = cadastro_notebook()
+        ativo = Notebook(ID_do_ativo, nome_ativo, setor, responsavel, status, so, tela)
 
-    return Ativo(ID_do_ativo, nome_ativo, categoria, setor, responsavel, status)
+    elif tipo is Roteador:
+        portas, velocidade = cadastro_roteador()
+        ativo = Roteador(ID_do_ativo, nome_ativo, setor, responsavel, status, portas, velocidade)
+
+    elif tipo is Servidor:
+        ram, armazenamento = cadastro_servidor()
+        ativo = Servidor(ID_do_ativo, nome_ativo, setor, responsavel, status, ram, armazenamento)
+    
+    elif tipo is Impressora:
+        cor, tecnologia = cadastro_impressora()
+        ativo = Impressora(ID_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
+
+    print('Ativo cadastrado com sucesso!')
+    print(ativo.exibir_detalhes())
+    return ativo
 
 def encontrar_ativo_por_id(ID, ativos):
     return ativos.get(ID)
@@ -281,14 +542,6 @@ def encontrar_ativo_por_nome(nome, ativos):
 
     return encontrados
 
-def encontrar_ativos_por_categ(categoria, ativos):
-    encontrados = []
-    for ativo in ativos.values():
-        if ativo.categoria == categoria:
-            encontrados.append(ativo)
-    return encontrados
-
-
 def encontrar_ativos_por_status(status, ativos):
     encontrados = []
     for ativo in ativos.values():
@@ -296,15 +549,15 @@ def encontrar_ativos_por_status(status, ativos):
             encontrados.append(ativo)
     return encontrados
 
-def mostrar_ativo(ativo):
-    print(f'''
-    ID: {ativo.id}
-    Nome: {ativo.nome}
-    Categoria: {ativo.categoria.name}
-    Setor: {ativo.setor.name}
-    Responsável: {ativo.responsavel}
-    Status: {ativo.status.name}
-    ''')
+def listar_ativos_por_tipo(classe, ativos):
+
+    encontrados = []
+
+    for ativo in ativos.values():
+        if isinstance(ativo, classe):
+            encontrados.append(ativo)
+
+    return encontrados
 
 def mostrar_vulnerabilidade(vulnerabilidade):
 
@@ -317,7 +570,7 @@ def mostrar_vulnerabilidade(vulnerabilidade):
 
 def editar_ativo(ativos):
 
-    id_ativo = pedir_id('Digite o ID do ativo que deseja editar: ')
+    id_ativo = pedir_int('Digite o ID do ativo que deseja editar: ')
 
     ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
 
@@ -329,7 +582,7 @@ def editar_ativo(ativos):
     ID: {ativo_encontrado.id}
     Nome: {ativo_encontrado.nome}
     Responsável: {ativo_encontrado.responsavel}
-    Categoria: {ativo_encontrado.categoria.name}
+    Tipo: {type(ativo_encontrado).__name__}
     Setor: {ativo_encontrado.setor.name}
     Status: {ativo_encontrado.status.name}
     ''')
@@ -340,8 +593,9 @@ def editar_ativo(ativos):
         1 - Editar responsável
         2 - Editar status
         3 - Editar setor
-        4 - Editar categoria
-        5 - Voltar''')
+        4 - Editar detalhes específicos
+        5 - Editar tipo
+        6 - Voltar''')
 
         opcao = input('Escolha uma opção: ').strip()
 
@@ -361,11 +615,52 @@ def editar_ativo(ativos):
             print(f'Setor do ativo atualizado com sucesso. Setor atual: {novo_setor.name}.')
 
         elif opcao == '4':
-            nova_categ = pedir_categoria('Digite a nova categoria do ativo: ')
-            ativo_encontrado.categoria = nova_categ
-            print(f'Categoria do ativo atualizada com sucesso. Categoria atual: {nova_categ.name}.')
 
+            if isinstance(ativo_encontrado, Notebook):
+                ativo_encontrado.sistema_operacional = pedir_info('Novo SO: ')
+                ativo_encontrado.tela = pedir_float('Nova tela: ')
+
+            elif isinstance(ativo_encontrado, Roteador):
+                ativo_encontrado.portas = pedir_int('Nova quantidade de portas: ')
+                ativo_encontrado.velocidade = pedir_int('Nova velocidade em MB: ')
+
+            elif isinstance(ativo_encontrado, Servidor):
+                ativo_encontrado.ram = pedir_int('Digite a quantidade de RAM do Servidor em GB: ')
+                ativo_encontrado.armazenamento = pedir_float('Digite a quantidade de armazenamento do Servidor em T: ')
+                
+            elif isinstance(ativo_encontrado, Impressora):
+                ativo_encontrado.cor = pedir_cor()
+                ativo_encontrado.tecnologia = pedir_tecnologia()
+
+            print(f'''
+            Detalhes específicos atualizados com sucesso!
+            Ativo atualizado:
+            {ativo_encontrado.exibir_detalhes()}
+            ''')
+            
         elif opcao == '5':
+
+            novo_tipo = pedir_tipo('Qual o novo tipo do ativo? ')
+            
+            if novo_tipo is Notebook:
+                so, tela = cadastro_notebook()
+                novo_ativo = Notebook(id_ativo, ativo_encontrado.nome, ativo_encontrado.setor, ativo_encontrado.responsavel, ativo_encontrado.status, so, tela)
+            elif novo_tipo is Roteador:
+                portas, velocidade = cadastro_roteador()
+                novo_ativo = Roteador(id_ativo, ativo_encontrado.nome, ativo_encontrado.setor, ativo_encontrado.responsavel, ativo_encontrado.status, portas, velocidade)
+            elif novo_tipo is Servidor:
+                ram, armazenamento = cadastro_servidor()
+                novo_ativo = Servidor(id_ativo, ativo_encontrado.nome, ativo_encontrado.setor, ativo_encontrado.responsavel, ativo_encontrado.status, ram, armazenamento)
+            elif novo_tipo is Impressora:
+                cor, tecnologia = cadastro_impressora()
+                novo_ativo = Impressora(id_ativo, ativo_encontrado.nome, ativo_encontrado.setor, ativo_encontrado.responsavel, ativo_encontrado.status, cor, tecnologia)
+
+            novo_ativo.vulnerabilidades = ativo_encontrado.vulnerabilidades
+            ativos[id_ativo] = novo_ativo
+            ativo_encontrado = novo_ativo
+            print(f'Tipo do ativo atualizado com sucesso! Tipo atual: {type(novo_ativo).__name__}')
+
+        elif opcao == '6':
             print('Voltando...')
             break
 
@@ -374,7 +669,7 @@ def editar_ativo(ativos):
 
 def excluir_ativo(ativos):
     if ativos:
-        id_a_excluir = pedir_id('Digite o ID do ativo que deseja excluir: ')
+        id_a_excluir = pedir_int('Digite o ID do ativo que deseja excluir: ')
         ativo_encontrado = encontrar_ativo_por_id(id_a_excluir, ativos)
 
         if ativo_encontrado:
@@ -465,13 +760,13 @@ def carregar_dados():
     try:
         with open(ARQUIVO_DADOS, 'r', encoding='utf-8') as arquivo:
             dados_brutos = json.load(arquivo)
-
             ativos_carregados = {}
-
+            
             for ativo_dicionario in dados_brutos:
-
-                vulnerabilidades_carregadas = []
-
+                tipo_string = ativo_dicionario['tipo']
+                classe = MAPA_DE_TIPOS[tipo_string]
+                novo_ativo = classe.de_dicionario(ativo_dicionario)
+                
                 for vulnerabilidade_dicionario in ativo_dicionario['vulnerabilidades']:
                     nova_vulnerabilidade = Vulnerabilidade(
                         vulnerabilidade_dicionario['nome da vulnerabilidade'],
@@ -479,26 +774,15 @@ def carregar_dados():
                         NivelDaVulnerabilidade(vulnerabilidade_dicionario['nivel']),
                         StatusDaVuln(vulnerabilidade_dicionario['status_tratamento'])
                     )
-                    vulnerabilidades_carregadas.append(nova_vulnerabilidade)
-
-                novo_ativo = Ativo(
-                    ativo_dicionario['id'],
-                    ativo_dicionario['nome'],
-                    Categorias(ativo_dicionario['categoria']),
-                    Setor(ativo_dicionario['setor']),
-                    ativo_dicionario['responsavel'],
-                    StatusDoAtivo(ativo_dicionario['status'])
-                )
-
-                novo_ativo.vulnerabilidades = vulnerabilidades_carregadas
-
+                    novo_ativo.vulnerabilidades.append(nova_vulnerabilidade)
+                
                 ativos_carregados[novo_ativo.id] = novo_ativo
-
+            
             return ativos_carregados
-
+    
     except FileNotFoundError:
         return {}
-
+    
     except json.JSONDecodeError:
         print('Aviso: ocorreu um erro no arquivo de dados. Criando um novo arquivo...')
         return {}
