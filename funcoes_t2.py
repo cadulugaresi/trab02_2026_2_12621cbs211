@@ -228,7 +228,7 @@ OPCOES_MENU = {
 }
 
 def validar_nome_responsavel(nome):
-        
+
     if not nome:
         raise DadoInvalidoError('Este campo não pode ser vazio.')
     if nome.isnumeric():
