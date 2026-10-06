@@ -1,0 +1,36 @@
+name: Testes e Linting
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+jobs:
+  testes:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Baixar o código
+        uses: actions/checkout@v4
+
+      - name: Configurar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+
+      - name: Instalar dependências
+        run: |
+          pip install pytest flake8 coverage
+
+      - name: Rodar flake8 (linting)
+        run: |
+          flake8 funcoes_t2.py main_code_t2.py --max-line-length 88
+
+      - name: Rodar testes com unittest
+        run: |
+          python -m unittest tests/testes.py
+
+      - name: Rodar testes com pytest
+        run: |
+          pytest tests/test_exemplos.py -v
