@@ -17,8 +17,7 @@ ENV/
 .DS_Store
 Thumbs.db
 
-rascunhos.py
-
-pyproject.toml
 .coverage
-.flake8
+rascunhos.py
+htmlcov/
+.pytest_cache/
