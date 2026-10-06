@@ -17,5 +17,8 @@ ENV/
 .DS_Store
 Thumbs.db
 
-testes.py
 rascunhos.py
+
+pyproject.toml
+.coverage
+.flake8
