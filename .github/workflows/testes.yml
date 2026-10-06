@@ -25,7 +25,7 @@ jobs:
 
       - name: Rodar flake8 (linting)
         run: |
-          flake8 funcoes_t2.py main_code_t2.py --max-line-length 88
+          flake8 funcoes_t2.py main_code_t2.py
 
       - name: Rodar testes com unittest
         run: |
