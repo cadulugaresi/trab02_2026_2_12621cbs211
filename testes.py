@@ -1,8 +1,10 @@
 import os
+import io
 import unittest
 import funcoes_t2
 from funcoes_t2 import *
 from unittest.mock import patch
+from contextlib import redirect_stdout
 
 
 # Exibir detalhes
@@ -235,7 +237,6 @@ class TestValidarNomeResponsavel(unittest.TestCase):
 
 
 # Funções encontrar ativo ------------------------
-
 
 # Por ID
 class TestEncontrarAtivoPorId(unittest.TestCase):
@@ -504,7 +505,6 @@ class TestListarAtivosPorTipo(unittest.TestCase):
 
 
 # Serialização -----------------------------------
-
 
 #Notebook
 class TestSerializacaoNotebook(unittest.TestCase):
@@ -823,6 +823,79 @@ class TestPedirTech(unittest.TestCase):
         with patch("builtins.input", side_effect=["9", "1"]):
             resultado = pedir_tecnologia()
         self.assertEqual(resultado, Tecnologia.TINTA)
+
+
+# Vulnerabilidades -------------------------------
+
+# Mostrar Vulnerabilidades:
+class TestMostrarVulnerabilidade(unittest.TestCase):
+
+    def test_mostra_dados_da_vulnerabilidade(self):
+        v = Vulnerabilidade(
+            "Senha fraca", "Autenticação",
+            NivelDaVulnerabilidade.ALTO,
+            StatusDaVuln.ABERTA
+        )
+        buffer = io.StringIO()
+        with redirect_stdout(buffer):
+            mostrar_vulnerabilidade(v)
+        saida = buffer.getvalue()
+
+        self.assertIn("Senha fraca", saida)
+        self.assertIn("Autenticação", saida)
+        self.assertIn("alto", saida)   # .name.lower()
+        self.assertIn("aberta", saida)
+
+# Nível de Vulnerabilidade
+class TestNivelVulnerabilidade(unittest.TestCase):
+
+    def test_retorna_baixo_digita_1(self):
+        with patch("builtins.input", return_value="1"):
+            resultado = nivel_vulnerabilidade()
+        self.assertEqual(resultado, NivelDaVulnerabilidade.BAIXO)
+
+    def test_retorna_medio_digita_2(self):
+        with patch("builtins.input", return_value="2"):
+            resultado = nivel_vulnerabilidade()
+        self.assertEqual(resultado, NivelDaVulnerabilidade.MEDIO)
+
+    def test_retorna_alto_digita_3(self):
+        with patch("builtins.input", return_value="3"):
+            resultado = nivel_vulnerabilidade()
+        self.assertEqual(resultado, NivelDaVulnerabilidade.ALTO)
+
+    def test_aceita_erro_e_depois_valido(self):
+        with patch("builtins.input", side_effect=["9", "2"]):
+            resultado = nivel_vulnerabilidade()
+        self.assertEqual(resultado, NivelDaVulnerabilidade.MEDIO)
+
+# Status de Vulnerabilidade
+class TestStatusVulnerabilidade(unittest.TestCase):
+
+    def test_retorna_aberta_digita_1(self):
+        with patch("builtins.input", return_value="1"):
+            resultado = status_vulnerabilidade()
+        self.assertEqual(resultado, StatusDaVuln.ABERTA)
+
+    def test_retorna_em_tratamento_digita_2(self):
+        with patch("builtins.input", return_value="2"):
+            resultado = status_vulnerabilidade()
+        self.assertEqual(resultado, StatusDaVuln.EM_TRATAMENTO)
+
+    def test_retorna_corrigida_digita_3(self):
+        with patch("builtins.input", return_value="3"):
+            resultado = status_vulnerabilidade()
+        self.assertEqual(resultado, StatusDaVuln.CORRIGIDA)
+
+    def test_retorna_aceita_digita_4(self):
+        with patch("builtins.input", return_value="4"):
+            resultado = status_vulnerabilidade()
+        self.assertEqual(resultado, StatusDaVuln.ACEITA)
+
+    def test_aceita_erro_e_depois_valido(self):
+        with patch("builtins.input", side_effect=["9", "3"]):
+            resultado = status_vulnerabilidade()
+        self.assertEqual(resultado, StatusDaVuln.CORRIGIDA)
 
 if __name__ == "__main__":
     unittest.main()
