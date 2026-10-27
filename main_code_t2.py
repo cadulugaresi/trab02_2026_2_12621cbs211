@@ -140,7 +140,39 @@ while True:
                         for vulnerabilidade in catalogo.values():
                             mostrar_vulnerabilidade(vulnerabilidade)
 
-                elif opcao_vulnerabilidade in ('3','4','5','6','7','8'):
+                elif opcao_vulnerabilidade == '3':
+                    if not catalogo:
+                        print("Nenhuma vulnerabilidade cadastrada no catálogo.")
+                    elif not ativos:
+                        print("Nenhum ativo cadastrado.")
+                    else:
+                        for vulnerabilidade in catalogo.values():
+                            mostrar_vulnerabilidade(vulnerabilidade)
+
+                        id_vulnerabilidade = pedir_int("Digite o ID da vulnerabilidade: ")
+
+                        if id_vulnerabilidade not in catalogo:
+                            print('Vulnerabilidade não encontrada no catálogo. Tente novamente.')
+
+                        else:
+                            id_ativo = pedir_int("Digite o ID do ativo ao qual deseja vincular essa vulnerabilidade: ")
+                            ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
+
+                            if ativo_encontrado is None:
+                                print("Ativo não encontrado.")
+
+                            else:
+                                status_tratamento = pedir_status_vulnerabilidade("Digite o status: ")
+
+                                try:
+                                    vincular_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, status_tratamento, catalogo)
+                                    salvar_dados(ativos)
+                                    print("Vulnerabilidade vinculada com sucesso!")
+
+                                except DadoInvalidoError as erro:
+                                    print(erro)
+
+                elif opcao_vulnerabilidade in ('4','5','6','7','8'):
                     print('Em construção...')
 
                 elif opcao_vulnerabilidade == '9':

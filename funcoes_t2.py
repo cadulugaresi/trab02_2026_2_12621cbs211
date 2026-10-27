@@ -663,7 +663,6 @@ def cadastrar_vulnerabilidade(catalogo):
     return vulnerabilidade
 
 
-
 def encontrar_ativo_por_nome(nome, ativos):
 
     encontrados = []
@@ -705,6 +704,16 @@ def mostrar_vulnerabilidade(vulnerabilidade, status_tratamento=None):
     if status_tratamento is not None:
         print(f"    Status neste ativo: {status_tratamento.name.lower()}")
 
+def vincular_vulnerabilidade(ativo, id_vulnerabilidade, status_tratamento, catalogo):
+    if id_vulnerabilidade in catalogo:
+
+        if id_vulnerabilidade in ativo.vulnerabilidades:
+            raise DadoInvalidoError("Esta vulnerabilidade já está vinculada a este ativo.")
+
+        ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
+
+    else:
+        raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
 
 def editar_ativo(ativos):
 
