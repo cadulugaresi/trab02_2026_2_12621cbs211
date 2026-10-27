@@ -24,6 +24,7 @@ from inventario.operacoes.ativos import (
 from inventario.operacoes.vulnerabilidades import (
     cadastrar_vulnerabilidade,
     mostrar_vulnerabilidade,
+    mostrar_vulnerabilidades_do_ativo,
     vincular_vulnerabilidade,
 )
 
@@ -199,7 +200,20 @@ while True:
                                 except DadoInvalidoError as erro:
                                     print(erro)
 
-                elif opcao_vulnerabilidade in ('4', '5', '6', '7', '8'):
+                elif opcao_vulnerabilidade == '4':
+                    if not ativos:
+                        print('Nenhum ativo cadastrado.')
+                    else:
+                        id_ativo = pedir_int('Digite o ID do ativo cujas vulnerabilidades deseja listar: ')
+                        ativo_encontrado=encontrar_ativo_por_id(id_ativo, ativos)
+                        if not ativo_encontrado:
+                            print('Ativo não encontrado.')
+                        elif not ativo_encontrado.vulnerabilidades:
+                            print('Este ativo não possui vulnerabilidades vinculadas.')
+                        else:
+                            mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
+
+                elif opcao_vulnerabilidade in ('5', '6', '7', '8'):
                     print('Em construção...')
 
                 elif opcao_vulnerabilidade == '9':
