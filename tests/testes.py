@@ -11,7 +11,6 @@ from inventario.enums import (
     Tecnologia,
 )
 from inventario.entradas import (
-    nivel_vulnerabilidade,
     pedir_cor,
     pedir_float,
     pedir_info,
@@ -493,17 +492,6 @@ class TestMostrarVulnerabilidade(unittest.TestCase):
         self.assertIn("Senha fraca", saida)
         self.assertIn("alto", saida)
         self.assertIn("aberta", saida)
-
-
-class TestNivelVulnerabilidade(unittest.TestCase):
-
-    def test_retorna_baixo_digita_1(self):
-        with patch("builtins.input", return_value="1"):
-            self.assertEqual(nivel_vulnerabilidade(), NivelDaVulnerabilidade.BAIXO)
-
-    def test_aceita_erro_e_depois_valido(self):
-        with patch("builtins.input", side_effect=["9", "2"]):
-            self.assertEqual(nivel_vulnerabilidade(), NivelDaVulnerabilidade.MEDIO)
 
 
 class TestStatusVulnerabilidade(unittest.TestCase):

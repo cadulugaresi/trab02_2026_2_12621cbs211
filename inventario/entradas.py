@@ -1,4 +1,3 @@
-from inventario.enums import NivelDaVulnerabilidade
 from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.ativo import OPCOES_MENU
 from inventario.validacoes import (
@@ -218,24 +217,3 @@ def pedir_tecnologia():
             print(erro)
 
     return tecnologia
-
-
-def nivel_vulnerabilidade():
-
-    nivel = None
-    while nivel is None:
-        print("""BAIXO - 1 \n MEDIO - 2 \n ALTO - 3""")
-
-        nivel_digitado = input("Digite o nível da vulnerabilidade: ").strip()
-
-        if nivel_digitado == "1":
-            nivel = NivelDaVulnerabilidade.BAIXO
-        elif nivel_digitado == "2":
-            nivel = NivelDaVulnerabilidade.MEDIO
-        elif nivel_digitado == "3":
-            nivel = NivelDaVulnerabilidade.ALTO
-        else:
-            print("Nível inválido. Tente novamente.")
-            continue
-
-    return nivel
