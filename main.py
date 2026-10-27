@@ -27,6 +27,7 @@ from inventario.operacoes.vulnerabilidades import (
     mostrar_vulnerabilidades_do_ativo,
     atualizar_status_vulnerabilidade,
     vincular_vulnerabilidade,
+    desvincular_vulnerabilidade,
 )
 
 ativos = carregar_dados()
@@ -240,7 +241,26 @@ while True:
                             except DadoInvalidoError as erro:
                                 print(erro)
 
-                elif opcao_vulnerabilidade in ('6', '7', '8'):
+                elif opcao_vulnerabilidade =='6':
+                    if not ativos:
+                        print("Nenhum ativo cadastrado.")
+                    else:
+                        for ativo in ativos.values():
+                            print(ativo.exibir_detalhes())
+
+                        id_ativo = pedir_int("Digite o ID do ativo ao qual deseja desvincular uma vulnerabilidade: ")
+                        ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
+                        mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
+                        id_vulnerabilidade = pedir_int("Digite o ID da vulnerabilidade que deseja desvincular do ativo: ")
+
+                        if id_vulnerabilidade not in catalogo:
+                            print('Vulnerabilidade não encontrada no catálogo. Tente novamente.')
+                        else:
+                            desvincular_vulnerabilidade(ativo_encontrado, id_vulnerabilidade)
+                            salvar_dados(ativos)
+                            print(f'''Vulnerabilidade desvinculada com sucesso!''')
+
+                elif opcao_vulnerabilidade in ('7', '8'):
                     print('Em construção...')
 
                 elif opcao_vulnerabilidade == '9':

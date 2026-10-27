@@ -49,6 +49,15 @@ def vincular_vulnerabilidade(ativo, id_vulnerabilidade, status_tratamento, catal
     else:
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
 
+def desvincular_vulnerabilidade(ativo, id_vulnerabilidade):
+
+    if id_vulnerabilidade not in ativo.vulnerabilidades:
+        raise DadoInvalidoError("Esta vulnerabilidade não está vinculada a este ativo.")
+
+    else:
+        del ativo.vulnerabilidades[id_vulnerabilidade]
+
+
 def mostrar_vulnerabilidades_do_ativo(ativo, catalogo):
     for id_vulnerabilidade, status_tratamento in ativo.vulnerabilidades.items():
         vulnerabilidade = catalogo[id_vulnerabilidade]
