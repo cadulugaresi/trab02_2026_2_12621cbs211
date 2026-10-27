@@ -1,6 +1,7 @@
 from funcoes_t2 import *
 
 ativos = carregar_dados()
+catalogo = carregar_catalogo()
 
 while True:
 
@@ -112,147 +113,42 @@ while True:
         elif opcao == "4":
 
             while True:
-                print("Menu de vulnerabilidades:")
-                print("1 - Listar vulnerabilidades")
-                print("2 - Adicionar vulnerabilidade")
-                print("3 - Remover vulnerabilidade")
-                print("4 - Voltar ao menu principal")
+                print('''MENU DE VULNERABILIDADES
+
+                        1 - Cadastrar vulnerabilidade
+                        2 - Listar catálogo de vulnerabilidades
+                        3 - Vincular vulnerabilidade a um ativo
+                        4 - Listar vulnerabilidades de um ativo
+                        5 - Atualizar status da vulnerabilidade em um ativo
+                        6 - Desvincular vulnerabilidade de um ativo
+                        7 - Excluir vulnerabilidade do catálogo
+                        8 - Editar vulnerabilidade no catálogo
+                        9 - Voltar ao menu principal''')
 
                 opcao_vulnerabilidade = input("Escolha uma opção: ").strip()
 
-                if opcao_vulnerabilidade == "1":
-                    print("Listando vulnerabilidades...")
+                if opcao_vulnerabilidade == '1':
+                    nova_vulnerabilidade = cadastrar_vulnerabilidade(catalogo)
+                    catalogo[nova_vulnerabilidade.id_vulnerabilidade] = nova_vulnerabilidade
+                    salvar_catalogo(catalogo)
 
-                    todas_um = input(
-                        "Deseja listar todas as vulnerabilidades ou apenas as de um ativo específico? (todas/um): "
-                    ).strip()
-
-                    if todas_um == "todas":
-
-                        if ativos:
-                            print("Listando todas as vulnerabilidades...")
-                            encontrou_alguma = False
-
-                            for ativo in ativos.values():
-                                if ativo.vulnerabilidades:
-                                    encontrou_alguma = True
-                                    print(f"Ativo: {ativo.nome}")
-
-                                    for vulnerabilidade in ativo.vulnerabilidades:
-                                        mostrar_vulnerabilidade(vulnerabilidade)
-
-                            if not encontrou_alguma:
-                                print("Nenhuma vulnerabilidade cadastrada nos ativos.")
-
-                        else:
-                            print("Nenhum ativo cadastrado.")
-
-                    elif todas_um == "um":
-
-                        id_ativo_vulneravel = pedir_int(
-                            "Digite o ID do ativo que deseja listar as vulnerabilidades: "
-                        )
-                        ativo_encontrado = encontrar_ativo_por_id(id_ativo_vulneravel, ativos)
-
-                        if ativo_encontrado:
-
-                            if not ativo_encontrado.vulnerabilidades:
-                                print("Este ativo não possui vulnerabilidades cadastradas.")
-
-                            else:
-                                print("Vulnerabilidades cadastradas:")
-                                for vulnerabilidade in ativo_encontrado.vulnerabilidades:
-                                    mostrar_vulnerabilidade(vulnerabilidade)
-
-                        else:
-                            print("Ativo não encontrado.")
-
+                elif opcao_vulnerabilidade == '2':
+                    if not catalogo:
+                        print("Nenhuma vulnerabilidade cadastrada no catálogo.")
                     else:
-                        print("Opção inválida. Tente novamente.")
+                        print("Listando catálogo de vulnerabilidades...")
+                        for vulnerabilidade in catalogo.values():
+                            mostrar_vulnerabilidade(vulnerabilidade)
 
-                elif opcao_vulnerabilidade == "2":
-                    print("Adicionando vulnerabilidade...")
+                elif opcao_vulnerabilidade in ('3','4','5','6','7','8'):
+                    print('Em construção...')
 
-                    id_ativo_add_vuln = pedir_int(
-                        "Digite o ID do ativo que deseja adicionar a vulnerabilidade: "
-                    )
-                    ativo_encontrado = encontrar_ativo_por_id(id_ativo_add_vuln, ativos)
-
-                    if ativo_encontrado:
-                        nome_da_vulnerabilidade = input(
-                            "Digite a vulnerabilidade que deseja adicionar: "
-                        ).strip()
-
-                        if not nome_da_vulnerabilidade:
-                            print("Vulnerabilidade não pode ser vazia. Tente novamente.")
-
-                        else:
-
-                            nivel = nivel_vulnerabilidade()
-                            tipo = pedir_info("Digite o tipo da vulnerabilidade: ")
-                            status_tratamento = status_vulnerabilidade()
-                            ativo_encontrado.vulnerabilidades.append(
-                                Vulnerabilidade(
-                                    nome_da_vulnerabilidade,
-                                    tipo,
-                                    nivel,
-                                    status_tratamento,
-                                )
-                            )
-
-                            salvar_dados(ativos)
-
-                            print(f"""Informações adicionadas com sucesso!
-                                Vulnerabilidade: "{nome_da_vulnerabilidade}"
-                                Tipo: "{tipo}"
-                                Nível: "{nivel.name.lower()}"
-                                Status: "{status_tratamento.name.lower()}" """)
-
-                    else:
-                        print("Ativo não encontrado.")
-
-                elif opcao_vulnerabilidade == "3":
-                    print("Removendo vulnerabilidade...")
-
-                    id_ativo_del_vuln = pedir_int(
-                        "Digite o ID do ativo que deseja remover a vulnerabilidade: "
-                    )
-                    ativo_encontrado = encontrar_ativo_por_id(id_ativo_del_vuln, ativos)
-
-                    if ativo_encontrado:
-
-                        if not ativo_encontrado.vulnerabilidades:
-                            print("Este ativo não possui vulnerabilidades cadastradas.")
-
-                        else:
-                            print("Vulnerabilidades cadastradas:")
-                            for vulnerabilidade in ativo_encontrado.vulnerabilidades:
-                                mostrar_vulnerabilidade(vulnerabilidade)
-
-                            nome_a_remover = input(
-                                "Digite o nome da vulnerabilidade que deseja remover: "
-                            ).strip()
-
-                            vulnerabilidade_encontrada = None
-
-                            for vulnerabilidade in ativo_encontrado.vulnerabilidades:
-                                if vulnerabilidade.nome_vulnerabilidade == nome_a_remover:
-                                    vulnerabilidade_encontrada = vulnerabilidade
-
-                            if vulnerabilidade_encontrada:
-                                ativo_encontrado.vulnerabilidades.remove(vulnerabilidade_encontrada)
-                                salvar_dados(ativos)
-                                print(
-                                    f'Vulnerabilidade "{nome_a_remover}" removida do ativo {ativo_encontrado.nome} com sucesso!'
-                                )
-                            else:
-                                print("Vulnerabilidade não encontrada. Tente novamente.")
-                    else:
-                        print("Ativo não encontrado.")
-
-                elif opcao_vulnerabilidade == "4":
+                elif opcao_vulnerabilidade == '9':
                     print("Voltando ao menu principal...")
                     break
+                
+                else:
+                    print('Opção inválida. Tente novamente.')
 
         elif opcao == "5":
             editar_ativo(ativos)

@@ -411,7 +411,7 @@ def validar_setor(setor_digitado):
 def pedir_float(mensagem):
     while True:
         try:
-            numero = input(mensagem).strip()
+            numero = input(mensagem).strip().replace(",", ".")
 
             if not numero:
                 raise DadoInvalidoError("Este campo não pode ser vazio. Tente novamente.")
@@ -451,6 +451,28 @@ def pedir_int(mensagem):
 
         except DadoInvalidoError as erro:
             print(erro)
+
+
+def pedir_cvss(mensagem):
+
+    while True:
+        cvss = pedir_float(mensagem)
+
+        if cvss > 10:
+            print("O CVSS não pode ser maior que 10.")
+        else:
+            return round(cvss, 1)
+
+
+def proximo_id(dicionario):
+
+    maior_id = 0
+
+    for id_existente in dicionario:
+        if id_existente > maior_id:
+            maior_id = id_existente
+
+    return maior_id + 1
 
 
 def pedir_id_disponivel(ativos):
@@ -629,6 +651,19 @@ def encontrar_ativo_por_id(ID, ativos):
     return ativos.get(ID)
 
 
+def cadastrar_vulnerabilidade(catalogo):
+    nome = pedir_info("Digite o nome da vulnerabilidade: ")
+    cvss = pedir_cvss("Digite a nota CVSS da vulnerabilidade (0.1 a 10): ")
+    id_vulnerabilidade = proximo_id(catalogo)
+
+    vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome, cvss)
+
+    mostrar_vulnerabilidade(vulnerabilidade)
+
+    return vulnerabilidade
+
+
+
 def encontrar_ativo_por_nome(nome, ativos):
 
     encontrados = []
@@ -659,14 +694,16 @@ def listar_ativos_por_tipo(classe, ativos):
     return encontrados
 
 
-def mostrar_vulnerabilidade(vulnerabilidade):
+def mostrar_vulnerabilidade(vulnerabilidade, status_tratamento=None):
 
     print(f"""
+    ID: {vulnerabilidade.id_vulnerabilidade}
     Vulnerabilidade: {vulnerabilidade.nome_vulnerabilidade}
-    Tipo: {vulnerabilidade.tipo}
-    Nível: {vulnerabilidade.nivel.name.lower()}
-    Status: {vulnerabilidade.status_tratamento.name.lower()}
-    """)
+    CVSS: {vulnerabilidade.cvss}
+    Nível: {vulnerabilidade.nivel().name.lower()}""")
+
+    if status_tratamento is not None:
+        print(f"    Status neste ativo: {status_tratamento.name.lower()}")
 
 
 def editar_ativo(ativos):

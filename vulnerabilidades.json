@@ -1,0 +1,12 @@
+[
+    {
+        "id_vulnerabilidade": 1,
+        "nome_vulnerabilidade": "senha fraca",
+        "cvss": 1.1
+    },
+    {
+        "id_vulnerabilidade": 2,
+        "nome_vulnerabilidade": "porta aberta",
+        "cvss": 0.3
+    }
+]
