@@ -250,15 +250,23 @@ while True:
 
                         id_ativo = pedir_int("Digite o ID do ativo ao qual deseja desvincular uma vulnerabilidade: ")
                         ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
-                        mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
-                        id_vulnerabilidade = pedir_int("Digite o ID da vulnerabilidade que deseja desvincular do ativo: ")
 
-                        if id_vulnerabilidade not in catalogo:
-                            print('Vulnerabilidade não encontrada no catálogo. Tente novamente.')
+                        if not ativo_encontrado:
+                            print('Ativo não encontrado.')
+
+                        elif not ativo_encontrado.vulnerabilidades:
+                            print('Este ativo não possui vulnerabilidades vinculadas.')\
+                            
                         else:
-                            desvincular_vulnerabilidade(ativo_encontrado, id_vulnerabilidade)
-                            salvar_dados(ativos)
-                            print(f'''Vulnerabilidade desvinculada com sucesso!''')
+                            mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
+                            id_vulnerabilidade = pedir_int("Digite o ID da vulnerabilidade que deseja desvincular do ativo: ")
+
+                            try:
+                                desvincular_vulnerabilidade(ativo_encontrado, id_vulnerabilidade)
+                                salvar_dados(ativos)
+                                print('Vulnerabilidade desvinculada com sucesso!')
+                            except DadoInvalidoError as erro:
+                                print(erro)
 
                 elif opcao_vulnerabilidade in ('7', '8'):
                     print('Em construção...')

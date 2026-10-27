@@ -65,6 +65,6 @@ def mostrar_vulnerabilidades_do_ativo(ativo, catalogo):
 
 def atualizar_status_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, novo_status):
     if id_vulnerabilidade not in ativo_encontrado.vulnerabilidades:
-        print('Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele.')
+        raise DadoInvalidoError('Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele.')
 
     ativo_encontrado.vulnerabilidades[id_vulnerabilidade] = novo_status
