@@ -25,6 +25,7 @@ from inventario.operacoes.vulnerabilidades import (
     cadastrar_vulnerabilidade,
     mostrar_vulnerabilidade,
     mostrar_vulnerabilidades_do_ativo,
+    atualizar_status_vulnerabilidade,
     vincular_vulnerabilidade,
 )
 
@@ -195,7 +196,8 @@ while True:
                                 try:
                                     vincular_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, status_tratamento, catalogo)
                                     salvar_dados(ativos)
-                                    print("Vulnerabilidade vinculada com sucesso!")
+                                    print(f'''Vulnerabilidade vinculada com sucesso! \n {ativo_encontrado.exibir_detalhes()}''')
+                                    mostrar_vulnerabilidade(catalogo[id_vulnerabilidade], status_tratamento)
 
                                 except DadoInvalidoError as erro:
                                     print(erro)
@@ -213,7 +215,32 @@ while True:
                         else:
                             mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
 
-                elif opcao_vulnerabilidade in ('5', '6', '7', '8'):
+                elif opcao_vulnerabilidade == '5':
+                    if not ativos:
+                        print('Nenhum ativo cadastrado.')
+
+                    else:
+                        id_ativo = pedir_int('Digite o ID do ativo cujo status da vulnerabilidade deseja editar: ')
+                        ativo_encontrado=encontrar_ativo_por_id(id_ativo, ativos)
+
+                        if not ativo_encontrado:
+                            print('Ativo não encontrado.')
+
+                        elif not ativo_encontrado.vulnerabilidades:
+                            print('Este ativo não possui vulnerabilidades vinculadas.')
+
+                        else:
+                            try:
+                                mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
+                                id_vulnerabilidade = pedir_int('Digite o ID da vulnerabilidade cujo status deseja editar: ')
+                                novo_status = pedir_status_vulnerabilidade('Novo status: ')
+                                atualizar_status_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, novo_status)
+                                salvar_dados(ativos)
+                                print(f'''Status atualizado com sucesso! \n Novo status: {novo_status.name.lower()}''')
+                            except DadoInvalidoError as erro:
+                                print(erro)
+
+                elif opcao_vulnerabilidade in ('6', '7', '8'):
                     print('Em construção...')
 
                 elif opcao_vulnerabilidade == '9':

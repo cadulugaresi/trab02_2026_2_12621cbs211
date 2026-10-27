@@ -53,3 +53,9 @@ def mostrar_vulnerabilidades_do_ativo(ativo, catalogo):
     for id_vulnerabilidade, status_tratamento in ativo.vulnerabilidades.items():
         vulnerabilidade = catalogo[id_vulnerabilidade]
         mostrar_vulnerabilidade(vulnerabilidade, status_tratamento)
+
+def atualizar_status_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, novo_status):
+    if id_vulnerabilidade not in ativo_encontrado.vulnerabilidades:
+        print('Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele.')
+
+    ativo_encontrado.vulnerabilidades[id_vulnerabilidade] = novo_status
