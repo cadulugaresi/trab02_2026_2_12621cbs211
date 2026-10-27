@@ -1,8 +1,52 @@
 import os
 import io
 import unittest
-import funcoes_t2
-from funcoes_t2 import *
+import inventario.persistencia
+from inventario.enums import (
+    Cor,
+    NivelDaVulnerabilidade,
+    Setor,
+    StatusDaVuln,
+    StatusDoAtivo,
+    Tecnologia,
+)
+from inventario.entradas import (
+    nivel_vulnerabilidade,
+    pedir_cor,
+    pedir_float,
+    pedir_info,
+    pedir_int,
+    pedir_setor,
+    pedir_status,
+    pedir_tecnologia,
+    pedir_tipo,
+)
+from inventario.excecoes import DadoInvalidoError
+from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
+from inventario.modelos.vulnerabilidade import Vulnerabilidade
+from inventario.persistencia import carregar_dados, salvar_dados
+from inventario.operacoes.ativos import (
+    cadastrar_ativo,
+    cadastro_impressora,
+    cadastro_notebook,
+    cadastro_roteador,
+    cadastro_servidor,
+    confirmar_exclusao,
+    encontrar_ativo_por_id,
+    encontrar_ativo_por_nome,
+    encontrar_ativos_por_status,
+    listar_ativos_por_tipo,
+    pedir_id_disponivel,
+)
+from inventario.operacoes.vulnerabilidades import mostrar_vulnerabilidade
+from inventario.validacoes import (
+    validar_cor,
+    validar_nome_responsavel,
+    validar_setor,
+    validar_status,
+    validar_tecnologia,
+    validar_tipo,
+)
 from unittest.mock import patch
 from contextlib import redirect_stdout
 
@@ -302,11 +346,11 @@ class TestPersistencia(unittest.TestCase):
 
     def setUp(self):
         self.arquivo_teste = "teste_ativos_tmp.json"
-        self.arquivo_original = funcoes_t2.ARQUIVO_DADOS
-        funcoes_t2.ARQUIVO_DADOS = self.arquivo_teste
+        self.arquivo_original = inventario.persistencia.ARQUIVO_DADOS
+        inventario.persistencia.ARQUIVO_DADOS = self.arquivo_teste
 
     def tearDown(self):
-        funcoes_t2.ARQUIVO_DADOS = self.arquivo_original
+        inventario.persistencia.ARQUIVO_DADOS = self.arquivo_original
         if os.path.exists(self.arquivo_teste):
             os.remove(self.arquivo_teste)
 

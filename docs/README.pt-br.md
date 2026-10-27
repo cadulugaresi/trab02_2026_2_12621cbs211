@@ -51,18 +51,36 @@ Modelo baseado em álgebra linear que estima o risco de cada ativo a partir de s
 
 ## ✨ Estrutura do projeto
 .
-├── main_code_t2.py
-├── funcoes_t2.py
-├── testes.py
+├── main.py
+├── inventario/
+│ ├── enums.py
+│ ├── excecoes.py
+│ ├── validacoes.py
+│ ├── entradas.py
+│ ├── persistencia.py
+│ ├── modelos/
+│ │ ├── ativo.py
+│ │ └── vulnerabilidade.py
+│ └── operacoes/
+│   ├── ativos.py
+│   └── vulnerabilidades.py
+├── tests/
+│ ├── testes.py
+│ └── test_exemplos.py
 ├── docs/
+│ ├── README.pt-br.md
 │ ├── requisitos.md
 │ ├── validacoes.md
 │ ├── criterios_aceitacao.md
 │ ├── especificacao.md
-│ └── relatorio_testes.md
+│ ├── relatorio_testes.md
+│ └── entrega_final.md
+├── vulnerabilidades.json
+├── .github/workflows/testes.yml
+├── .flake8
+├── pyproject.toml
 ├── .gitignore
-├── README.md
-└── README.pt-br.md
+└── README.md
 
 > O arquivo `ativos.json` (dados salvos) é gerado automaticamente na primeira execução e não é versionado.
 
@@ -71,7 +89,7 @@ Modelo baseado em álgebra linear que estima o risco de cada ativo a partir de s
 Pré-requisito: Python 3.8 ou superior instalado.
 git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
 cd it-asset-vulnerability-manager
-python main_code_t2.py
+python main.py
 
 O programa abre um menu interativo no terminal. Basta seguir as opções numeradas para cadastrar ativos, gerenciar vulnerabilidades e salvar os dados.
 

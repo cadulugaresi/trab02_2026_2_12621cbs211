@@ -1,0 +1,2 @@
+class DadoInvalidoError(Exception):
+    pass
