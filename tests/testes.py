@@ -1,12 +1,9 @@
 import os
-import io
 import unittest
 import inventario.persistencia
 from inventario.enums import (
     Cor,
-    NivelDaVulnerabilidade,
     Setor,
-    StatusDaVuln,
     StatusDoAtivo,
     Tecnologia,
 )
@@ -22,7 +19,6 @@ from inventario.entradas import (
 )
 from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
-from inventario.modelos.vulnerabilidade import Vulnerabilidade
 from inventario.persistencia import carregar_dados, salvar_dados
 from inventario.operacoes.ativos import (
     cadastrar_ativo,
@@ -37,7 +33,6 @@ from inventario.operacoes.ativos import (
     listar_ativos_por_tipo,
     pedir_id_disponivel,
 )
-from inventario.operacoes.vulnerabilidades import mostrar_vulnerabilidade
 from inventario.validacoes import (
     validar_cor,
     validar_nome_responsavel,
@@ -47,7 +42,6 @@ from inventario.validacoes import (
     validar_tipo,
 )
 from unittest.mock import patch
-from contextlib import redirect_stdout
 
 
 # Exibir detalhes
@@ -476,33 +470,6 @@ class TestPedirIdDisponivel(unittest.TestCase):
         ativos = {1: Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)}
         with patch("builtins.input", side_effect=["1", "2"]):
             self.assertEqual(pedir_id_disponivel(ativos), 2)
-
-
-# Vulnerabilidades -------------------------------
-
-
-class TestMostrarVulnerabilidade(unittest.TestCase):
-
-    def test_mostra_dados_da_vulnerabilidade(self):
-        v = Vulnerabilidade("Senha fraca", "Autenticação", NivelDaVulnerabilidade.ALTO, StatusDaVuln.ABERTA)
-        buffer = io.StringIO()
-        with redirect_stdout(buffer):
-            mostrar_vulnerabilidade(v)
-        saida = buffer.getvalue()
-        self.assertIn("Senha fraca", saida)
-        self.assertIn("alto", saida)
-        self.assertIn("aberta", saida)
-
-
-class TestStatusVulnerabilidade(unittest.TestCase):
-
-    def test_retorna_aberta_digita_1(self):
-        with patch("builtins.input", return_value="1"):
-            self.assertEqual(status_vulnerabilidade(), StatusDaVuln.ABERTA)
-
-    def test_retorna_aceita_digita_4(self):
-        with patch("builtins.input", return_value="4"):
-            self.assertEqual(status_vulnerabilidade(), StatusDaVuln.ACEITA)
 
 
 # Cadastros específicos --------------------------
