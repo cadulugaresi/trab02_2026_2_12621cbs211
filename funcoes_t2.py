@@ -2,22 +2,39 @@ import json
 from enum import Enum
 
 ARQUIVO_DADOS = "ativos.json"
+ARQUIVO_CATALOGO = "vulnerabilidades.json"
 
 
 class Vulnerabilidade:
-    def __init__(self, nome_vulnerabilidade, tipo, nivel, status_tratamento):
+    def __init__(self, id_vulnerabilidade, nome_vulnerabilidade, cvss):
+        self.id_vulnerabilidade = id_vulnerabilidade
         self.nome_vulnerabilidade = nome_vulnerabilidade
-        self.tipo = tipo
-        self.nivel = nivel
-        self.status_tratamento = status_tratamento
+        self.cvss = cvss
+
+    def nivel(self):
+        if self.cvss > 8.9:
+            return NivelDaVulnerabilidade.CRITICO
+        elif self.cvss > 6.9:
+            return NivelDaVulnerabilidade.ALTO
+        elif self.cvss > 3.9:
+            return NivelDaVulnerabilidade.MEDIO
+        else:
+            return NivelDaVulnerabilidade.BAIXO
 
     def para_dicionario(self):
         return {
-            "nome da vulnerabilidade": self.nome_vulnerabilidade,
-            "tipo": self.tipo,
-            "nivel": self.nivel.value,
-            "status_tratamento": self.status_tratamento.value,
+            "id_vulnerabilidade": self.id_vulnerabilidade,
+            "nome_vulnerabilidade": self.nome_vulnerabilidade,
+            "cvss": self.cvss,
         }
+
+    @classmethod
+    def de_dicionario(cls, dicionario_vulnerabilidade):
+        return cls(
+            dicionario_vulnerabilidade["id_vulnerabilidade"],
+            dicionario_vulnerabilidade["nome_vulnerabilidade"],
+            dicionario_vulnerabilidade["cvss"],
+        )
 
 
 class Ativo:
@@ -28,7 +45,7 @@ class Ativo:
         self.setor = setor
         self.responsavel = responsavel
         self.status = status
-        self.vulnerabilidades = []
+        self.vulnerabilidades = {}
 
     def exibir_detalhes(self):
         return f"""
@@ -41,6 +58,13 @@ class Ativo:
             """
 
     def para_dicionario(self):
+        lista_de_vulns = []
+
+        for id_vulnerabilidade, status in self.vulnerabilidades.items():
+            lista_de_vulns.append(
+                {"id_vulnerabilidade": id_vulnerabilidade, "status_tratamento": status.value}
+            )
+
         return {
             "id": self.id,
             "nome": self.nome,
@@ -48,9 +72,7 @@ class Ativo:
             "setor": self.setor.value,
             "responsavel": self.responsavel,
             "status": self.status.value,
-            "vulnerabilidades": [
-                vulnerabilidade.para_dicionario() for vulnerabilidade in self.vulnerabilidades
-            ],
+            "vulnerabilidades": lista_de_vulns,
         }
 
 
@@ -200,13 +222,7 @@ class NivelDaVulnerabilidade(Enum):
     BAIXO = 1
     MEDIO = 2
     ALTO = 3
-
-
-class StatusDaVuln(Enum):
-    ABERTA = 1
-    EM_TRATAMENTO = 2
-    CORRIGIDA = 3
-    ACEITA = 4
+    CRITICO = 4
 
 
 class Setor(Enum):
@@ -225,6 +241,13 @@ class Cor(Enum):
 class Tecnologia(Enum):
     TINTA = 1
     LASER = 2
+
+
+class StatusDaVuln(Enum):
+    ABERTA = 1
+    EM_TRATAMENTO = 2
+    CORRIGIDA = 3
+    ACEITA = 4
 
 
 MAPA_DE_TIPOS = {
@@ -295,6 +318,45 @@ def validar_status(status_digitado):
     elif status_digitado == "3":
         return StatusDoAtivo.EM_MANUTENCAO
 
+    else:
+        raise DadoInvalidoError("Status inválido. Tente novamente.")
+
+
+def pedir_status_vulnerabilidade(mensagem):
+
+    status_tratamento = None
+
+    while status_tratamento is None:
+
+        try:
+            print("""
+            Status da vulnerabilidade:
+
+            ABERTA - 1
+            EM TRATAMENTO - 2
+            CORRIGIDA - 3
+            ACEITA - 4
+            """)
+
+            status_digitado = input(mensagem).strip()
+            status_tratamento = validar_status_vulnerabilidade(status_digitado)
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return status_tratamento
+
+
+def validar_status_vulnerabilidade(status_digitado):
+
+    if status_digitado == "1":
+        return StatusDaVuln.ABERTA
+    elif status_digitado == "2":
+        return StatusDaVuln.EM_TRATAMENTO
+    elif status_digitado == "3":
+        return StatusDaVuln.CORRIGIDA
+    elif status_digitado == "4":
+        return StatusDaVuln.ACEITA
     else:
         raise DadoInvalidoError("Status inválido. Tente novamente.")
 
@@ -806,28 +868,41 @@ def nivel_vulnerabilidade():
     return nivel
 
 
-def status_vulnerabilidade():
+def salvar_catalogo(catalogo):
 
-    status_tratamento = None
-    while status_tratamento is None:
-        print("""ABERTA - 1 \n EM TRATAMENTO - 2 \n CORRIGIDA - 3 \n ACEITA - 4""")
+    catalogo_para_salvar = []
 
-        status_digitado = input("Digite o status atual da vulnerabilidade: ").strip()
+    for vulnerabilidade in catalogo.values():
+        catalogo_para_salvar.append(vulnerabilidade.para_dicionario())
 
-        if status_digitado == "1":
-            status_tratamento = StatusDaVuln.ABERTA
-        elif status_digitado == "2":
-            status_tratamento = StatusDaVuln.EM_TRATAMENTO
-        elif status_digitado == "3":
-            status_tratamento = StatusDaVuln.CORRIGIDA
-        elif status_digitado == "4":
-            status_tratamento = StatusDaVuln.ACEITA
+    try:
+        with open(ARQUIVO_CATALOGO, "w", encoding="utf-8") as arquivo:
+            json.dump(catalogo_para_salvar, arquivo, indent=4, ensure_ascii=False)
+    except PermissionError:
+        print("Erro de Persistência: Sem permissão para gravar no arquivo no computador.")
+    except IOError:
+        print("Erro de Persistência ao salvar os dados no arquivo.")
 
-        else:
-            print("Status inválido. Tente novamente.")
-            continue
 
-    return status_tratamento
+def carregar_catalogo():
+
+    try:
+        with open(ARQUIVO_CATALOGO, "r", encoding="utf-8") as arquivo:
+            dados_brutos = json.load(arquivo)
+            catalogo = {}
+
+            for dicionario_vulnerabilidade in dados_brutos:
+                vulnerabilidade = Vulnerabilidade.de_dicionario(dicionario_vulnerabilidade)
+                catalogo[vulnerabilidade.id_vulnerabilidade] = vulnerabilidade
+
+            return catalogo
+
+    except FileNotFoundError:
+        return {}
+
+    except json.JSONDecodeError:
+        print("Aviso: ocorreu um erro no arquivo de dados. Criando um novo arquivo...")
+        return {}
 
 
 def salvar_dados(ativos):
@@ -858,14 +933,10 @@ def carregar_dados():
                 classe = MAPA_DE_TIPOS[tipo_string]
                 novo_ativo = classe.de_dicionario(ativo_dicionario)
 
-                for vulnerabilidade_dicionario in ativo_dicionario["vulnerabilidades"]:
-                    nova_vulnerabilidade = Vulnerabilidade(
-                        vulnerabilidade_dicionario["nome da vulnerabilidade"],
-                        vulnerabilidade_dicionario["tipo"],
-                        NivelDaVulnerabilidade(vulnerabilidade_dicionario["nivel"]),
-                        StatusDaVuln(vulnerabilidade_dicionario["status_tratamento"]),
-                    )
-                    novo_ativo.vulnerabilidades.append(nova_vulnerabilidade)
+                for vinculo in ativo_dicionario["vulnerabilidades"]:
+                    id_vulnerabilidade = vinculo["id_vulnerabilidade"]
+                    status_tratamento = StatusDaVuln(vinculo["status_tratamento"])
+                    novo_ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
 
                 ativos_carregados[novo_ativo.id] = novo_ativo
 
