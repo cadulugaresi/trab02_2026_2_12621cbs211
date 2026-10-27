@@ -1,4 +1,31 @@
-from funcoes_t2 import *
+from inventario.excecoes import DadoInvalidoError
+from inventario.entradas import (
+    pedir_info,
+    pedir_int,
+    pedir_status,
+    pedir_status_vulnerabilidade,
+    pedir_tipo,
+)
+from inventario.persistencia import (
+    carregar_catalogo,
+    carregar_dados,
+    salvar_catalogo,
+    salvar_dados,
+)
+from inventario.operacoes.ativos import (
+    cadastrar_ativo,
+    editar_ativo,
+    encontrar_ativo_por_id,
+    encontrar_ativo_por_nome,
+    encontrar_ativos_por_status,
+    excluir_ativo,
+    listar_ativos_por_tipo,
+)
+from inventario.operacoes.vulnerabilidades import (
+    cadastrar_vulnerabilidade,
+    mostrar_vulnerabilidade,
+    vincular_vulnerabilidade,
+)
 
 ativos = carregar_dados()
 catalogo = carregar_catalogo()
@@ -172,13 +199,13 @@ while True:
                                 except DadoInvalidoError as erro:
                                     print(erro)
 
-                elif opcao_vulnerabilidade in ('4','5','6','7','8'):
+                elif opcao_vulnerabilidade in ('4', '5', '6', '7', '8'):
                     print('Em construção...')
 
                 elif opcao_vulnerabilidade == '9':
                     print("Voltando ao menu principal...")
                     break
-                
+
                 else:
                     print('Opção inválida. Tente novamente.')
 

@@ -25,7 +25,7 @@ jobs:
 
       - name: Rodar flake8 (linting)
         run: |
-          flake8 funcoes_t2.py main_code_t2.py
+          flake8 main.py inventario
 
       - name: Rodar testes com unittest
         run: |
