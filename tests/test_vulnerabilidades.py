@@ -10,8 +10,12 @@ from inventario.enums import NivelDaVulnerabilidade, Setor, StatusDaVuln, Status
 from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.ativo import Notebook, Servidor
 from inventario.modelos.vulnerabilidade import Vulnerabilidade
+from inventario.operacoes.ativos import encontrar_ativo, escolher_ativo_com_vulnerabilidades
 from inventario.operacoes.vulnerabilidades import (
+    atualizar_status_vulnerabilidade,
     cadastrar_vulnerabilidade,
+    desvincular_vulnerabilidade,
+    encontrar_vulnerabilidade,
     mostrar_vulnerabilidade,
     mostrar_vulnerabilidades_do_ativo,
     proximo_id,
@@ -261,6 +265,128 @@ class TestMostrarVulnerabilidadesDoAtivo(unittest.TestCase):
         notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA  # o notebook só tem a 1
         saida = capturar_saida(mostrar_vulnerabilidades_do_ativo, notebook, catalogo)
         self.assertNotIn("TLS 1.0 ativo", saida)
+
+
+class TestAtualizarStatusVulnerabilidade(unittest.TestCase):
+
+    def setUp(self):
+        self.notebook = criar_notebook()
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+
+    def test_atualiza_status_vinculado(self):
+        atualizar_status_vulnerabilidade(self.notebook, 3, StatusDaVuln.CORRIGIDA)
+        self.assertEqual(self.notebook.vulnerabilidades[3], StatusDaVuln.CORRIGIDA)
+
+    def test_nao_cria_vinculo_novo(self):
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_status_vulnerabilidade(self.notebook, 1, StatusDaVuln.CORRIGIDA)
+        self.assertNotIn(1, self.notebook.vulnerabilidades)  # a 1 não podia ter sido criada
+
+
+class TestDesvincularVulnerabilidade(unittest.TestCase):
+
+    def setUp(self):
+        self.catalogo = criar_catalogo()
+        self.notebook = criar_notebook()
+        self.notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+
+    def test_remove_so_do_ativo(self):
+        desvincular_vulnerabilidade(self.notebook, 3)
+        self.assertEqual(self.notebook.vulnerabilidades, {1: StatusDaVuln.ABERTA})
+        self.assertIn(3, self.catalogo)  # continua existindo no catálogo
+
+    def test_nao_vinculada_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            desvincular_vulnerabilidade(self.notebook, 99)
+
+    def test_remove_vinculo_orfao(self):
+        self.notebook.vulnerabilidades[50] = StatusDaVuln.ABERTA  # aponta para algo que não está no catálogo
+        desvincular_vulnerabilidade(self.notebook, 50)
+        self.assertNotIn(50, self.notebook.vulnerabilidades)
+
+
+# Escolhas feitas pelo usuário -------------------
+
+
+class TestEncontrarAtivo(unittest.TestCase):
+
+    def setUp(self):
+        self.ativos = {1: criar_notebook(), 2: criar_servidor()}
+
+    def test_sem_ativos_retorna_none_sem_perguntar(self):
+        with patch("builtins.input") as entrada:
+            with redirect_stdout(io.StringIO()):
+                self.assertIsNone(encontrar_ativo({}))
+        entrada.assert_not_called()  # nem chegou a pedir o ID
+
+    def test_id_existente_retorna_o_ativo(self):
+        with patch("builtins.input", return_value="2"):
+            with redirect_stdout(io.StringIO()):
+                self.assertIs(encontrar_ativo(self.ativos), self.ativos[2])
+
+    def test_id_inexistente_retorna_none(self):
+        with patch("builtins.input", return_value="99"):
+            with redirect_stdout(io.StringIO()):
+                self.assertIsNone(encontrar_ativo(self.ativos))
+
+
+class TestEscolherAtivoComVulnerabilidades(unittest.TestCase):
+
+    def setUp(self):
+        notebook = criar_notebook()
+        notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA
+        self.ativos = {1: notebook, 2: criar_servidor()}  # o servidor não tem vínculos
+
+    def test_ativo_com_vinculos_retorna_o_ativo(self):
+        with patch("builtins.input", return_value="1"):
+            with redirect_stdout(io.StringIO()):
+                self.assertIs(escolher_ativo_com_vulnerabilidades(self.ativos), self.ativos[1])
+
+    def test_ativo_sem_vinculos_retorna_none(self):
+        with patch("builtins.input", return_value="2"):
+            with redirect_stdout(io.StringIO()):
+                self.assertIsNone(escolher_ativo_com_vulnerabilidades(self.ativos))
+
+    def test_id_inexistente_retorna_none(self):
+        with patch("builtins.input", return_value="99"):
+            with redirect_stdout(io.StringIO()):
+                self.assertIsNone(escolher_ativo_com_vulnerabilidades(self.ativos))
+
+    def test_pergunta_o_id_uma_vez_so(self):
+        with patch("builtins.input", return_value="1") as entrada:
+            with redirect_stdout(io.StringIO()):
+                escolher_ativo_com_vulnerabilidades(self.ativos)
+        self.assertEqual(entrada.call_count, 1)  # pega o bug de chamar a função duas vezes
+
+
+class TestEncontrarVulnerabilidade(unittest.TestCase):
+
+    def setUp(self):
+        self.catalogo = criar_catalogo()
+
+    def test_catalogo_vazio_retorna_none_sem_perguntar(self):
+        with patch("builtins.input") as entrada:
+            with redirect_stdout(io.StringIO()):
+                self.assertIsNone(encontrar_vulnerabilidade({}))
+        entrada.assert_not_called()
+
+    def test_id_existente_retorna_o_objeto(self):
+        with patch("builtins.input", return_value="3"):
+            with redirect_stdout(io.StringIO()):
+                encontrada = encontrar_vulnerabilidade(self.catalogo)
+        self.assertIs(encontrada, self.catalogo[3])  # devolve o objeto, não o ID
+
+    def test_id_inexistente_retorna_none(self):
+        with patch("builtins.input", return_value="99"):
+            with redirect_stdout(io.StringIO()):
+                self.assertIsNone(encontrar_vulnerabilidade(self.catalogo))
+
+    def test_mostra_o_catalogo_antes_de_perguntar(self):
+        with patch("builtins.input", return_value="3"):
+            saida = capturar_saida(encontrar_vulnerabilidade, self.catalogo)
+        self.assertIn("Senha padrão", saida)
+        self.assertIn("TLS 1.0 ativo", saida)
 
 
 # Persistência do catálogo e dos vínculos --------

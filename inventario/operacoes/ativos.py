@@ -293,3 +293,28 @@ def confirmar_exclusao(ativo):
         return True
     else:
         return False
+
+def encontrar_ativo(ativos):
+
+    if not ativos:
+        print('Nenhum ativo cadastrado.')
+        return None
+
+    id_ativo = pedir_int('Digite o ID do ativo: ')
+    ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
+
+    if not ativo_encontrado:
+        print('Ativo não encontrado.')
+        return None
+
+    return ativo_encontrado
+
+def escolher_ativo_com_vulnerabilidades(ativos):
+    ativo_encontrado = encontrar_ativo(ativos)
+    if ativo_encontrado is None:
+        return None
+    elif not ativo_encontrado.vulnerabilidades:
+        print('Nenhuma vulnerabilidade vinculada a este ativo.')
+        return None
+    else:
+        return ativo_encontrado

@@ -1,4 +1,4 @@
-from inventario.entradas import pedir_cvss, pedir_info
+from inventario.entradas import pedir_cvss, pedir_info, pedir_int
 from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.vulnerabilidade import Vulnerabilidade
 
@@ -68,3 +68,21 @@ def atualizar_status_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, novo_
         raise DadoInvalidoError('Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele.')
 
     ativo_encontrado.vulnerabilidades[id_vulnerabilidade] = novo_status
+
+def encontrar_vulnerabilidade(catalogo):
+
+    if not catalogo:
+        print('Nenhuma vulnerabilidade cadastrada.')
+        return None
+
+    for vulnerabilidade in catalogo.values():
+        mostrar_vulnerabilidade(vulnerabilidade)
+
+    id_vulnerabilidade = pedir_int('Digite o ID da vulnerabilidade: ')
+    vulnerabilidade_encontrada = catalogo.get(id_vulnerabilidade)
+
+    if not vulnerabilidade_encontrada:
+        print('Vulnerabilidade não encontrada.')
+        return None
+
+    return vulnerabilidade_encontrada
