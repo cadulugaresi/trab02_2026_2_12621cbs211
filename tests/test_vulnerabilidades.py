@@ -14,7 +14,9 @@ from inventario.operacoes.ativos import encontrar_ativo, escolher_ativo_com_vuln
 from inventario.operacoes.vulnerabilidades import (
     atualizar_status_vulnerabilidade,
     cadastrar_vulnerabilidade,
+    confirmar_exclusao_vuln,
     desvincular_vulnerabilidade,
+    excluir_vulnerabilidade_do_catalogo,
     encontrar_vulnerabilidade,
     mostrar_vulnerabilidade,
     mostrar_vulnerabilidades_do_ativo,
@@ -304,6 +306,71 @@ class TestDesvincularVulnerabilidade(unittest.TestCase):
         self.notebook.vulnerabilidades[50] = StatusDaVuln.ABERTA  # aponta para algo que não está no catálogo
         desvincular_vulnerabilidade(self.notebook, 50)
         self.assertNotIn(50, self.notebook.vulnerabilidades)
+
+
+class TestExcluirVulnerabilidadeDoCatalogo(unittest.TestCase):
+
+    def setUp(self):
+        self.catalogo = criar_catalogo()
+        self.notebook = criar_notebook()
+        self.servidor = criar_servidor()
+        self.ativos = {1: self.notebook, 2: self.servidor}
+
+    def test_remove_do_catalogo(self):
+        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
+        self.assertNotIn(3, self.catalogo)
+        self.assertIn(1, self.catalogo)  # as outras continuam
+
+    def test_remove_de_todos_os_ativos_vinculados(self):
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        self.servidor.vulnerabilidades[3] = StatusDaVuln.CORRIGIDA  # a mesma em dois ativos
+        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
+        self.assertNotIn(3, self.notebook.vulnerabilidades)
+        self.assertNotIn(3, self.servidor.vulnerabilidades)
+
+    def test_mantem_os_outros_vinculos(self):
+        self.notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
+        self.assertEqual(self.notebook.vulnerabilidades, {1: StatusDaVuln.ABERTA})
+
+    def test_exclui_mesmo_sem_nenhum_vinculo(self):
+        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)  # ninguém tinha a 3
+        self.assertNotIn(3, self.catalogo)
+
+    def test_id_inexistente_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 99)
+        self.assertEqual(len(self.catalogo), 2)  # nada foi apagado
+
+
+class TestConfirmarExclusaoVuln(unittest.TestCase):
+
+    def setUp(self):
+        self.vulnerabilidade = Vulnerabilidade(3, "TLS 1.0 ativo", 5.3)
+
+    def confirmar(self, resposta):
+        with patch("builtins.input", return_value=resposta):
+            with redirect_stdout(io.StringIO()):
+                return confirmar_exclusao_vuln(self.vulnerabilidade)
+
+    def test_sim_confirma(self):
+        self.assertTrue(self.confirmar("sim"))
+
+    def test_sim_com_maiuscula_e_espaco_confirma(self):
+        self.assertTrue(self.confirmar("  SIM "))  # o .strip().lower() cuida disso
+
+    def test_enter_cancela(self):
+        self.assertFalse(self.confirmar(""))
+
+    def test_qualquer_outra_resposta_cancela(self):
+        self.assertFalse(self.confirmar("não"))
+
+    def test_mostra_o_nome_e_o_id(self):
+        with patch("builtins.input", return_value=""):
+            saida = capturar_saida(confirmar_exclusao_vuln, self.vulnerabilidade)
+        self.assertIn("TLS 1.0 ativo", saida)
+        self.assertIn("ID 3", saida)
 
 
 # Escolhas feitas pelo usuário -------------------
