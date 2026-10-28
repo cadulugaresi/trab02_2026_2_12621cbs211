@@ -86,3 +86,13 @@ def encontrar_vulnerabilidade(catalogo):
         return None
 
     return vulnerabilidade_encontrada
+
+def confirmar_exclusao_vuln(vulnerabilidade):
+
+    print(f'Tem certeza que deseja excluir a vulnerabilidade "{vulnerabilidade.nome_vulnerabilidade}" (ID {vulnerabilidade.id_vulnerabilidade})?')
+    resposta = input('Digite "sim" para excluir ou tecle enter para voltar: ').strip().lower()
+
+    if resposta == "sim":
+        return True
+    else:
+        return False

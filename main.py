@@ -31,6 +31,7 @@ from inventario.operacoes.vulnerabilidades import (
     vincular_vulnerabilidade,
     desvincular_vulnerabilidade,
     encontrar_vulnerabilidade,
+    confirmar_exclusao_vuln,
 )
 
 ativos = carregar_dados()
@@ -222,7 +223,28 @@ while True:
                         except DadoInvalidoError as erro:
                             print(erro)
 
-                elif opcao_vulnerabilidade in ('7', '8'):
+                elif opcao_vulnerabilidade == '7':
+                    print('Excluindo vulnerabilidade...')
+                    vulnerabilidade_a_excluir = encontrar_vulnerabilidade(catalogo)
+
+                    if vulnerabilidade_a_excluir:
+                            excluiu_aqui = confirmar_exclusao_vuln(vulnerabilidade_a_excluir)
+
+                            if excluiu_aqui is True:
+                                id_vulnerabilidade = vulnerabilidade_a_excluir.id_vulnerabilidade
+
+                                for ativo in ativos.values():
+                                    if id_vulnerabilidade in ativo.vulnerabilidades:
+                                        desvincular_vulnerabilidade(ativo, id_vulnerabilidade)
+                                del catalogo[id_vulnerabilidade]
+                                salvar_catalogo(catalogo)
+                                salvar_dados(ativos)
+                                print(f'''Vulnerabilidade "{vulnerabilidade_a_excluir.nome_vulnerabilidade}" excluída com sucesso!''')
+                            
+                            else:
+                                print("Exclusão cancelada.")
+
+                elif opcao_vulnerabilidade == '8':
                     print('Em construção...')
 
                 elif opcao_vulnerabilidade == '9':
