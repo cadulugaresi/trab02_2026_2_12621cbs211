@@ -31,6 +31,7 @@ from inventario.operacoes.vulnerabilidades import (
     vincular_vulnerabilidade,
     desvincular_vulnerabilidade,
     encontrar_vulnerabilidade,
+    excluir_vulnerabilidade_do_catalogo,
     confirmar_exclusao_vuln,
 )
 
@@ -147,7 +148,7 @@ while True:
         elif opcao == "4":
 
             while True:
-                print('''MENU DE VULNERABILIDADES
+                print("""MENU DE VULNERABILIDADES
 
                         1 - Cadastrar vulnerabilidade
                         2 - Listar catálogo de vulnerabilidades
@@ -157,16 +158,16 @@ while True:
                         6 - Desvincular vulnerabilidade de um ativo
                         7 - Excluir vulnerabilidade do catálogo
                         8 - Editar vulnerabilidade no catálogo
-                        9 - Voltar ao menu principal''')
+                        9 - Voltar ao menu principal""")
 
                 opcao_vulnerabilidade = input("Escolha uma opção: ").strip()
 
-                if opcao_vulnerabilidade == '1':
+                if opcao_vulnerabilidade == "1":
                     nova_vulnerabilidade = cadastrar_vulnerabilidade(catalogo)
                     catalogo[nova_vulnerabilidade.id_vulnerabilidade] = nova_vulnerabilidade
                     salvar_catalogo(catalogo)
 
-                elif opcao_vulnerabilidade == '2':
+                elif opcao_vulnerabilidade == "2":
                     if not catalogo:
                         print("Nenhuma vulnerabilidade cadastrada no catálogo.")
                     else:
@@ -174,85 +175,101 @@ while True:
                         for vulnerabilidade in catalogo.values():
                             mostrar_vulnerabilidade(vulnerabilidade)
 
-                elif opcao_vulnerabilidade == '3':
+                elif opcao_vulnerabilidade == "3":
                     vulnerabilidade_encontrada = encontrar_vulnerabilidade(catalogo)
-                    ativo_encontrado = encontrar_ativo(ativos)
-                    if ativo_encontrado:
-                        status_tratamento = pedir_status_vulnerabilidade("Digite o status: ")
+
+                    if vulnerabilidade_encontrada:
+                        ativo_encontrado = encontrar_ativo(ativos)
+
+                        if ativo_encontrado:
+                            status_tratamento = pedir_status_vulnerabilidade("Digite o status: ")
 
                         try:
-                            vincular_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, status_tratamento, catalogo)
+                            vincular_vulnerabilidade(
+                                ativo_encontrado,
+                                vulnerabilidade_encontrada.id_vulnerabilidade,
+                                status_tratamento,
+                                catalogo,
+                            )
                             salvar_dados(ativos)
-                            print(f'''Vulnerabilidade vinculada com sucesso! \n {ativo_encontrado.exibir_detalhes()}''')
-                            mostrar_vulnerabilidade(catalogo[id_vulnerabilidade], status_tratamento)
+                            print(
+                                f"""Vulnerabilidade vinculada com sucesso! \n {ativo_encontrado.exibir_detalhes()}"""
+                            )
+                            mostrar_vulnerabilidade(vulnerabilidade_encontrada, status_tratamento)
 
                         except DadoInvalidoError as erro:
                             print(erro)
 
-                elif opcao_vulnerabilidade == '4':
+                elif opcao_vulnerabilidade == "4":
                     ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
                     if ativo_encontrado:
                         mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
 
-                elif opcao_vulnerabilidade == '5':
+                elif opcao_vulnerabilidade == "5":
                     ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
 
                     if ativo_encontrado:
                         mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
-                        id_vulnerabilidade = pedir_int('Digite o ID da vulnerabilidade cujo status deseja editar: ')
-                        novo_status = pedir_status_vulnerabilidade('Novo status: ')
+                        id_vulnerabilidade = pedir_int(
+                            "Digite o ID da vulnerabilidade cujo status deseja editar: "
+                        )
+                        novo_status = pedir_status_vulnerabilidade("Novo status: ")
 
                         try:
-                            atualizar_status_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, novo_status)
+                            atualizar_status_vulnerabilidade(
+                                ativo_encontrado, id_vulnerabilidade, novo_status
+                            )
                             salvar_dados(ativos)
-                            print(f'Status atualizado com sucesso! Novo status: {novo_status.name.lower()}')
+                            print(
+                                f"Status atualizado com sucesso! Novo status: {novo_status.name.lower()}"
+                            )
                         except DadoInvalidoError as erro:
                             print(erro)
 
-                elif opcao_vulnerabilidade =='6':
+                elif opcao_vulnerabilidade == "6":
                     ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
 
                     if ativo_encontrado:
                         mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
-                        id_vulnerabilidade = pedir_int('Digite o ID da vulnerabilidade que deseja desvincular do ativo: ')
+                        id_vulnerabilidade = pedir_int(
+                            "Digite o ID da vulnerabilidade que deseja desvincular do ativo: "
+                        )
 
                         try:
                             desvincular_vulnerabilidade(ativo_encontrado, id_vulnerabilidade)
                             salvar_dados(ativos)
-                            print('Vulnerabilidade desvinculada com sucesso!')
+                            print("Vulnerabilidade desvinculada com sucesso!")
                         except DadoInvalidoError as erro:
                             print(erro)
 
-                elif opcao_vulnerabilidade == '7':
-                    print('Excluindo vulnerabilidade...')
+                elif opcao_vulnerabilidade == "7":
+                    print("Excluindo vulnerabilidade...")
                     vulnerabilidade_a_excluir = encontrar_vulnerabilidade(catalogo)
 
                     if vulnerabilidade_a_excluir:
-                            excluiu_aqui = confirmar_exclusao_vuln(vulnerabilidade_a_excluir)
+                        confirmou = confirmar_exclusao_vuln(vulnerabilidade_a_excluir)
 
-                            if excluiu_aqui is True:
-                                id_vulnerabilidade = vulnerabilidade_a_excluir.id_vulnerabilidade
+                        if confirmou:
+                            excluir_vulnerabilidade_do_catalogo(
+                                catalogo, ativos, vulnerabilidade_a_excluir.id_vulnerabilidade
+                            )
+                            salvar_catalogo(catalogo)
+                            salvar_dados(ativos)
+                            print(
+                                f'Vulnerabilidade "{vulnerabilidade_a_excluir.nome_vulnerabilidade}" excluída com sucesso!'
+                            )
+                        else:
+                            print("Exclusão cancelada.")
 
-                                for ativo in ativos.values():
-                                    if id_vulnerabilidade in ativo.vulnerabilidades:
-                                        desvincular_vulnerabilidade(ativo, id_vulnerabilidade)
-                                del catalogo[id_vulnerabilidade]
-                                salvar_catalogo(catalogo)
-                                salvar_dados(ativos)
-                                print(f'''Vulnerabilidade "{vulnerabilidade_a_excluir.nome_vulnerabilidade}" excluída com sucesso!''')
-                            
-                            else:
-                                print("Exclusão cancelada.")
+                elif opcao_vulnerabilidade == "8":
+                    print("Em construção...")
 
-                elif opcao_vulnerabilidade == '8':
-                    print('Em construção...')
-
-                elif opcao_vulnerabilidade == '9':
+                elif opcao_vulnerabilidade == "9":
                     print("Voltando ao menu principal...")
                     break
 
                 else:
-                    print('Opção inválida. Tente novamente.')
+                    print("Opção inválida. Tente novamente.")
 
         elif opcao == "5":
             editar_ativo(ativos)
