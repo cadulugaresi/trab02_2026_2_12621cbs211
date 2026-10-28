@@ -4,7 +4,6 @@ from inventario.enums import StatusDaVuln
 from inventario.modelos.ativo import MAPA_DE_TIPOS
 from inventario.modelos.vulnerabilidade import Vulnerabilidade
 
-
 ARQUIVO_DADOS = "ativos.json"
 ARQUIVO_CATALOGO = "vulnerabilidades.json"
 

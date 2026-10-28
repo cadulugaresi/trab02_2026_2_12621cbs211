@@ -49,6 +49,7 @@ def vincular_vulnerabilidade(ativo, id_vulnerabilidade, status_tratamento, catal
     else:
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
 
+
 def desvincular_vulnerabilidade(ativo, id_vulnerabilidade):
 
     if id_vulnerabilidade not in ativo.vulnerabilidades:
@@ -63,33 +64,51 @@ def mostrar_vulnerabilidades_do_ativo(ativo, catalogo):
         vulnerabilidade = catalogo[id_vulnerabilidade]
         mostrar_vulnerabilidade(vulnerabilidade, status_tratamento)
 
+
 def atualizar_status_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, novo_status):
     if id_vulnerabilidade not in ativo_encontrado.vulnerabilidades:
-        raise DadoInvalidoError('Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele.')
+        raise DadoInvalidoError(
+            "Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele."
+        )
 
     ativo_encontrado.vulnerabilidades[id_vulnerabilidade] = novo_status
+
 
 def encontrar_vulnerabilidade(catalogo):
 
     if not catalogo:
-        print('Nenhuma vulnerabilidade cadastrada.')
+        print("Nenhuma vulnerabilidade cadastrada.")
         return None
 
     for vulnerabilidade in catalogo.values():
         mostrar_vulnerabilidade(vulnerabilidade)
 
-    id_vulnerabilidade = pedir_int('Digite o ID da vulnerabilidade: ')
+    id_vulnerabilidade = pedir_int("Digite o ID da vulnerabilidade: ")
     vulnerabilidade_encontrada = catalogo.get(id_vulnerabilidade)
 
     if not vulnerabilidade_encontrada:
-        print('Vulnerabilidade não encontrada.')
+        print("Vulnerabilidade não encontrada.")
         return None
 
     return vulnerabilidade_encontrada
 
+
+def excluir_vulnerabilidade_do_catalogo(catalogo, ativos, id_vulnerabilidade):
+    if id_vulnerabilidade not in catalogo:
+        raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
+
+    for ativo in ativos.values():
+        if id_vulnerabilidade in ativo.vulnerabilidades:
+            desvincular_vulnerabilidade(ativo, id_vulnerabilidade)
+
+    del catalogo[id_vulnerabilidade]
+
+
 def confirmar_exclusao_vuln(vulnerabilidade):
 
-    print(f'Tem certeza que deseja excluir a vulnerabilidade "{vulnerabilidade.nome_vulnerabilidade}" (ID {vulnerabilidade.id_vulnerabilidade})?')
+    print(
+        f'Tem certeza que deseja excluir a vulnerabilidade "{vulnerabilidade.nome_vulnerabilidade}" (ID {vulnerabilidade.id_vulnerabilidade})?'
+    )
     resposta = input('Digite "sim" para excluir ou tecle enter para voltar: ').strip().lower()
 
     if resposta == "sim":
