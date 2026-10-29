@@ -1,10 +1,47 @@
 import os
-import io
 import unittest
-import funcoes_t2
-from funcoes_t2 import *
+import inventario.persistencia
+from inventario.enums import (
+    Cor,
+    Setor,
+    StatusDoAtivo,
+    Tecnologia,
+)
+from inventario.entradas import (
+    pedir_cor,
+    pedir_float,
+    pedir_info,
+    pedir_int,
+    pedir_setor,
+    pedir_status,
+    pedir_tecnologia,
+    pedir_tipo,
+)
+from inventario.excecoes import DadoInvalidoError
+from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
+from inventario.persistencia import carregar_dados, salvar_dados
+from inventario.operacoes.ativos import (
+    cadastrar_ativo,
+    cadastro_impressora,
+    cadastro_notebook,
+    cadastro_roteador,
+    cadastro_servidor,
+    confirmar_exclusao,
+    encontrar_ativo_por_id,
+    encontrar_ativo_por_nome,
+    encontrar_ativos_por_status,
+    listar_ativos_por_tipo,
+    pedir_id_disponivel,
+)
+from inventario.validacoes import (
+    validar_cor,
+    validar_nome_responsavel,
+    validar_setor,
+    validar_status,
+    validar_tecnologia,
+    validar_tipo,
+)
 from unittest.mock import patch
-from contextlib import redirect_stdout
 
 
 # Exibir detalhes
@@ -302,11 +339,11 @@ class TestPersistencia(unittest.TestCase):
 
     def setUp(self):
         self.arquivo_teste = "teste_ativos_tmp.json"
-        self.arquivo_original = funcoes_t2.ARQUIVO_DADOS
-        funcoes_t2.ARQUIVO_DADOS = self.arquivo_teste
+        self.arquivo_original = inventario.persistencia.ARQUIVO_DADOS
+        inventario.persistencia.ARQUIVO_DADOS = self.arquivo_teste
 
     def tearDown(self):
-        funcoes_t2.ARQUIVO_DADOS = self.arquivo_original
+        inventario.persistencia.ARQUIVO_DADOS = self.arquivo_original
         if os.path.exists(self.arquivo_teste):
             os.remove(self.arquivo_teste)
 
@@ -433,44 +470,6 @@ class TestPedirIdDisponivel(unittest.TestCase):
         ativos = {1: Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)}
         with patch("builtins.input", side_effect=["1", "2"]):
             self.assertEqual(pedir_id_disponivel(ativos), 2)
-
-
-# Vulnerabilidades -------------------------------
-
-
-class TestMostrarVulnerabilidade(unittest.TestCase):
-
-    def test_mostra_dados_da_vulnerabilidade(self):
-        v = Vulnerabilidade("Senha fraca", "Autenticação", NivelDaVulnerabilidade.ALTO, StatusDaVuln.ABERTA)
-        buffer = io.StringIO()
-        with redirect_stdout(buffer):
-            mostrar_vulnerabilidade(v)
-        saida = buffer.getvalue()
-        self.assertIn("Senha fraca", saida)
-        self.assertIn("alto", saida)
-        self.assertIn("aberta", saida)
-
-
-class TestNivelVulnerabilidade(unittest.TestCase):
-
-    def test_retorna_baixo_digita_1(self):
-        with patch("builtins.input", return_value="1"):
-            self.assertEqual(nivel_vulnerabilidade(), NivelDaVulnerabilidade.BAIXO)
-
-    def test_aceita_erro_e_depois_valido(self):
-        with patch("builtins.input", side_effect=["9", "2"]):
-            self.assertEqual(nivel_vulnerabilidade(), NivelDaVulnerabilidade.MEDIO)
-
-
-class TestStatusVulnerabilidade(unittest.TestCase):
-
-    def test_retorna_aberta_digita_1(self):
-        with patch("builtins.input", return_value="1"):
-            self.assertEqual(status_vulnerabilidade(), StatusDaVuln.ABERTA)
-
-    def test_retorna_aceita_digita_4(self):
-        with patch("builtins.input", return_value="4"):
-            self.assertEqual(status_vulnerabilidade(), StatusDaVuln.ACEITA)
 
 
 # Cadastros específicos --------------------------

@@ -25,11 +25,11 @@ jobs:
 
       - name: Rodar flake8 (linting)
         run: |
-          flake8 funcoes_t2.py main_code_t2.py
+          flake8 main.py inventario
 
       - name: Rodar testes com unittest
         run: |
-          python -m unittest tests/testes.py
+          python -m unittest tests/testes.py tests/test_vulnerabilidades.py
 
       - name: Rodar testes com pytest
         run: |
