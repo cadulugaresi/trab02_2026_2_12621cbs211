@@ -16,6 +16,7 @@ from inventario.operacoes.vulnerabilidades import (
     cadastrar_vulnerabilidade,
     confirmar_exclusao_vuln,
     desvincular_vulnerabilidade,
+    editar_vulnerabilidade,
     excluir_vulnerabilidade_do_catalogo,
     encontrar_vulnerabilidade,
     mostrar_vulnerabilidade,
@@ -371,6 +372,63 @@ class TestConfirmarExclusaoVuln(unittest.TestCase):
             saida = capturar_saida(confirmar_exclusao_vuln, self.vulnerabilidade)
         self.assertIn("TLS 1.0 ativo", saida)
         self.assertIn("ID 3", saida)
+
+
+class TestEditarVulnerabilidade(unittest.TestCase):
+
+    def setUp(self):
+        self.catalogo = criar_catalogo()
+        self.vulnerabilidade = self.catalogo[3]
+
+    def editar(self, respostas):
+        with patch("builtins.input", side_effect=respostas):
+            with redirect_stdout(io.StringIO()):
+                return editar_vulnerabilidade(self.vulnerabilidade)
+
+    def test_edita_o_nome(self):
+        mudou = self.editar(["1", "TLS 1.0 habilitado"])
+        self.assertTrue(mudou)
+        self.assertEqual(self.vulnerabilidade.nome_vulnerabilidade, "TLS 1.0 habilitado")
+        self.assertEqual(self.vulnerabilidade.cvss, 5.3)  # o CVSS não mexe
+
+    def test_edita_o_cvss_com_virgula(self):
+        mudou = self.editar(["2", "7,4"])
+        self.assertTrue(mudou)
+        self.assertEqual(self.vulnerabilidade.cvss, 7.4)
+
+    def test_cvss_editado_muda_o_nivel(self):
+        self.editar(["2", "9.1"])
+        self.assertEqual(self.vulnerabilidade.nivel(), NivelDaVulnerabilidade.CRITICO)  # era MEDIO
+
+    def test_recusa_cvss_maior_que_10(self):
+        self.editar(["2", "15", "8"])  # o 15 é recusado e a nota é pedida de novo
+        self.assertEqual(self.vulnerabilidade.cvss, 8.0)
+
+    def test_arredonda_cvss_editado(self):
+        self.editar(["2", "3.94"])
+        self.assertEqual(self.vulnerabilidade.cvss, 3.9)
+
+    def test_voltar_nao_muda_nada(self):
+        mudou = self.editar(["3"])
+        self.assertFalse(mudou)
+        self.assertEqual(self.vulnerabilidade.nome_vulnerabilidade, "TLS 1.0 ativo")
+        self.assertEqual(self.vulnerabilidade.cvss, 5.3)
+
+    def test_opcao_invalida_nao_muda_nada(self):
+        self.assertFalse(self.editar(["x"]))
+        self.assertEqual(self.vulnerabilidade.cvss, 5.3)
+
+    def test_edita_o_mesmo_objeto_do_catalogo(self):
+        self.editar(["2", "7.5"])
+        self.assertEqual(self.catalogo[3].cvss, 7.5)  # sem precisar recolocar no catálogo
+
+    def test_ativo_vinculado_ve_a_nota_nova(self):
+        notebook = criar_notebook()
+        notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        self.editar(["2", "7.5"])
+        saida = capturar_saida(mostrar_vulnerabilidades_do_ativo, notebook, self.catalogo)
+        self.assertIn("7.5", saida)  # o ativo só guarda o ID, então já enxerga a nota nova
+        self.assertNotIn("5.3", saida)
 
 
 # Escolhas feitas pelo usuário -------------------
