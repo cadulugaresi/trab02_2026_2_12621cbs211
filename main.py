@@ -19,7 +19,6 @@ from inventario.operacoes.ativos import (
     encontrar_ativo_por_nome,
     encontrar_ativos_por_status,
     excluir_ativo,
-    encontrar_ativo,
     escolher_ativo_com_vulnerabilidades,
     listar_ativos_por_tipo,
 )
@@ -28,7 +27,7 @@ from inventario.operacoes.vulnerabilidades import (
     mostrar_vulnerabilidade,
     mostrar_vulnerabilidades_do_ativo,
     atualizar_status_vulnerabilidade,
-    vincular_vulnerabilidade,
+    vincular_a_um_ativo,
     desvincular_vulnerabilidade,
     encontrar_vulnerabilidade,
     excluir_vulnerabilidade_do_catalogo,
@@ -167,6 +166,20 @@ while True:
                     nova_vulnerabilidade = cadastrar_vulnerabilidade(catalogo)
                     catalogo[nova_vulnerabilidade.id_vulnerabilidade] = nova_vulnerabilidade
                     salvar_catalogo(catalogo)
+                    resposta = (
+                        input(
+                            "Deseja vincular a um ativo agora? (Tecle 'sim'para confirmar ou enter para seguir sem vincular): "
+                        )
+                        .strip()
+                        .lower()
+                    )
+                    if resposta in ("sim", "s"):
+                        if vincular_a_um_ativo(nova_vulnerabilidade, ativos, catalogo):
+                            salvar_dados(ativos)
+                    else:
+                        print(
+                            "Nova vulnerabilidade criada com sucesso!\nNão vinculada a nenhum ativo."
+                        )
 
                 elif opcao_vulnerabilidade == "2":
                     if not catalogo:
@@ -180,28 +193,8 @@ while True:
                     vulnerabilidade_encontrada = encontrar_vulnerabilidade(catalogo)
 
                     if vulnerabilidade_encontrada:
-                        ativo_encontrado = encontrar_ativo(ativos)
-
-                        if ativo_encontrado:
-                            status_tratamento = pedir_status_vulnerabilidade("Digite o status: ")
-
-                            try:
-                                vincular_vulnerabilidade(
-                                    ativo_encontrado,
-                                    vulnerabilidade_encontrada.id_vulnerabilidade,
-                                    status_tratamento,
-                                    catalogo,
-                                )
-                                salvar_dados(ativos)
-                                print(
-                                    f"""Vulnerabilidade vinculada com sucesso! \n {ativo_encontrado.exibir_detalhes()}"""
-                                )
-                                mostrar_vulnerabilidade(
-                                    vulnerabilidade_encontrada, status_tratamento
-                                )
-
-                            except DadoInvalidoError as erro:
-                                print(erro)
+                        if vincular_a_um_ativo(vulnerabilidade_encontrada, ativos, catalogo):
+                            salvar_dados(ativos)
 
                 elif opcao_vulnerabilidade == "4":
                     ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)

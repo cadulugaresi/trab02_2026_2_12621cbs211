@@ -1,4 +1,5 @@
-from inventario.entradas import pedir_cvss, pedir_info, pedir_int
+from inventario.entradas import pedir_cvss, pedir_info, pedir_int, pedir_status_vulnerabilidade
+from inventario.operacoes.ativos import encontrar_ativo
 from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.vulnerabilidade import Vulnerabilidade
 
@@ -146,3 +147,24 @@ def editar_vulnerabilidade(vulnerabilidade):
     else:
         print("Opção inválida. Tente novamente.")
         return False
+
+
+def vincular_a_um_ativo(vulnerabilidade, ativos, catalogo):
+    ativo_encontrado = encontrar_ativo(ativos)
+
+    if not ativo_encontrado:
+        return False
+
+    status_tratamento = pedir_status_vulnerabilidade("Digite o status: ")
+
+    try:
+        vincular_vulnerabilidade(
+            ativo_encontrado, vulnerabilidade.id_vulnerabilidade, status_tratamento, catalogo
+        )
+    except DadoInvalidoError as erro:
+        print(erro)
+        return False
+
+    print(f"Vulnerabilidade vinculada com sucesso!\n{ativo_encontrado.exibir_detalhes()}")
+    mostrar_vulnerabilidade(vulnerabilidade, status_tratamento)
+    return True
