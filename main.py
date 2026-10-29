@@ -185,21 +185,23 @@ while True:
                         if ativo_encontrado:
                             status_tratamento = pedir_status_vulnerabilidade("Digite o status: ")
 
-                        try:
-                            vincular_vulnerabilidade(
-                                ativo_encontrado,
-                                vulnerabilidade_encontrada.id_vulnerabilidade,
-                                status_tratamento,
-                                catalogo,
-                            )
-                            salvar_dados(ativos)
-                            print(
-                                f"""Vulnerabilidade vinculada com sucesso! \n {ativo_encontrado.exibir_detalhes()}"""
-                            )
-                            mostrar_vulnerabilidade(vulnerabilidade_encontrada, status_tratamento)
+                            try:
+                                vincular_vulnerabilidade(
+                                    ativo_encontrado,
+                                    vulnerabilidade_encontrada.id_vulnerabilidade,
+                                    status_tratamento,
+                                    catalogo,
+                                )
+                                salvar_dados(ativos)
+                                print(
+                                    f"""Vulnerabilidade vinculada com sucesso! \n {ativo_encontrado.exibir_detalhes()}"""
+                                )
+                                mostrar_vulnerabilidade(
+                                    vulnerabilidade_encontrada, status_tratamento
+                                )
 
-                        except DadoInvalidoError as erro:
-                            print(erro)
+                            except DadoInvalidoError as erro:
+                                print(erro)
 
                 elif opcao_vulnerabilidade == "4":
                     ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
@@ -268,8 +270,6 @@ while True:
                     if vulnerabilidade:
                         if editar_vulnerabilidade(vulnerabilidade):
                             salvar_catalogo(catalogo)
-                    else:
-                        print("Vulnerabilidade não encontrada. Tente novamente.")
 
                 elif opcao_vulnerabilidade == "9":
                     print("Voltando ao menu principal...")
