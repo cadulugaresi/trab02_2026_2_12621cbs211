@@ -15,11 +15,11 @@ def proximo_id(dicionario):
 
 
 def cadastrar_vulnerabilidade(catalogo):
-    nome = pedir_info("Digite o nome da vulnerabilidade: ")
+    nome_vulnerabilidade = pedir_info("Digite o nome da vulnerabilidade: ")
     cvss = pedir_cvss("Digite a nota CVSS da vulnerabilidade (0.1 a 10): ")
     id_vulnerabilidade = proximo_id(catalogo)
 
-    vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome, cvss)
+    vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)
 
     mostrar_vulnerabilidade(vulnerabilidade)
 
@@ -114,4 +114,35 @@ def confirmar_exclusao_vuln(vulnerabilidade):
     if resposta == "sim":
         return True
     else:
+        return False
+
+
+def editar_vulnerabilidade(vulnerabilidade):
+    print("""
+    1 - Editar nome
+    2 - Editar CVSS
+    3 - Voltar""")
+
+    opcao_edicao = input("Escolha uma opção: ").strip()
+
+    if opcao_edicao == "1":
+        novo_nome = pedir_info("Digite o novo nome da vulnerabilidade: ")
+        vulnerabilidade.nome_vulnerabilidade = novo_nome
+        print("Nome atualizado com sucesso!")
+        mostrar_vulnerabilidade(vulnerabilidade)
+        return True
+
+    elif opcao_edicao == "2":
+        novo_cvss = pedir_cvss("Digite a nova nota CVSS (0.1 a 10): ")
+        vulnerabilidade.cvss = novo_cvss
+        print("CVSS atualizado com sucesso!")
+        mostrar_vulnerabilidade(vulnerabilidade)
+        return True
+
+    elif opcao_edicao == "3":
+        print("Voltando ao menu de vulnerabilidades...")
+        return False
+
+    else:
+        print("Opção inválida. Tente novamente.")
         return False

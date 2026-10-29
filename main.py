@@ -33,6 +33,7 @@ from inventario.operacoes.vulnerabilidades import (
     encontrar_vulnerabilidade,
     excluir_vulnerabilidade_do_catalogo,
     confirmar_exclusao_vuln,
+    editar_vulnerabilidade,
 )
 
 ativos = carregar_dados()
@@ -262,7 +263,13 @@ while True:
                             print("Exclusão cancelada.")
 
                 elif opcao_vulnerabilidade == "8":
-                    print("Em construção...")
+                    vulnerabilidade = encontrar_vulnerabilidade(catalogo)
+
+                    if vulnerabilidade:
+                        if editar_vulnerabilidade(vulnerabilidade):
+                            salvar_catalogo(catalogo)
+                    else:
+                        print("Vulnerabilidade não encontrada. Tente novamente.")
 
                 elif opcao_vulnerabilidade == "9":
                     print("Voltando ao menu principal...")
