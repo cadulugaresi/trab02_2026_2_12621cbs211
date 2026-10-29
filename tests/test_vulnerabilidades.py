@@ -17,11 +17,12 @@ from inventario.operacoes.vulnerabilidades import (
     confirmar_exclusao_vuln,
     desvincular_vulnerabilidade,
     editar_vulnerabilidade,
-    excluir_vulnerabilidade_do_catalogo,
     encontrar_vulnerabilidade,
+    excluir_vulnerabilidade_do_catalogo,
     mostrar_vulnerabilidade,
     mostrar_vulnerabilidades_do_ativo,
     proximo_id,
+    vincular_a_um_ativo,
     vincular_vulnerabilidade,
 )
 from inventario.persistencia import (
@@ -429,6 +430,44 @@ class TestEditarVulnerabilidade(unittest.TestCase):
         saida = capturar_saida(mostrar_vulnerabilidades_do_ativo, notebook, self.catalogo)
         self.assertIn("7.5", saida)  # o ativo só guarda o ID, então já enxerga a nota nova
         self.assertNotIn("5.3", saida)
+
+
+class TestVincularAUmAtivo(unittest.TestCase):
+
+    def setUp(self):
+        self.catalogo = criar_catalogo()
+        self.notebook = criar_notebook()
+        self.ativos = {1: self.notebook, 2: criar_servidor()}
+        self.vulnerabilidade = self.catalogo[3]
+
+    def vincular(self, respostas, ativos=None):
+        if ativos is None:
+            ativos = self.ativos
+        with patch("builtins.input", side_effect=respostas) as entrada:
+            with redirect_stdout(io.StringIO()):
+                resultado = vincular_a_um_ativo(self.vulnerabilidade, ativos, self.catalogo)
+        return resultado, entrada
+
+    def test_vincula_e_devolve_true(self):
+        resultado, _ = self.vincular(["1", "2"])  # ativo 1, status EM_TRATAMENTO
+        self.assertTrue(resultado)
+        self.assertEqual(self.notebook.vulnerabilidades, {3: StatusDaVuln.EM_TRATAMENTO})
+
+    def test_ativo_inexistente_devolve_false_sem_pedir_status(self):
+        resultado, entrada = self.vincular(["99"])
+        self.assertFalse(resultado)
+        self.assertEqual(entrada.call_count, 1)  # parou depois do ID, nem pediu o status
+
+    def test_sem_ativos_devolve_false_sem_perguntar(self):
+        resultado, entrada = self.vincular([], ativos={})
+        self.assertFalse(resultado)
+        entrada.assert_not_called()
+
+    def test_vinculo_duplicado_devolve_false(self):
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        resultado, _ = self.vincular(["1", "3"])
+        self.assertFalse(resultado)
+        self.assertEqual(self.notebook.vulnerabilidades[3], StatusDaVuln.ABERTA)  # não sobrescreveu
 
 
 # Escolhas feitas pelo usuário -------------------
