@@ -19,7 +19,6 @@ from inventario.operacoes.ativos import (
     encontrar_ativo_por_nome,
     encontrar_ativos_por_status,
     excluir_ativo,
-    encontrar_ativo,
     escolher_ativo_com_vulnerabilidades,
     listar_ativos_por_tipo,
 )
@@ -167,12 +166,20 @@ while True:
                     nova_vulnerabilidade = cadastrar_vulnerabilidade(catalogo)
                     catalogo[nova_vulnerabilidade.id_vulnerabilidade] = nova_vulnerabilidade
                     salvar_catalogo(catalogo)
-                    resposta = input("Deseja vincular a um ativo agora? (Tecle 'sim'para confirmar ou enter para seguir sem vincular): ").strip().lower()
-                    if resposta in ('sim','s'):
+                    resposta = (
+                        input(
+                            "Deseja vincular a um ativo agora? (Tecle 'sim'para confirmar ou enter para seguir sem vincular): "
+                        )
+                        .strip()
+                        .lower()
+                    )
+                    if resposta in ("sim", "s"):
                         if vincular_a_um_ativo(nova_vulnerabilidade, ativos, catalogo):
                             salvar_dados(ativos)
                     else:
-                        print('Nova vulnerabilidade criada com sucesso!\nNão vinculada a nenhum ativo.')
+                        print(
+                            "Nova vulnerabilidade criada com sucesso!\nNão vinculada a nenhum ativo."
+                        )
 
                 elif opcao_vulnerabilidade == "2":
                     if not catalogo:

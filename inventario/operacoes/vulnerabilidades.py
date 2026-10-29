@@ -4,7 +4,6 @@ from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.vulnerabilidade import Vulnerabilidade
 
 
-
 def proximo_id(dicionario):
 
     maior_id = 0
@@ -149,6 +148,7 @@ def editar_vulnerabilidade(vulnerabilidade):
         print("Opção inválida. Tente novamente.")
         return False
 
+
 def vincular_a_um_ativo(vulnerabilidade, ativos, catalogo):
     ativo_encontrado = encontrar_ativo(ativos)
 
@@ -158,7 +158,9 @@ def vincular_a_um_ativo(vulnerabilidade, ativos, catalogo):
     status_tratamento = pedir_status_vulnerabilidade("Digite o status: ")
 
     try:
-        vincular_vulnerabilidade(ativo_encontrado, vulnerabilidade.id_vulnerabilidade, status_tratamento, catalogo)
+        vincular_vulnerabilidade(
+            ativo_encontrado, vulnerabilidade.id_vulnerabilidade, status_tratamento, catalogo
+        )
     except DadoInvalidoError as erro:
         print(erro)
         return False
