@@ -1,4 +1,4 @@
-from inventario.enums import Cor, Setor, StatusDoAtivo, Tecnologia
+from inventario.dominio.enums import Cor, Setor, StatusDoAtivo, Tecnologia
 
 
 class Ativo:
@@ -178,5 +178,3 @@ MAPA_DE_TIPOS = {
     "Roteador": Roteador,
     "Impressora": Impressora,
 }
-
-OPCOES_MENU = {"1": "Notebook", "2": "Servidor", "3": "Roteador", "4": "Impressora"}

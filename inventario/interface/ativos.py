@@ -1,4 +1,6 @@
-from inventario.entradas import (
+from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.interface.entradas import (
     pedir_cor,
     pedir_float,
     pedir_info,
@@ -8,8 +10,13 @@ from inventario.entradas import (
     pedir_tecnologia,
     pedir_tipo,
 )
-from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
-from inventario.persistencia import salvar_dados
+from inventario.servicos.ativos import (
+    atualizar_ativo_no_inventario,
+    encontrar_ativo_por_id,
+    obter_ativo,
+    registrar_ativo_no_inventario,
+    remover_ativo_do_inventario,
+)
 
 
 def pedir_id_disponivel(ativos):
@@ -78,53 +85,16 @@ def cadastrar_ativo(ativos):
         cor, tecnologia = cadastro_impressora()
         ativo = Impressora(ID_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
 
+    registrar_ativo_no_inventario(ativos, ativo)
     print("Ativo cadastrado com sucesso!")
     print(ativo.exibir_detalhes())
     return ativo
 
 
-def encontrar_ativo_por_id(ID, ativos):
-    return ativos.get(ID)
-
-
-def encontrar_ativo_por_nome(nome, ativos):
-
-    encontrados = []
-
-    for ativo in ativos.values():
-        if nome.lower() in ativo.nome.lower():
-            encontrados.append(ativo)
-
-    return encontrados
-
-
-def encontrar_ativos_por_status(status, ativos):
-    encontrados = []
-    for ativo in ativos.values():
-        if ativo.status == status:
-            encontrados.append(ativo)
-    return encontrados
-
-
-def listar_ativos_por_tipo(classe, ativos):
-
-    encontrados = []
-
-    for ativo in ativos.values():
-        if isinstance(ativo, classe):
-            encontrados.append(ativo)
-
-    return encontrados
-
-
 def editar_ativo(ativos):
 
-    id_ativo = pedir_int("Digite o ID do ativo que deseja editar: ")
-
-    ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
-
-    if not ativo_encontrado:
-        print("Nenhum ativo com este ID cadastrado.")
+    ativo_encontrado = perguntar_ativo(ativos)
+    if ativo_encontrado is None:
         return
 
     print(f"""Dados atuais do ativo:
@@ -205,7 +175,7 @@ def editar_ativo(ativos):
             if novo_tipo is Notebook:
                 so, tela = cadastro_notebook()
                 novo_ativo = Notebook(
-                    id_ativo,
+                    ativo_encontrado.id,
                     ativo_encontrado.nome,
                     ativo_encontrado.setor,
                     ativo_encontrado.responsavel,
@@ -216,7 +186,7 @@ def editar_ativo(ativos):
             elif novo_tipo is Roteador:
                 portas, velocidade = cadastro_roteador()
                 novo_ativo = Roteador(
-                    id_ativo,
+                    ativo_encontrado.id,
                     ativo_encontrado.nome,
                     ativo_encontrado.setor,
                     ativo_encontrado.responsavel,
@@ -227,7 +197,7 @@ def editar_ativo(ativos):
             elif novo_tipo is Servidor:
                 ram, armazenamento = cadastro_servidor()
                 novo_ativo = Servidor(
-                    id_ativo,
+                    ativo_encontrado.id,
                     ativo_encontrado.nome,
                     ativo_encontrado.setor,
                     ativo_encontrado.responsavel,
@@ -238,7 +208,7 @@ def editar_ativo(ativos):
             elif novo_tipo is Impressora:
                 cor, tecnologia = cadastro_impressora()
                 novo_ativo = Impressora(
-                    id_ativo,
+                    ativo_encontrado.id,
                     ativo_encontrado.nome,
                     ativo_encontrado.setor,
                     ativo_encontrado.responsavel,
@@ -247,8 +217,6 @@ def editar_ativo(ativos):
                     tecnologia,
                 )
 
-            novo_ativo.vulnerabilidades = ativo_encontrado.vulnerabilidades
-            ativos[id_ativo] = novo_ativo
             ativo_encontrado = novo_ativo
             print(f"""
                 Tipo do ativo atualizado com sucesso!
@@ -256,6 +224,7 @@ def editar_ativo(ativos):
                 """)
 
         elif opcao == "6":
+            atualizar_ativo_no_inventario(ativos, ativo_encontrado)
             print("Voltando...")
             break
 
@@ -264,24 +233,16 @@ def editar_ativo(ativos):
 
 
 def excluir_ativo(ativos):
-    if ativos:
-        id_a_excluir = pedir_int("Digite o ID do ativo que deseja excluir: ")
-        ativo_encontrado = encontrar_ativo_por_id(id_a_excluir, ativos)
+    ativo = perguntar_ativo(ativos)
+    if ativo is None:
+        return
 
-        if ativo_encontrado:
+    if not confirmar_exclusao(ativo):
+        print("Exclusão cancelada.")
+        return
 
-            if confirmar_exclusao(ativo_encontrado):
-                del ativos[ativo_encontrado.id]
-                salvar_dados(ativos)
-                print("Ativo excluído com sucesso!")
-            else:
-                print("Exclusão cancelada.")
-
-        else:
-            print("Ativo não encontrado.")
-
-    else:
-        print("Nenhum ativo cadastrado.")
+    remover_ativo_do_inventario(ativos, ativo.id)
+    print("Ativo excluído com sucesso!")
 
 
 def confirmar_exclusao(ativo):
@@ -295,24 +256,23 @@ def confirmar_exclusao(ativo):
         return False
 
 
-def encontrar_ativo(ativos):
+def perguntar_ativo(ativos):
 
     if not ativos:
         print("Nenhum ativo cadastrado.")
         return None
 
     id_ativo = pedir_int("Digite o ID do ativo: ")
-    ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
 
-    if not ativo_encontrado:
-        print("Ativo não encontrado.")
+    try:
+        return obter_ativo(ativos, id_ativo)
+    except DadoInvalidoError as erro:
+        print(erro)
         return None
-
-    return ativo_encontrado
 
 
 def escolher_ativo_com_vulnerabilidades(ativos):
-    ativo_encontrado = encontrar_ativo(ativos)
+    ativo_encontrado = perguntar_ativo(ativos)
     if ativo_encontrado is None:
         return None
     elif not ativo_encontrado.vulnerabilidades:

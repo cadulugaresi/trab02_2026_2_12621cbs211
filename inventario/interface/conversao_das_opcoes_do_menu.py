@@ -1,14 +1,11 @@
-from inventario.enums import Cor, Setor, StatusDaVuln, StatusDoAtivo, Tecnologia
-from inventario.excecoes import DadoInvalidoError
-from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
+from inventario.dominio.enums import Cor, Setor, StatusDaVuln, StatusDoAtivo, Tecnologia
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.ativo import MAPA_DE_TIPOS
 
+TIPOS_DE_ATIVOS = {}
 
-def validar_nome_responsavel(nome):
-
-    if not nome:
-        raise DadoInvalidoError("Este campo não pode ser vazio.")
-    if nome.isnumeric():
-        raise DadoInvalidoError("Este campo não pode ser composto apenas por números.")
+for numero, classe in enumerate(MAPA_DE_TIPOS.values(), start=1):
+    TIPOS_DE_ATIVOS[str(numero)] = classe
 
 
 def validar_status(status_digitado):
@@ -62,21 +59,9 @@ def validar_setor(setor_digitado):
 
 
 def validar_tipo(tipo_digitado):
-
-    if tipo_digitado == "1":
-        return Notebook
-
-    elif tipo_digitado == "2":
-        return Servidor
-
-    elif tipo_digitado == "3":
-        return Roteador
-
-    elif tipo_digitado == "4":
-        return Impressora
-
-    else:
+    if tipo_digitado not in TIPOS_DE_ATIVOS:
         raise DadoInvalidoError("Tipo inválido. Tente novamente.")
+    return TIPOS_DE_ATIVOS[tipo_digitado]
 
 
 def validar_cor(opcao):

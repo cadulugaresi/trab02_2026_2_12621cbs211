@@ -1,8 +1,8 @@
-from inventario.excecoes import DadoInvalidoError
-from inventario.modelos.ativo import OPCOES_MENU
-from inventario.validacoes import (
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.validacoes import validar_cvss, validar_nome_responsavel
+from inventario.interface.conversao_das_opcoes_do_menu import (
+    TIPOS_DE_ATIVOS,
     validar_cor,
-    validar_nome_responsavel,
     validar_setor,
     validar_status,
     validar_status_vulnerabilidade,
@@ -147,14 +147,12 @@ def pedir_int(mensagem):
 
 
 def pedir_cvss(mensagem):
-
     while True:
         cvss = pedir_float(mensagem)
-
-        if cvss > 10:
-            print("O CVSS não pode ser maior que 10.")
-        else:
-            return round(cvss, 1)
+        try:
+            return validar_cvss(cvss)
+        except DadoInvalidoError as erro:
+            print(erro)
 
 
 def pedir_tipo(mensagem):
@@ -165,8 +163,8 @@ def pedir_tipo(mensagem):
 
         try:
             print("Tipos de ativo:")
-            for numero, nome in OPCOES_MENU.items():
-                print(f"{numero} - {nome}")
+            for numero, classe in TIPOS_DE_ATIVOS.items():
+                print(f"{numero} - {classe.__name__}")
 
             tipo_digitado = input(mensagem).strip()
             tipo = validar_tipo(tipo_digitado)

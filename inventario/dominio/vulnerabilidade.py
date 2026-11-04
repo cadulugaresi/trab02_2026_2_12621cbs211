@@ -1,4 +1,4 @@
-from inventario.enums import NivelDaVulnerabilidade
+from inventario.dominio.enums import NivelDaVulnerabilidade
 
 
 class Vulnerabilidade:

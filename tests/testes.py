@@ -1,13 +1,13 @@
 import os
 import unittest
-import inventario.persistencia
-from inventario.enums import (
+from inventario.dominio.enums import (
     Cor,
     Setor,
+    StatusDaVuln,
     StatusDoAtivo,
     Tecnologia,
 )
-from inventario.entradas import (
+from inventario.interface.entradas import (
     pedir_cor,
     pedir_float,
     pedir_info,
@@ -17,30 +17,39 @@ from inventario.entradas import (
     pedir_tecnologia,
     pedir_tipo,
 )
-from inventario.excecoes import DadoInvalidoError
-from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
-from inventario.persistencia import carregar_dados, salvar_dados
-from inventario.operacoes.ativos import (
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
+from inventario.persistencia.arquivos_json import carregar_dados, salvar_dados
+from inventario.interface.ativos import (
     cadastrar_ativo,
     cadastro_impressora,
     cadastro_notebook,
     cadastro_roteador,
     cadastro_servidor,
     confirmar_exclusao,
+    editar_ativo,
+    excluir_ativo,
+    pedir_id_disponivel,
+)
+from inventario.servicos.ativos import (
+    atualizar_ativo_no_inventario,
     encontrar_ativo_por_id,
     encontrar_ativo_por_nome,
     encontrar_ativos_por_status,
     listar_ativos_por_tipo,
-    pedir_id_disponivel,
+    obter_ativo,
+    registrar_ativo_no_inventario,
+    remover_ativo_do_inventario,
 )
-from inventario.validacoes import (
+from inventario.dominio.validacoes import validar_nome_responsavel
+from inventario.interface.conversao_das_opcoes_do_menu import (
     validar_cor,
-    validar_nome_responsavel,
     validar_setor,
     validar_status,
     validar_tecnologia,
     validar_tipo,
 )
+from tests.apoio import TesteComArquivosTemporarios
 from unittest.mock import patch
 
 
@@ -204,6 +213,65 @@ class TestEncontrarAtivoPorId(unittest.TestCase):
         self.assertIsNone(ativo)
 
 
+class TestObterAtivo(unittest.TestCase):
+
+    def setUp(self):
+        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.ativos = {1: self.notebook}
+
+    def test_devolve_ativo_existente(self):
+        self.assertIs(obter_ativo(self.ativos, 1), self.notebook)
+
+    def test_id_inexistente_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            obter_ativo(self.ativos, 99)
+
+
+class TestRemoverAtivoDoInventario(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.ativos = {1: self.notebook}
+
+    def test_remove_e_salva(self):
+        remover_ativo_do_inventario(self.ativos, 1)
+        self.assertNotIn(1, self.ativos)
+        self.assertNotIn(1, carregar_dados())
+
+    def test_id_inexistente_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            remover_ativo_do_inventario(self.ativos, 99)
+        self.assertIn(1, self.ativos)
+
+
+class TestAtualizarAtivoNoInventario(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        self.ativos = {1: self.notebook}
+
+    def test_salva_edicao_simples(self):
+        self.notebook.responsavel = "Ana Souza"
+        atualizar_ativo_no_inventario(self.ativos, self.notebook)
+        self.assertEqual(carregar_dados()[1].responsavel, "Ana Souza")
+
+    def test_troca_de_tipo_mantem_as_vulnerabilidades(self):
+        servidor = Servidor(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 32, 4)
+        atualizar_ativo_no_inventario(self.ativos, servidor)
+        self.assertIs(self.ativos[1], servidor)
+        self.assertEqual(servidor.vulnerabilidades, {3: StatusDaVuln.ABERTA})
+        self.assertIsInstance(carregar_dados()[1], Servidor)
+
+    def test_id_inexistente_levanta_erro(self):
+        roteador = Roteador(99, "TP-Link", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 4, 1000)
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_ativo_no_inventario(self.ativos, roteador)
+        self.assertNotIn(99, self.ativos)
+
+
 class TestEncontrarAtivosPorNome(unittest.TestCase):
 
     def setUp(self):
@@ -335,22 +403,12 @@ class TestSerializacaoImpressora(unittest.TestCase):
 # Persistência de dados --------------------------
 
 
-class TestPersistencia(unittest.TestCase):
-
-    def setUp(self):
-        self.arquivo_teste = "teste_ativos_tmp.json"
-        self.arquivo_original = inventario.persistencia.ARQUIVO_DADOS
-        inventario.persistencia.ARQUIVO_DADOS = self.arquivo_teste
-
-    def tearDown(self):
-        inventario.persistencia.ARQUIVO_DADOS = self.arquivo_original
-        if os.path.exists(self.arquivo_teste):
-            os.remove(self.arquivo_teste)
+class TestPersistencia(TesteComArquivosTemporarios):
 
     def test_salvar_cria_arquivo(self):
         ativos = {1: Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)}
         salvar_dados(ativos)
-        self.assertTrue(os.path.exists(self.arquivo_teste))
+        self.assertTrue(os.path.exists(self.arquivo_dados))
 
     def test_carregar_devolve_o_que_foi_salvo(self):
         ativos = {1: Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)}
@@ -360,8 +418,6 @@ class TestPersistencia(unittest.TestCase):
         self.assertEqual(carregados[1].nome, "Dell")
 
     def test_carregar_arquivo_inexistente_retorna_vazio(self):
-        if os.path.exists(self.arquivo_teste):
-            os.remove(self.arquivo_teste)
         self.assertEqual(carregar_dados(), {})
 
 
@@ -514,7 +570,21 @@ class TestCadastroImpressora(unittest.TestCase):
 # Cadastrar Ativo --------------------------------
 
 
-class TestCadastrarAtivo(unittest.TestCase):
+class TestCadastrarAtivo(TesteComArquivosTemporarios):
+
+    def test_guarda_no_inventario(self):
+        ativos = {}
+        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6"]
+        with patch("builtins.input", side_effect=respostas):
+            ativo = cadastrar_ativo(ativos)
+        self.assertIs(ativos[5], ativo)
+        self.assertIn(5, carregar_dados())
+
+    def test_registrar_id_repetido_levanta_erro(self):
+        ativo = Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        ativos = {1: ativo}
+        with self.assertRaises(DadoInvalidoError):
+            registrar_ativo_no_inventario(ativos, ativo)
 
     def test_cadastra_notebook(self):
         # Ordem: tipo, id, nome, setor, responsável, status, so, tela
@@ -568,6 +638,64 @@ class TestConfirmarExclusao(unittest.TestCase):
     def test_retorna_false_com_nao(self):
         with patch("builtins.input", return_value="nao"):
             self.assertFalse(confirmar_exclusao(self.ativo))
+
+
+# Excluir Ativo ----------------------------------
+
+
+class TestExcluirAtivo(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.ativos = {
+            1: Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        }
+
+    def test_confirmando_remove_e_salva(self):
+        with patch("builtins.input", side_effect=["1", "sim"]):
+            excluir_ativo(self.ativos)
+        self.assertNotIn(1, self.ativos)
+        self.assertNotIn(1, carregar_dados())
+
+    def test_cancelando_mantem_o_ativo(self):
+        with patch("builtins.input", side_effect=["1", ""]):
+            excluir_ativo(self.ativos)
+        self.assertIn(1, self.ativos)
+
+    def test_id_inexistente_nao_pede_confirmacao(self):
+        with patch("builtins.input", side_effect=["99"]) as entrada:
+            excluir_ativo(self.ativos)
+        self.assertEqual(entrada.call_count, 1)
+        self.assertIn(1, self.ativos)
+
+
+# Editar Ativo -----------------------------------
+
+
+class TestEditarAtivo(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        self.ativos = {1: self.notebook}
+
+    def test_editar_responsavel_salva_ao_voltar(self):
+        with patch("builtins.input", side_effect=["1", "1", "Ana Souza", "6"]):
+            editar_ativo(self.ativos)
+        self.assertEqual(carregar_dados()[1].responsavel, "Ana Souza")
+
+    def test_trocar_tipo_mantem_as_vulnerabilidades(self):
+        with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "6"]):
+            editar_ativo(self.ativos)
+        self.assertIsInstance(self.ativos[1], Servidor)
+        self.assertEqual(self.ativos[1].vulnerabilidades, {3: StatusDaVuln.ABERTA})
+        self.assertIsInstance(carregar_dados()[1], Servidor)
+
+    def test_id_inexistente_nao_abre_o_menu(self):
+        with patch("builtins.input", side_effect=["99"]) as entrada:
+            editar_ativo(self.ativos)
+        self.assertEqual(entrada.call_count, 1)
 
 
 if __name__ == "__main__":

@@ -1,8 +1,8 @@
 import json
 
-from inventario.enums import StatusDaVuln
-from inventario.modelos.ativo import MAPA_DE_TIPOS
-from inventario.modelos.vulnerabilidade import Vulnerabilidade
+from inventario.dominio.enums import StatusDaVuln
+from inventario.dominio.ativo import MAPA_DE_TIPOS
+from inventario.dominio.vulnerabilidade import Vulnerabilidade
 
 ARQUIVO_DADOS = "ativos.json"
 ARQUIVO_CATALOGO = "vulnerabilidades.json"

@@ -1,7 +1,7 @@
 import pytest
-from inventario.enums import Setor, StatusDoAtivo
-from inventario.excecoes import DadoInvalidoError
-from inventario.validacoes import validar_setor, validar_status
+from inventario.dominio.enums import Setor, StatusDoAtivo
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.interface.conversao_das_opcoes_do_menu import validar_setor, validar_status
 
 def test_validar_status_1_retorna_ativo():
     resultado = validar_status("1")
