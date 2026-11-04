@@ -68,6 +68,20 @@ flowchart TD
     interface -.-> dominio
     servicos -.-> dominio
     persistencia -.-> dominio
+
+    classDef corMain fill:#1e1e2e,stroke:#f5c2e7,stroke-width:2px,color:#cdd6f4
+    classDef corInterface fill:#1e1e2e,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
+    classDef corServicos fill:#1e1e2e,stroke:#a6e3a1,stroke-width:2px,color:#cdd6f4
+    classDef corPersistencia fill:#1e1e2e,stroke:#fab387,stroke-width:2px,color:#cdd6f4
+    classDef corDominio fill:#1e1e2e,stroke:#cba6f7,stroke-width:2px,color:#cdd6f4
+
+    class main corMain
+    class interface corInterface
+    class servicos corServicos
+    class persistencia corPersistencia
+    class dominio corDominio
+
+    linkStyle default stroke:#9399b2,stroke-width:2px
 ```
 
 **Regra de dependência:** as setas só apontam para baixo. A interface chama os serviços, e os serviços chamam a persistência. Todas as camadas podem usar o domínio (setas tracejadas), mas o domínio não importa nenhuma outra camada.
