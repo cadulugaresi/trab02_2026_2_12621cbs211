@@ -1,4 +1,4 @@
-from inventario.excecoes import DadoInvalidoError
+from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.entradas import (
     pedir_info,
     pedir_int,

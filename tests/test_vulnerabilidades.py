@@ -4,10 +4,10 @@ from contextlib import redirect_stdout
 from unittest.mock import patch
 
 from inventario.entradas import pedir_cvss, pedir_float, pedir_status_vulnerabilidade
-from inventario.enums import NivelDaVulnerabilidade, Setor, StatusDaVuln, StatusDoAtivo
-from inventario.excecoes import DadoInvalidoError
-from inventario.modelos.ativo import Notebook, Servidor
-from inventario.modelos.vulnerabilidade import Vulnerabilidade
+from inventario.dominio.enums import NivelDaVulnerabilidade, Setor, StatusDaVuln, StatusDoAtivo
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.ativo import Notebook, Servidor
+from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.operacoes.ativos import encontrar_ativo, escolher_ativo_com_vulnerabilidades
 from inventario.operacoes.vulnerabilidades import (
     atualizar_status_vulnerabilidade,

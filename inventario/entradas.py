@@ -1,5 +1,5 @@
-from inventario.excecoes import DadoInvalidoError
-from inventario.modelos.ativo import OPCOES_MENU
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.ativo import OPCOES_MENU
 from inventario.validacoes import (
     validar_cor,
     validar_nome_responsavel,

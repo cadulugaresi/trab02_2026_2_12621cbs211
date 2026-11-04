@@ -1,4 +1,4 @@
-from inventario.enums import Cor, Setor, StatusDoAtivo, Tecnologia
+from inventario.dominio.enums import Cor, Setor, StatusDoAtivo, Tecnologia
 
 
 class Ativo:

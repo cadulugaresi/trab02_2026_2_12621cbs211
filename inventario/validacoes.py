@@ -1,6 +1,6 @@
-from inventario.enums import Cor, Setor, StatusDaVuln, StatusDoAtivo, Tecnologia
-from inventario.excecoes import DadoInvalidoError
-from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
+from inventario.dominio.enums import Cor, Setor, StatusDaVuln, StatusDoAtivo, Tecnologia
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
 
 
 def validar_nome_responsavel(nome):

@@ -1,7 +1,7 @@
 from inventario.entradas import pedir_cvss, pedir_info, pedir_int, pedir_status_vulnerabilidade
 from inventario.operacoes.ativos import encontrar_ativo, obter_ativo
-from inventario.excecoes import DadoInvalidoError
-from inventario.modelos.vulnerabilidade import Vulnerabilidade
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.persistencia import salvar_catalogo, salvar_dados
 
 

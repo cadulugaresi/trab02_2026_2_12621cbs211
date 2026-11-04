@@ -1,6 +1,6 @@
 import os
 import unittest
-from inventario.enums import (
+from inventario.dominio.enums import (
     Cor,
     Setor,
     StatusDoAtivo,
@@ -16,8 +16,8 @@ from inventario.entradas import (
     pedir_tecnologia,
     pedir_tipo,
 )
-from inventario.excecoes import DadoInvalidoError
-from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
+from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
 from inventario.persistencia import carregar_dados, salvar_dados
 from inventario.operacoes.ativos import (
     cadastrar_ativo,
