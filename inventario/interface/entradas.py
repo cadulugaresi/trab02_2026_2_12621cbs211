@@ -1,7 +1,7 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.dominio.ativo import OPCOES_MENU
 from inventario.dominio.validacoes import validar_nome_responsavel
 from inventario.interface.conversao_das_opcoes_do_menu import (
+    TIPOS_DE_ATIVO_POR_OPCAO_DO_MENU,
     validar_cor,
     validar_setor,
     validar_status,
@@ -165,8 +165,8 @@ def pedir_tipo(mensagem):
 
         try:
             print("Tipos de ativo:")
-            for numero, nome in OPCOES_MENU.items():
-                print(f"{numero} - {nome}")
+            for numero, classe in TIPOS_DE_ATIVO_POR_OPCAO_DO_MENU.items():
+                print(f"{numero} - {classe.__name__}")
 
             tipo_digitado = input(mensagem).strip()
             tipo = validar_tipo(tipo_digitado)
