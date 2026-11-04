@@ -56,9 +56,7 @@ while True:
         opcao = input("Escolha uma opção: ").strip()
 
         if opcao == "1":
-            novo_ativo = cadastrar_ativo(ativos)
-            ativos[novo_ativo.id] = novo_ativo
-            salvar_dados(ativos)
+            cadastrar_ativo(ativos)
 
         elif opcao == "2":
 
@@ -164,8 +162,6 @@ while True:
 
                 if opcao_vulnerabilidade == "1":
                     nova_vulnerabilidade = cadastrar_vulnerabilidade(catalogo)
-                    catalogo[nova_vulnerabilidade.id_vulnerabilidade] = nova_vulnerabilidade
-                    salvar_catalogo(catalogo)
                     resposta = (
                         input(
                             "Deseja vincular a um ativo agora? (Tecle 'sim'para confirmar ou enter para seguir sem vincular): "

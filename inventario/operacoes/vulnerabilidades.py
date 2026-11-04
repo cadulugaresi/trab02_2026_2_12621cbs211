@@ -2,6 +2,7 @@ from inventario.entradas import pedir_cvss, pedir_info, pedir_int, pedir_status_
 from inventario.operacoes.ativos import encontrar_ativo
 from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.vulnerabilidade import Vulnerabilidade
+from inventario.persistencia import salvar_catalogo
 
 
 def proximo_id(dicionario):
@@ -18,11 +19,20 @@ def proximo_id(dicionario):
 def cadastrar_vulnerabilidade(catalogo):
     nome_vulnerabilidade = pedir_info("Digite o nome da vulnerabilidade: ")
     cvss = pedir_cvss("Digite a nota CVSS da vulnerabilidade (0.1 a 10): ")
-    id_vulnerabilidade = proximo_id(catalogo)
 
-    vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)
+    vulnerabilidade = registrar_vulnerabilidade(catalogo, nome_vulnerabilidade, cvss)
 
     mostrar_vulnerabilidade(vulnerabilidade)
+
+    return vulnerabilidade
+
+
+def registrar_vulnerabilidade(catalogo, nome_vulnerabilidade, cvss):
+    id_vulnerabilidade = proximo_id(catalogo)  # regra: nunca repete ID
+
+    vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)
+    catalogo[id_vulnerabilidade] = vulnerabilidade  # guarda no catálogo
+    salvar_catalogo(catalogo)  # cozinha guarda na despensa
 
     return vulnerabilidade
 

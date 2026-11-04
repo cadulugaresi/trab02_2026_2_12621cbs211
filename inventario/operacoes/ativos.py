@@ -8,6 +8,7 @@ from inventario.entradas import (
     pedir_tecnologia,
     pedir_tipo,
 )
+from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.ativo import Impressora, Notebook, Roteador, Servidor
 from inventario.persistencia import salvar_dados
 
@@ -78,9 +79,18 @@ def cadastrar_ativo(ativos):
         cor, tecnologia = cadastro_impressora()
         ativo = Impressora(ID_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
 
+    registrar_ativo(ativos, ativo)  # entrega o ativo pronto pra regra
     print("Ativo cadastrado com sucesso!")
     print(ativo.exibir_detalhes())
     return ativo
+
+
+def registrar_ativo(ativos, ativo):
+    if ativo.id in ativos:  # regra: o ID não pode repetir
+        raise DadoInvalidoError("Já existe um ativo cadastrado com este ID.")
+
+    ativos[ativo.id] = ativo  # guarda no inventário
+    salvar_dados(ativos)  # cozinha guarda na despensa
 
 
 def encontrar_ativo_por_id(ID, ativos):

@@ -32,6 +32,7 @@ from inventario.operacoes.ativos import (
     encontrar_ativos_por_status,
     listar_ativos_por_tipo,
     pedir_id_disponivel,
+    registrar_ativo,
 )
 from inventario.validacoes import (
     validar_cor,
@@ -515,6 +516,29 @@ class TestCadastroImpressora(unittest.TestCase):
 
 
 class TestCadastrarAtivo(unittest.TestCase):
+
+    def setUp(self):
+        self.original = inventario.persistencia.ARQUIVO_DADOS
+        inventario.persistencia.ARQUIVO_DADOS = "teste_ativos_tmp.json"  # não mexe no real
+
+    def tearDown(self):
+        if os.path.exists(inventario.persistencia.ARQUIVO_DADOS):
+            os.remove(inventario.persistencia.ARQUIVO_DADOS)
+        inventario.persistencia.ARQUIVO_DADOS = self.original
+
+    def test_guarda_no_inventario(self):
+        ativos = {}
+        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6"]
+        with patch("builtins.input", side_effect=respostas):
+            ativo = cadastrar_ativo(ativos)
+        self.assertIs(ativos[5], ativo)  # agora quem guarda é a própria função
+        self.assertIn(5, carregar_dados())  # e já salvou no arquivo
+
+    def test_registrar_id_repetido_levanta_erro(self):
+        ativo = Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        ativos = {1: ativo}
+        with self.assertRaises(DadoInvalidoError):
+            registrar_ativo(ativos, ativo)
 
     def test_cadastra_notebook(self):
         # Ordem: tipo, id, nome, setor, responsável, status, so, tela

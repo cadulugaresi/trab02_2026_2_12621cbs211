@@ -183,6 +183,15 @@ class TestProximoId(unittest.TestCase):
 
 class TestCadastrarVulnerabilidade(unittest.TestCase):
 
+    def setUp(self):
+        self.original = inventario.persistencia.ARQUIVO_CATALOGO
+        inventario.persistencia.ARQUIVO_CATALOGO = "teste_catalogo_tmp.json"  # não mexe no real
+
+    def tearDown(self):
+        if os.path.exists(inventario.persistencia.ARQUIVO_CATALOGO):
+            os.remove(inventario.persistencia.ARQUIVO_CATALOGO)
+        inventario.persistencia.ARQUIVO_CATALOGO = self.original
+
     def test_cria_com_proximo_id(self):
         catalogo = criar_catalogo()
         with patch("builtins.input", side_effect=["SMB desatualizado", "8,1"]):
@@ -192,12 +201,20 @@ class TestCadastrarVulnerabilidade(unittest.TestCase):
         self.assertEqual(nova.nome_vulnerabilidade, "SMB desatualizado")
         self.assertEqual(nova.cvss, 8.1)
 
-    def test_nao_coloca_no_catalogo_sozinha(self):
+    def test_guarda_no_catalogo(self):
+        catalogo = criar_catalogo()
+        with patch("builtins.input", side_effect=["SMB desatualizado", "8.1"]):
+            with redirect_stdout(io.StringIO()):
+                nova = cadastrar_vulnerabilidade(catalogo)
+        self.assertEqual(len(catalogo), 3)  # agora quem guarda é a própria função
+        self.assertIs(catalogo[4], nova)
+
+    def test_salva_no_arquivo(self):
         catalogo = criar_catalogo()
         with patch("builtins.input", side_effect=["SMB desatualizado", "8.1"]):
             with redirect_stdout(io.StringIO()):
                 cadastrar_vulnerabilidade(catalogo)
-        self.assertEqual(len(catalogo), 2)  # quem guarda no catálogo é o menu
+        self.assertEqual(len(carregar_catalogo()), 3)  # relê o arquivo pra conferir
 
 
 class TestMostrarVulnerabilidade(unittest.TestCase):
