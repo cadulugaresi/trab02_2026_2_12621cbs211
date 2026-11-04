@@ -2,10 +2,10 @@ from inventario.dominio.enums import Cor, Setor, StatusDaVuln, StatusDoAtivo, Te
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 
-TIPOS_DE_ATIVO_POR_OPCAO_DO_MENU = {}
+TIPOS_DE_ATIVOS = {}
 
 for numero, classe in enumerate(MAPA_DE_TIPOS.values(), start=1):
-    TIPOS_DE_ATIVO_POR_OPCAO_DO_MENU[str(numero)] = classe
+    TIPOS_DE_ATIVOS[str(numero)] = classe
 
 
 def validar_status(status_digitado):
@@ -59,9 +59,9 @@ def validar_setor(setor_digitado):
 
 
 def validar_tipo(tipo_digitado):
-    if tipo_digitado not in TIPOS_DE_ATIVO_POR_OPCAO_DO_MENU:
+    if tipo_digitado not in TIPOS_DE_ATIVOS:
         raise DadoInvalidoError("Tipo inválido. Tente novamente.")
-    return TIPOS_DE_ATIVO_POR_OPCAO_DO_MENU[tipo_digitado]
+    return TIPOS_DE_ATIVOS[tipo_digitado]
 
 
 def validar_cor(opcao):
