@@ -7,10 +7,7 @@ from inventario.interface.entradas import (
     pedir_tipo,
 )
 
-from inventario.persistencia.arquivos_json import (
-    salvar_catalogo,
-    salvar_dados,
-)
+from inventario.persistencia.arquivos_json import salvar_catalogo
 
 from inventario.interface.ativos import (
     cadastrar_ativo,
@@ -72,7 +69,6 @@ def menu_principal(ativos, catalogo):
 
             elif opcao == "5":
                 editar_ativo(ativos)
-                salvar_dados(ativos)
 
             elif opcao == "6":
                 print("Saindo do programa...")

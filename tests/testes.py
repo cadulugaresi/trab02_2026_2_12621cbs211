@@ -3,6 +3,7 @@ import unittest
 from inventario.dominio.enums import (
     Cor,
     Setor,
+    StatusDaVuln,
     StatusDoAtivo,
     Tecnologia,
 )
@@ -26,10 +27,12 @@ from inventario.interface.ativos import (
     cadastro_roteador,
     cadastro_servidor,
     confirmar_exclusao,
+    editar_ativo,
     excluir_ativo,
     pedir_id_disponivel,
 )
 from inventario.servicos.ativos import (
+    atualizar_ativo_no_inventario,
     encontrar_ativo_por_id,
     encontrar_ativo_por_nome,
     encontrar_ativos_por_status,
@@ -240,6 +243,33 @@ class TestRemoverAtivoDoInventario(TesteComArquivosTemporarios):
         with self.assertRaises(DadoInvalidoError):
             remover_ativo_do_inventario(self.ativos, 99)
         self.assertIn(1, self.ativos)
+
+
+class TestAtualizarAtivoNoInventario(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        self.ativos = {1: self.notebook}
+
+    def test_salva_edicao_simples(self):
+        self.notebook.responsavel = "Ana Souza"
+        atualizar_ativo_no_inventario(self.ativos, self.notebook)
+        self.assertEqual(carregar_dados()[1].responsavel, "Ana Souza")
+
+    def test_troca_de_tipo_mantem_as_vulnerabilidades(self):
+        servidor = Servidor(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 32, 4)
+        atualizar_ativo_no_inventario(self.ativos, servidor)
+        self.assertIs(self.ativos[1], servidor)
+        self.assertEqual(servidor.vulnerabilidades, {3: StatusDaVuln.ABERTA})
+        self.assertIsInstance(carregar_dados()[1], Servidor)
+
+    def test_id_inexistente_levanta_erro(self):
+        roteador = Roteador(99, "TP-Link", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 4, 1000)
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_ativo_no_inventario(self.ativos, roteador)
+        self.assertNotIn(99, self.ativos)
 
 
 class TestEncontrarAtivosPorNome(unittest.TestCase):
@@ -637,6 +667,35 @@ class TestExcluirAtivo(TesteComArquivosTemporarios):
             excluir_ativo(self.ativos)
         self.assertEqual(entrada.call_count, 1)
         self.assertIn(1, self.ativos)
+
+
+# Editar Ativo -----------------------------------
+
+
+class TestEditarAtivo(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        self.ativos = {1: self.notebook}
+
+    def test_editar_responsavel_salva_ao_voltar(self):
+        with patch("builtins.input", side_effect=["1", "1", "Ana Souza", "6"]):
+            editar_ativo(self.ativos)
+        self.assertEqual(carregar_dados()[1].responsavel, "Ana Souza")
+
+    def test_trocar_tipo_mantem_as_vulnerabilidades(self):
+        with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "6"]):
+            editar_ativo(self.ativos)
+        self.assertIsInstance(self.ativos[1], Servidor)
+        self.assertEqual(self.ativos[1].vulnerabilidades, {3: StatusDaVuln.ABERTA})
+        self.assertIsInstance(carregar_dados()[1], Servidor)
+
+    def test_id_inexistente_nao_abre_o_menu(self):
+        with patch("builtins.input", side_effect=["99"]) as entrada:
+            editar_ativo(self.ativos)
+        self.assertEqual(entrada.call_count, 1)
 
 
 if __name__ == "__main__":

@@ -53,6 +53,13 @@ def listar_ativos_por_tipo(classe, ativos):
     return encontrados
 
 
+def atualizar_ativo_no_inventario(ativos, ativo_atualizado):
+    ativo_antigo = obter_ativo(ativos, ativo_atualizado.id)
+    ativo_atualizado.vulnerabilidades = ativo_antigo.vulnerabilidades
+    ativos[ativo_atualizado.id] = ativo_atualizado
+    salvar_dados(ativos)
+
+
 def remover_ativo_do_inventario(ativos, id_ativo):
     obter_ativo(ativos, id_ativo)
     del ativos[id_ativo]

@@ -11,6 +11,7 @@ from inventario.interface.entradas import (
     pedir_tipo,
 )
 from inventario.servicos.ativos import (
+    atualizar_ativo_no_inventario,
     encontrar_ativo_por_id,
     obter_ativo,
     registrar_ativo_no_inventario,
@@ -92,12 +93,8 @@ def cadastrar_ativo(ativos):
 
 def editar_ativo(ativos):
 
-    id_ativo = pedir_int("Digite o ID do ativo que deseja editar: ")
-
-    ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
-
-    if not ativo_encontrado:
-        print("Nenhum ativo com este ID cadastrado.")
+    ativo_encontrado = perguntar_ativo(ativos)
+    if ativo_encontrado is None:
         return
 
     print(f"""Dados atuais do ativo:
@@ -178,7 +175,7 @@ def editar_ativo(ativos):
             if novo_tipo is Notebook:
                 so, tela = cadastro_notebook()
                 novo_ativo = Notebook(
-                    id_ativo,
+                    ativo_encontrado.id,
                     ativo_encontrado.nome,
                     ativo_encontrado.setor,
                     ativo_encontrado.responsavel,
@@ -189,7 +186,7 @@ def editar_ativo(ativos):
             elif novo_tipo is Roteador:
                 portas, velocidade = cadastro_roteador()
                 novo_ativo = Roteador(
-                    id_ativo,
+                    ativo_encontrado.id,
                     ativo_encontrado.nome,
                     ativo_encontrado.setor,
                     ativo_encontrado.responsavel,
@@ -200,7 +197,7 @@ def editar_ativo(ativos):
             elif novo_tipo is Servidor:
                 ram, armazenamento = cadastro_servidor()
                 novo_ativo = Servidor(
-                    id_ativo,
+                    ativo_encontrado.id,
                     ativo_encontrado.nome,
                     ativo_encontrado.setor,
                     ativo_encontrado.responsavel,
@@ -211,7 +208,7 @@ def editar_ativo(ativos):
             elif novo_tipo is Impressora:
                 cor, tecnologia = cadastro_impressora()
                 novo_ativo = Impressora(
-                    id_ativo,
+                    ativo_encontrado.id,
                     ativo_encontrado.nome,
                     ativo_encontrado.setor,
                     ativo_encontrado.responsavel,
@@ -220,8 +217,6 @@ def editar_ativo(ativos):
                     tecnologia,
                 )
 
-            novo_ativo.vulnerabilidades = ativo_encontrado.vulnerabilidades
-            ativos[id_ativo] = novo_ativo
             ativo_encontrado = novo_ativo
             print(f"""
                 Tipo do ativo atualizado com sucesso!
@@ -229,6 +224,7 @@ def editar_ativo(ativos):
                 """)
 
         elif opcao == "6":
+            atualizar_ativo_no_inventario(ativos, ativo_encontrado)
             print("Voltando...")
             break
 
