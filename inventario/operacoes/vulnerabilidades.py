@@ -2,7 +2,7 @@ from inventario.entradas import pedir_cvss, pedir_info, pedir_int, pedir_status_
 from inventario.operacoes.ativos import obter_ativo, perguntar_ativo
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
-from inventario.persistencia import salvar_catalogo, salvar_dados
+from inventario.persistencia.arquivos_json import salvar_catalogo, salvar_dados
 
 
 def proximo_id(dicionario):

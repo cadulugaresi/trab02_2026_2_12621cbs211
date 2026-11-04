@@ -18,7 +18,7 @@ from inventario.entradas import (
 )
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
-from inventario.persistencia import carregar_dados, salvar_dados
+from inventario.persistencia.arquivos_json import carregar_dados, salvar_dados
 from inventario.operacoes.ativos import (
     cadastrar_ativo,
     cadastro_impressora,

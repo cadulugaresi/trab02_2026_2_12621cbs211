@@ -6,7 +6,7 @@ from inventario.entradas import (
     pedir_status_vulnerabilidade,
     pedir_tipo,
 )
-from inventario.persistencia import (
+from inventario.persistencia.arquivos_json import (
     carregar_catalogo,
     carregar_dados,
     salvar_catalogo,

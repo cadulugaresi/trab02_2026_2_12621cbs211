@@ -10,7 +10,7 @@ from inventario.entradas import (
 )
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
-from inventario.persistencia import salvar_dados
+from inventario.persistencia.arquivos_json import salvar_dados
 
 
 def pedir_id_disponivel(ativos):

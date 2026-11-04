@@ -23,7 +23,7 @@ from inventario.operacoes.vulnerabilidades import (
     vincular_a_um_ativo,
     vincular_vulnerabilidade,
 )
-from inventario.persistencia import (
+from inventario.persistencia.arquivos_json import (
     carregar_catalogo,
     carregar_dados,
     salvar_catalogo,
@@ -50,7 +50,7 @@ def criar_servidor():
 
 def capturar_saida(funcao, *argumentos):
     buffer = io.StringIO()
-    with redirect_stdout(buffer):  # guarda o que seria impresso na tela
+    with redirect_stdout(buffer):
         funcao(*argumentos)
     return buffer.getvalue()
 
@@ -91,7 +91,7 @@ class TestSerializacaoVulnerabilidade(unittest.TestCase):
 
     def test_de_dicionario_reconstroi_igual(self):
         dicionario = self.vulnerabilidade.para_dicionario()
-        reconstruida = Vulnerabilidade.de_dicionario(dicionario)  # ida e volta
+        reconstruida = Vulnerabilidade.de_dicionario(dicionario)
         self.assertEqual(reconstruida.id_vulnerabilidade, 3)
         self.assertEqual(reconstruida.nome_vulnerabilidade, "TLS 1.0 ativo")
         self.assertEqual(reconstruida.cvss, 5.3)
@@ -185,7 +185,7 @@ class TestCadastrarVulnerabilidade(TesteComArquivosTemporarios):
     def test_cria_com_proximo_id(self):
         catalogo = criar_catalogo()
         with patch("builtins.input", side_effect=["SMB desatualizado", "8,1"]):
-            with redirect_stdout(io.StringIO()):  # esconde o que a função imprime
+            with redirect_stdout(io.StringIO()):
                 nova = cadastrar_vulnerabilidade(catalogo)
         self.assertEqual(nova.id_vulnerabilidade, 4)
         self.assertEqual(nova.nome_vulnerabilidade, "SMB desatualizado")
@@ -254,7 +254,7 @@ class TestVincularVulnerabilidade(TesteComArquivosTemporarios):
     def test_nao_vincula_vulnerabilidade_inexistente(self):
         with self.assertRaises(DadoInvalidoError):
             vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 99, StatusDaVuln.ABERTA)
-        self.assertEqual(self.notebook.vulnerabilidades, {})  # nada foi gravado
+        self.assertEqual(self.notebook.vulnerabilidades, {})
 
     def test_ativo_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
@@ -283,7 +283,7 @@ class TestMostrarVulnerabilidadesDoAtivo(unittest.TestCase):
     def test_nao_mostra_vulnerabilidade_de_outro_ativo(self):
         catalogo = criar_catalogo()
         notebook = criar_notebook()
-        notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA  # o notebook só tem a 1
+        notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA
         saida = capturar_saida(mostrar_vulnerabilidades_do_ativo, notebook, catalogo)
         self.assertNotIn("TLS 1.0 ativo", saida)
 
@@ -303,7 +303,7 @@ class TestAtualizarStatusVulnerabilidade(TesteComArquivosTemporarios):
     def test_nao_cria_vinculo_novo(self):
         with self.assertRaises(DadoInvalidoError):
             atualizar_status_vulnerabilidade(self.ativos, 1, 1, StatusDaVuln.CORRIGIDA)
-        self.assertNotIn(1, self.notebook.vulnerabilidades)  # a 1 não podia ter sido criada
+        self.assertNotIn(1, self.notebook.vulnerabilidades)
 
     def test_ativo_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
@@ -323,7 +323,7 @@ class TestDesvincularVulnerabilidade(TesteComArquivosTemporarios):
     def test_remove_so_do_ativo(self):
         desvincular_vulnerabilidade(self.ativos, 1, 3)
         self.assertEqual(self.notebook.vulnerabilidades, {1: StatusDaVuln.ABERTA})
-        self.assertIn(3, self.catalogo)  # continua existindo no catálogo
+        self.assertIn(3, self.catalogo)
 
     def test_nao_vinculada_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
@@ -351,11 +351,11 @@ class TestExcluirVulnerabilidadeDoCatalogo(TesteComArquivosTemporarios):
     def test_remove_do_catalogo(self):
         excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
         self.assertNotIn(3, self.catalogo)
-        self.assertIn(1, self.catalogo)  # as outras continuam
+        self.assertIn(1, self.catalogo)
 
     def test_remove_de_todos_os_ativos_vinculados(self):
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
-        self.servidor.vulnerabilidades[3] = StatusDaVuln.CORRIGIDA  # a mesma em dois ativos
+        self.servidor.vulnerabilidades[3] = StatusDaVuln.CORRIGIDA
         excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
         self.assertNotIn(3, self.notebook.vulnerabilidades)
         self.assertNotIn(3, self.servidor.vulnerabilidades)
@@ -367,13 +367,13 @@ class TestExcluirVulnerabilidadeDoCatalogo(TesteComArquivosTemporarios):
         self.assertEqual(self.notebook.vulnerabilidades, {1: StatusDaVuln.ABERTA})
 
     def test_exclui_mesmo_sem_nenhum_vinculo(self):
-        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)  # ninguém tinha a 3
+        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
         self.assertNotIn(3, self.catalogo)
 
     def test_id_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
             excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 99)
-        self.assertEqual(len(self.catalogo), 2)  # nada foi apagado
+        self.assertEqual(len(self.catalogo), 2)
 
     def test_salva_catalogo_e_ativos(self):
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
@@ -426,7 +426,7 @@ class TestEditarVulnerabilidade(unittest.TestCase):
         mudou = self.editar(["1", "TLS 1.0 habilitado"])
         self.assertTrue(mudou)
         self.assertEqual(self.vulnerabilidade.nome_vulnerabilidade, "TLS 1.0 habilitado")
-        self.assertEqual(self.vulnerabilidade.cvss, 5.3)  # o CVSS não mexe
+        self.assertEqual(self.vulnerabilidade.cvss, 5.3)
 
     def test_edita_o_cvss_com_virgula(self):
         mudou = self.editar(["2", "7,4"])
@@ -435,7 +435,7 @@ class TestEditarVulnerabilidade(unittest.TestCase):
 
     def test_cvss_editado_muda_o_nivel(self):
         self.editar(["2", "9.1"])
-        self.assertEqual(self.vulnerabilidade.nivel(), NivelDaVulnerabilidade.CRITICO)  # era MEDIO
+        self.assertEqual(self.vulnerabilidade.nivel(), NivelDaVulnerabilidade.CRITICO)
 
     def test_recusa_cvss_maior_que_10(self):
         self.editar(["2", "15", "8"])  # o 15 é recusado e a nota é pedida de novo
@@ -493,7 +493,7 @@ class TestVincularAUmAtivo(TesteComArquivosTemporarios):
     def test_ativo_inexistente_devolve_false_sem_pedir_status(self):
         resultado, entrada = self.vincular(["99"])
         self.assertFalse(resultado)
-        self.assertEqual(entrada.call_count, 1)  # parou depois do ID, nem pediu o status
+        self.assertEqual(entrada.call_count, 1)
 
     def test_sem_ativos_devolve_false_sem_perguntar(self):
         resultado, entrada = self.vincular([], ativos={})
@@ -504,7 +504,7 @@ class TestVincularAUmAtivo(TesteComArquivosTemporarios):
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         resultado, _ = self.vincular(["1", "3"])
         self.assertFalse(resultado)
-        self.assertEqual(self.notebook.vulnerabilidades[3], StatusDaVuln.ABERTA)  # não sobrescreveu
+        self.assertEqual(self.notebook.vulnerabilidades[3], StatusDaVuln.ABERTA)
 
 
 # Escolhas feitas pelo usuário -------------------
@@ -519,7 +519,7 @@ class TestPerguntarAtivo(unittest.TestCase):
         with patch("builtins.input") as entrada:
             with redirect_stdout(io.StringIO()):
                 self.assertIsNone(perguntar_ativo({}))
-        entrada.assert_not_called()  # nem chegou a pedir o ID
+        entrada.assert_not_called()
 
     def test_id_existente_retorna_o_ativo(self):
         with patch("builtins.input", return_value="2"):
@@ -542,7 +542,7 @@ class TestEscolherAtivoComVulnerabilidades(unittest.TestCase):
     def setUp(self):
         notebook = criar_notebook()
         notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA
-        self.ativos = {1: notebook, 2: criar_servidor()}  # o servidor não tem vínculos
+        self.ativos = {1: notebook, 2: criar_servidor()}
 
     def test_ativo_com_vinculos_retorna_o_ativo(self):
         with patch("builtins.input", return_value="1"):
