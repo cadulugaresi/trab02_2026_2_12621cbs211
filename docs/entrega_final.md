@@ -2,7 +2,9 @@
 
 Versão: v1.0
 
-## Definição de Pronto
+> **Documento histórico:** registra a entrega do Trabalho 1, quando o código ainda ficava em um único arquivo. A estrutura atual, organizada em camadas, está descrita no [README](../README.md).
+
+## ✨ Definição de Pronto
 
 - [x] CRUD de ativos funcional (cadastro, listagem, busca, edição, exclusão);
 - [x] Vulnerabilidades associadas a ativos (cadastro, listagem, remoção);
@@ -16,7 +18,7 @@ Versão: v1.0
 - [x] Testes automatizados (32 testes, todos passando);
 - [x] Documentação de requisitos, validações, critérios de aceitação e especificação.
 
-## Rastreabilidade
+## 🫧 Rastreabilidade
 
 - `docs/requisitos.md` — requisitos funcionais e não funcionais
 - `docs/validacoes.md` — matriz campo × regra × mensagem
@@ -25,7 +27,7 @@ Versão: v1.0
 - `docs/relatorio_testes.md` — falhas e correções
 - `testes.py` — suíte de testes
 
-## Novos aprendizados
+## ✨ Novos aprendizados
 
 Praticamente todo o Python que usei foi aprendido do zero durante a sprint:
 
@@ -46,9 +48,10 @@ Praticamente todo o Python que usei foi aprendido do zero durante a sprint:
 
 O que eu já sabia antes: operações matemáticas, `print`, `input` e condicionais simples.
 
-## Como executar
+## 🫧 Como executar
 
 ```bash
-git https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
+git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
 cd it-asset-vulnerability-manager
 python3 "main code s1.py"
+```

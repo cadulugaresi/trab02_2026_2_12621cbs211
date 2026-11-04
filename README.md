@@ -2,7 +2,7 @@
 
 *[Ler em português](./docs/README.pt-br.md)*
 
-A command-line (CLI) application in Python for registering and managing IT assets and their associated security vulnerabilities, with risk analysis based on linear algebra (in development). Built as a study project for a Cybersecurity course at UFU, applying clean code practices: expressive naming, single-responsibility functions, separation between business rules and I/O, object-oriented programming, and error handling that doesn't leak internal details.
+A command-line (CLI) application in Python for registering and managing IT assets and their associated security vulnerabilities, with risk analysis based on linear algebra (in development). Built as a study project for a Cybersecurity course at UFU, applying clean code practices: expressive naming, single-responsibility functions, layered architecture, object-oriented programming, and error handling that doesn't leak internal details.
 
 ## ✨ Features
 
@@ -16,8 +16,8 @@ Each asset type is a **subclass** of `Ativo`, with its own specific attributes:
 
 **Available operations:**
 - **Registration**: ID, name, type, department (IT / Finance / Marketing / HR / Legal), owner, status (Active / Inactive / Under maintenance), and type-specific attributes, all with input validation.
-- **Listing**: view all assets, or search by **ID**, by **name/hostname** (partial, case-insensitive), or by **type** (partial, case-insensitive).
-- **Editing**: update owner, status, department, and type-specific attributes.
+- **Listing**: view all assets, filter by **type** or by **status**, or show a single asset by **ID** or by **name/hostname** (partial, case-insensitive).
+- **Editing**: update owner, status, department, and type-specific attributes, or **change the asset type** while keeping its linked vulnerabilities.
 - **Deletion**: remove an asset by ID, with confirmation before deletion.
 
 ### Vulnerabilities
@@ -51,32 +51,100 @@ Model based on linear algebra that estimates the risk of each asset from its vul
 
 ## ✨ Architecture
 
+The project is organized in **layers**. Each layer is a package inside `inventario/` with a single responsibility:
+
+```mermaid
+flowchart TD
+    main["main.py<br/>loads the data and opens the menu"]
+    interface["INTERFACE<br/>inventario/interface<br/>menu.py, ativos.py, vulnerabilidades.py,<br/>entradas.py, conversao_das_opcoes_do_menu.py"]
+    servicos["SERVICES<br/>inventario/servicos<br/>ativos.py, vulnerabilidades.py"]
+    persistencia["PERSISTENCE<br/>inventario/persistencia<br/>arquivos_json.py"]
+    dominio["DOMAIN<br/>inventario/dominio<br/>ativo.py, vulnerabilidade.py, enums.py,<br/>excecoes.py, validacoes.py"]
+
+    main --> interface
+    main --> persistencia
+    interface --> servicos
+    servicos --> persistencia
+    interface -.-> dominio
+    servicos -.-> dominio
+    persistencia -.-> dominio
+```
+
+**Dependency rule:** arrows only point downward. The interface calls the services, and the services call the persistence layer. Every layer may use the domain (dashed arrows), but the domain imports no other layer.
+
+### Responsibility of each layer
+
+- **Interface** (`inventario/interface/`): the only layer that talks to the user (`input` and `print`). It shows the menus, reads and converts the input, and displays results and error messages.
+  - `menu.py`: `menu_principal`, `menu_listagem`, and `menu_vulnerabilidades`
+  - `ativos.py`: asset registration, editing, and deletion screens (`cadastrar_ativo`, `editar_ativo`, `excluir_ativo`, `perguntar_ativo`...)
+  - `vulnerabilidades.py`: catalog and link screens (`cadastrar_vulnerabilidade`, `editar_vulnerabilidade`, `vincular_a_um_ativo`, `mostrar_vulnerabilidade`...)
+  - `entradas.py`: `pedir_*` functions, which read and validate what was typed
+  - `conversao_das_opcoes_do_menu.py`: converts a numbered menu option into a domain value (`"1"` → `StatusDoAtivo.ATIVO`, `"1"` → `Notebook`...)
+- **Services** (`inventario/servicos/`): hold the registration, search, editing, deletion, and linking operations. They receive ready-made data as parameters, apply the rules, save through the persistence layer, and raise `DadoInvalidoError` when something is wrong. They never use `input` or `print`.
+  - `ativos.py`: `registrar_ativo_no_inventario`, `atualizar_ativo_no_inventario`, `remover_ativo_do_inventario`, `obter_ativo`, and the searches (`encontrar_ativo_por_id`, `encontrar_ativo_por_nome`, `encontrar_ativos_por_status`, `listar_ativos_por_tipo`)
+  - `vulnerabilidades.py`: `registrar_vulnerabilidade_no_catalogo`, `atualizar_vulnerabilidade_no_catalogo`, `excluir_vulnerabilidade_do_catalogo`, `vincular_vulnerabilidade`, `desvincular_vulnerabilidade`, `atualizar_status_vulnerabilidade`, and `proximo_id`
+- **Persistence** (`inventario/persistencia/`): saves and loads the data. The current implementation uses JSON files (`arquivos_json.py`: `salvar_dados`, `carregar_dados`, `salvar_catalogo`, `carregar_catalogo`).
+- **Domain** (`inventario/dominio/`): the entities and the rules that hold for any interface, depending on no one.
+  - `ativo.py`: `Ativo` and its subclasses `Notebook`, `Servidor`, `Roteador`, `Impressora`, plus `MAPA_DE_TIPOS`
+  - `vulnerabilidade.py`: `Vulnerabilidade`, with the level calculated from the CVSS score
+  - `enums.py`: `Setor`, `StatusDoAtivo`, `StatusDaVuln`, `NivelDaVulnerabilidade`, `Cor`, `Tecnologia`
+  - `excecoes.py`: `DadoInvalidoError`
+  - `validacoes.py`: validation rules (`validar_nome_responsavel`, `validar_cvss`)
+
+### Example flow: deleting an asset
+
+```
+menu_principal                      (interface)    user picks option 3
+└── excluir_ativo                   (interface)
+    ├── perguntar_ativo             (interface)    asks for the ID
+    │   └── obter_ativo             (service)      searches; raises an error if missing
+    ├── confirmar_exclusao          (interface)    asks for "sim"
+    └── remover_ativo_do_inventario (service)      removes it from the inventory
+        └── salvar_dados            (persistence)
+```
+
+### Design decisions
+
+- **Services take IDs, not questions:** every service works with ready-made data (e.g., `remover_ativo_do_inventario(ativos, id_ativo)`). The same rule can then be used by the terminal menu or by an API, without depending on `input`.
+- **Errors go up, the interface displays them:** services and the domain raise `DadoInvalidoError` with the message; the interface catches it and shows that message. Each error text is written in a single place.
+- **Defense in depth:** rules such as the CVSS range (`validar_cvss`) live in the domain and are used both by the interface (to ask again) and by the services (as a guarantee, wherever the data comes from).
+- **A single list of types:** the list of asset types lives in the domain (`MAPA_DE_TIPOS`); the menu numbering (`TIPOS_DE_ATIVOS`) is generated from it by the interface.
+- **Ready for change:** replacing the terminal with an HTTP service only touches the interface layer, and replacing the JSON files with a SQL database only touches the persistence layer.
+
+### Domain model
+
 - **Class hierarchy**: `Ativo` (base) + `Notebook`, `Servidor`, `Roteador`, `Impressora` (subclasses)
 - **Polymorphism**: each subclass overrides `exibir_detalhes()` and adds its own specific attributes
 - **Vulnerability catalog**: `Vulnerabilidade` objects stored in a `catalogo[id]` dictionary; each asset keeps a `{id_vulnerabilidade: StatusDaVuln}` dictionary of links (reference, not copy)
 - **Calculated level**: `Vulnerabilidade.nivel()` derives the severity level from the CVSS score
 - **Serialization / deserialization**: `para_dicionario()` converts objects to dictionaries; `de_dicionario()` (class method) rebuilds objects from dictionaries
 - **ID index**: `ativos[id]` and `catalogo[id]` dictionaries for O(1) search
-- **Separation of responsibilities**: functions that change data (e.g., `vincular_vulnerabilidade()`) only validate and raise `DadoInvalidoError`, while the menu handles all user interaction; pure functions (e.g., `listar_ativos_por_tipo()`) are kept apart from the I/O layer
 
-## ✨ Project Structure
+## 🫧 Project Structure
 
 ```
 .
 ├── main.py
 ├── inventario/
-│   ├── enums.py
-│   ├── excecoes.py
-│   ├── validacoes.py
-│   ├── entradas.py
-│   ├── persistencia.py
-│   ├── modelos/
-│   │   ├── ativo.py
-│   │   └── vulnerabilidade.py
-│   └── operacoes/
-│       ├── ativos.py
-│       └── vulnerabilidades.py
+│   ├── interface/
+│   │   ├── menu.py
+│   │   ├── ativos.py
+│   │   ├── vulnerabilidades.py
+│   │   ├── entradas.py
+│   │   └── conversao_das_opcoes_do_menu.py
+│   ├── servicos/
+│   │   ├── ativos.py
+│   │   └── vulnerabilidades.py
+│   ├── persistencia/
+│   │   └── arquivos_json.py
+│   └── dominio/
+│       ├── ativo.py
+│       ├── vulnerabilidade.py
+│       ├── enums.py
+│       ├── excecoes.py
+│       └── validacoes.py
 ├── tests/
+│   ├── apoio.py
 │   ├── testes.py
 │   ├── test_vulnerabilidades.py
 │   └── test_exemplos.py
@@ -97,7 +165,7 @@ Model based on linear algebra that estimates the risk of each asset from its vul
 
 > The data files `ativos.json` and `vulnerabilidades.json` are generated automatically on first run and are not version-controlled.
 
-## 🫧 Getting Started
+## ✨ Getting Started
 
 Requirement: Python 3.8 or higher installed.
 
@@ -122,6 +190,8 @@ The program opens an interactive menu in the terminal. Follow the numbered optio
 6 - Sair
 ```
 
+Inside option 2 (Listar ativo), you can list **all** assets, **filter** by type or status, or show **one** asset by name or ID.
+
 Inside option 4 (Menu de vulnerabilidades), a submenu manages the catalog and the links between vulnerabilities and assets:
 
 ```
@@ -136,7 +206,7 @@ Inside option 4 (Menu de vulnerabilidades), a submenu manages the catalog and th
 9 - Voltar ao menu principal
 ```
 
-Inside option 5 (Editar ativo), a submenu lets you update the owner, status, department, or type-specific attributes of an asset.
+Inside option 5 (Editar ativo), a submenu lets you update the owner, status, department, type-specific attributes, or the type of an asset. Changes are saved when you choose "Voltar".
 
 ### Running the tests
 
@@ -144,9 +214,12 @@ Inside option 5 (Editar ativo), a submenu lets you update the owner, status, dep
 python3 -m unittest tests/testes.py tests/test_vulnerabilidades.py
 python3 -m pytest tests/test_exemplos.py
 python3 -m flake8 main.py inventario
+python3 -m black --check main.py inventario
 ```
 
-## ✨ Deletion Policy
+Tests that save data inherit from `TesteComArquivosTemporarios` (`tests/apoio.py`), which swaps the real JSON files for temporary ones during each test.
+
+## 🫧 Deletion Policy
 
 The system uses **physical deletion**:
 - When an **asset** is removed, the record is permanently erased from `ativos.json`, along with its links. The vulnerabilities themselves remain in the catalog.
@@ -159,7 +232,7 @@ The system uses **physical deletion**:
 
 **Logical deletion** (marking as inactive instead of erasing) was considered but discarded as it is outside the project scope.
 
-## ✅ Requirements Met
+## ✨ Requirements Met
 
 ### Assignment 1 (Sprints 1 and 2)
 - [x] Classes represent domain entities
@@ -169,15 +242,16 @@ The system uses **physical deletion**:
 - [x] ID index (O(1) search)
 - [x] Git branches and merge
 
-## ✅ Assignment 2 Requirements
+## 🫧 Assignment 2 Requirements
 
-| # | Requirement | Status |
-|---|---|---|
-| 1 | Assets as individual objects (subclasses) | ✅ |
-| 2 | JSON persistence | ✅ |
-| 3 | Docker container execution | ⏳ |
-| 4 | Risk calculation (linear algebra) | ⏳ |
+| #   | Requirement                               | Status |
+| --- | ----------------------------------------- | ------ |
+| 1   | Assets as individual objects (subclasses) | ✅     |
+| 2   | JSON persistence                          | ✅     |
+| 3   | Layered architecture (S4_01)              | ✅     |
+| 4   | Docker container execution                | ⏳     |
+| 5   | Risk calculation (linear algebra)         | ⏳     |
 
-## 🫧 License
+## ✨ License
 
 Study project, free to use for educational purposes.
