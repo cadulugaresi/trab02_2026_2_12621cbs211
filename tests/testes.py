@@ -19,19 +19,21 @@ from inventario.interface.entradas import (
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
 from inventario.persistencia.arquivos_json import carregar_dados, salvar_dados
-from inventario.operacoes.ativos import (
+from inventario.interface.ativos import (
     cadastrar_ativo,
     cadastro_impressora,
     cadastro_notebook,
     cadastro_roteador,
     cadastro_servidor,
     confirmar_exclusao,
+    pedir_id_disponivel,
+)
+from inventario.servicos.ativos import (
     encontrar_ativo_por_id,
     encontrar_ativo_por_nome,
     encontrar_ativos_por_status,
     listar_ativos_por_tipo,
     obter_ativo,
-    pedir_id_disponivel,
     registrar_ativo_no_inventario,
 )
 from inventario.dominio.validacoes import validar_nome_responsavel

@@ -8,19 +8,21 @@ from inventario.dominio.enums import NivelDaVulnerabilidade, Setor, StatusDaVuln
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import Notebook, Servidor
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
-from inventario.operacoes.ativos import escolher_ativo_com_vulnerabilidades, perguntar_ativo
-from inventario.operacoes.vulnerabilidades import (
-    atualizar_status_vulnerabilidade,
+from inventario.interface.ativos import escolher_ativo_com_vulnerabilidades, perguntar_ativo
+from inventario.interface.vulnerabilidades import (
     cadastrar_vulnerabilidade,
     confirmar_exclusao_vuln,
-    desvincular_vulnerabilidade,
     editar_vulnerabilidade,
     encontrar_vulnerabilidade,
-    excluir_vulnerabilidade_do_catalogo,
     mostrar_vulnerabilidade,
     mostrar_vulnerabilidades_do_ativo,
-    proximo_id,
     vincular_a_um_ativo,
+)
+from inventario.servicos.vulnerabilidades import (
+    atualizar_status_vulnerabilidade,
+    desvincular_vulnerabilidade,
+    excluir_vulnerabilidade_do_catalogo,
+    proximo_id,
     vincular_vulnerabilidade,
 )
 from inventario.persistencia.arquivos_json import (

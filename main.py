@@ -12,27 +12,31 @@ from inventario.persistencia.arquivos_json import (
     salvar_catalogo,
     salvar_dados,
 )
-from inventario.operacoes.ativos import (
+from inventario.interface.ativos import (
     cadastrar_ativo,
     editar_ativo,
+    escolher_ativo_com_vulnerabilidades,
+    excluir_ativo,
+)
+from inventario.interface.vulnerabilidades import (
+    cadastrar_vulnerabilidade,
+    confirmar_exclusao_vuln,
+    editar_vulnerabilidade,
+    encontrar_vulnerabilidade,
+    mostrar_vulnerabilidade,
+    mostrar_vulnerabilidades_do_ativo,
+    vincular_a_um_ativo,
+)
+from inventario.servicos.ativos import (
     encontrar_ativo_por_id,
     encontrar_ativo_por_nome,
     encontrar_ativos_por_status,
-    excluir_ativo,
-    escolher_ativo_com_vulnerabilidades,
     listar_ativos_por_tipo,
 )
-from inventario.operacoes.vulnerabilidades import (
-    cadastrar_vulnerabilidade,
-    mostrar_vulnerabilidade,
-    mostrar_vulnerabilidades_do_ativo,
+from inventario.servicos.vulnerabilidades import (
     atualizar_status_vulnerabilidade,
-    vincular_a_um_ativo,
     desvincular_vulnerabilidade,
-    encontrar_vulnerabilidade,
     excluir_vulnerabilidade_do_catalogo,
-    confirmar_exclusao_vuln,
-    editar_vulnerabilidade,
 )
 
 ativos = carregar_dados()
