@@ -32,7 +32,7 @@ from inventario.operacoes.ativos import (
     listar_ativos_por_tipo,
     obter_ativo,
     pedir_id_disponivel,
-    registrar_ativo,
+    registrar_ativo_no_inventario,
 )
 from inventario.validacoes import (
     validar_cor,
@@ -532,7 +532,7 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
         ativo = Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)
         ativos = {1: ativo}
         with self.assertRaises(DadoInvalidoError):
-            registrar_ativo(ativos, ativo)
+            registrar_ativo_no_inventario(ativos, ativo)
 
     def test_cadastra_notebook(self):
         # Ordem: tipo, id, nome, setor, responsável, status, so, tela

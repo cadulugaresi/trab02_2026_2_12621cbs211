@@ -20,14 +20,14 @@ def cadastrar_vulnerabilidade(catalogo):
     nome_vulnerabilidade = pedir_info("Digite o nome da vulnerabilidade: ")
     cvss = pedir_cvss("Digite a nota CVSS da vulnerabilidade (0.1 a 10): ")
 
-    vulnerabilidade = registrar_vulnerabilidade(catalogo, nome_vulnerabilidade, cvss)
+    vulnerabilidade = registrar_vulnerabilidade_no_catalogo(catalogo, nome_vulnerabilidade, cvss)
 
     mostrar_vulnerabilidade(vulnerabilidade)
 
     return vulnerabilidade
 
 
-def registrar_vulnerabilidade(catalogo, nome_vulnerabilidade, cvss):
+def registrar_vulnerabilidade_no_catalogo(catalogo, nome_vulnerabilidade, cvss):
     id_vulnerabilidade = proximo_id(catalogo)
 
     vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)

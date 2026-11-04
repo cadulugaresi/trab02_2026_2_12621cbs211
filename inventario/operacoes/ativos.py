@@ -79,13 +79,13 @@ def cadastrar_ativo(ativos):
         cor, tecnologia = cadastro_impressora()
         ativo = Impressora(ID_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
 
-    registrar_ativo(ativos, ativo)
+    registrar_ativo_no_inventario(ativos, ativo)
     print("Ativo cadastrado com sucesso!")
     print(ativo.exibir_detalhes())
     return ativo
 
 
-def registrar_ativo(ativos, ativo):
+def registrar_ativo_no_inventario(ativos, ativo):
     if ativo.id in ativos:
         raise DadoInvalidoError("Já existe um ativo cadastrado com este ID.")
 
