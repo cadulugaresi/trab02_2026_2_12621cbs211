@@ -3,7 +3,7 @@ import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
-from inventario.entradas import pedir_cvss, pedir_float, pedir_status_vulnerabilidade
+from inventario.interface.entradas import pedir_cvss, pedir_float, pedir_status_vulnerabilidade
 from inventario.dominio.enums import NivelDaVulnerabilidade, Setor, StatusDaVuln, StatusDoAtivo
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import Notebook, Servidor
@@ -29,7 +29,7 @@ from inventario.persistencia.arquivos_json import (
     salvar_catalogo,
     salvar_dados,
 )
-from inventario.validacoes import validar_status_vulnerabilidade
+from inventario.interface.conversao_das_opcoes_do_menu import validar_status_vulnerabilidade
 from tests.apoio import TesteComArquivosTemporarios
 
 

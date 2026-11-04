@@ -3,14 +3,6 @@ from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
 
 
-def validar_nome_responsavel(nome):
-
-    if not nome:
-        raise DadoInvalidoError("Este campo não pode ser vazio.")
-    if nome.isnumeric():
-        raise DadoInvalidoError("Este campo não pode ser composto apenas por números.")
-
-
 def validar_status(status_digitado):
 
     if status_digitado == "1":

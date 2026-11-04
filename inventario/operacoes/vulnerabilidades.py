@@ -1,4 +1,9 @@
-from inventario.entradas import pedir_cvss, pedir_info, pedir_int, pedir_status_vulnerabilidade
+from inventario.interface.entradas import (
+    pedir_cvss,
+    pedir_info,
+    pedir_int,
+    pedir_status_vulnerabilidade,
+)
 from inventario.operacoes.ativos import obter_ativo, perguntar_ativo
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade

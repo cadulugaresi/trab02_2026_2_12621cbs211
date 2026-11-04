@@ -1,5 +1,5 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.entradas import (
+from inventario.interface.entradas import (
     pedir_info,
     pedir_int,
     pedir_status,

@@ -1,8 +1,8 @@
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import OPCOES_MENU
-from inventario.validacoes import (
+from inventario.dominio.validacoes import validar_nome_responsavel
+from inventario.interface.conversao_das_opcoes_do_menu import (
     validar_cor,
-    validar_nome_responsavel,
     validar_setor,
     validar_status,
     validar_status_vulnerabilidade,

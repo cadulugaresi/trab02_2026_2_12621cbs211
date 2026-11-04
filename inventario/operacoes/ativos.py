@@ -1,4 +1,4 @@
-from inventario.entradas import (
+from inventario.interface.entradas import (
     pedir_cor,
     pedir_float,
     pedir_info,

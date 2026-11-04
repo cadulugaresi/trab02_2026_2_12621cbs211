@@ -6,7 +6,7 @@ from inventario.dominio.enums import (
     StatusDoAtivo,
     Tecnologia,
 )
-from inventario.entradas import (
+from inventario.interface.entradas import (
     pedir_cor,
     pedir_float,
     pedir_info,
@@ -34,9 +34,9 @@ from inventario.operacoes.ativos import (
     pedir_id_disponivel,
     registrar_ativo_no_inventario,
 )
-from inventario.validacoes import (
+from inventario.dominio.validacoes import validar_nome_responsavel
+from inventario.interface.conversao_das_opcoes_do_menu import (
     validar_cor,
-    validar_nome_responsavel,
     validar_setor,
     validar_status,
     validar_tecnologia,
