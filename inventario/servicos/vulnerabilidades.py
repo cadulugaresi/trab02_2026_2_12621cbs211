@@ -2,6 +2,7 @@ from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.persistencia.arquivos_json import salvar_catalogo, salvar_dados
 from inventario.servicos.ativos import obter_ativo
+from inventario.dominio.validacoes import validar_cvss
 
 
 def proximo_id(dicionario):
@@ -16,6 +17,7 @@ def proximo_id(dicionario):
 
 
 def registrar_vulnerabilidade_no_catalogo(catalogo, nome_vulnerabilidade, cvss):
+    cvss = validar_cvss(cvss)
     id_vulnerabilidade = proximo_id(catalogo)
 
     vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)
@@ -76,5 +78,6 @@ def excluir_vulnerabilidade_do_catalogo(catalogo, ativos, id_vulnerabilidade):
 def atualizar_vulnerabilidade_no_catalogo(catalogo, vulnerabilidade_atualizada):
     if vulnerabilidade_atualizada.id_vulnerabilidade not in catalogo:
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
+    vulnerabilidade_atualizada.cvss = validar_cvss(vulnerabilidade_atualizada.cvss)
     catalogo[vulnerabilidade_atualizada.id_vulnerabilidade] = vulnerabilidade_atualizada
     salvar_catalogo(catalogo)

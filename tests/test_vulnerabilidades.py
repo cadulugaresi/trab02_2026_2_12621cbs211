@@ -7,6 +7,7 @@ from inventario.interface.entradas import pedir_cvss, pedir_float, pedir_status_
 from inventario.dominio.enums import NivelDaVulnerabilidade, Setor, StatusDaVuln, StatusDoAtivo
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import Notebook, Servidor
+from inventario.dominio.validacoes import validar_cvss
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.interface.ativos import escolher_ativo_com_vulnerabilidades, perguntar_ativo
 from inventario.interface.vulnerabilidades import (
@@ -24,6 +25,7 @@ from inventario.servicos.vulnerabilidades import (
     desvincular_vulnerabilidade,
     excluir_vulnerabilidade_do_catalogo,
     proximo_id,
+    registrar_vulnerabilidade_no_catalogo,
     vincular_vulnerabilidade,
 )
 from inventario.persistencia.arquivos_json import (
@@ -166,6 +168,34 @@ class TestPedirCvss(unittest.TestCase):
     def test_arredonda_para_uma_casa(self):
         with patch("builtins.input", return_value="3.94"):
             self.assertEqual(pedir_cvss("Digite: "), 3.9)
+
+    def test_mostra_a_mensagem_do_dominio(self):
+        with patch("builtins.input", side_effect=["15", "7"]):
+            saida = capturar_saida(pedir_cvss, "Digite: ")
+        self.assertIn("O CVSS deve estar entre 0.1 e 10.", saida)
+
+
+class TestValidarCvss(unittest.TestCase):
+
+    def test_aceita_os_limites(self):
+        self.assertEqual(validar_cvss(0.1), 0.1)
+        self.assertEqual(validar_cvss(10), 10)
+
+    def test_arredonda_para_uma_casa(self):
+        self.assertEqual(validar_cvss(7.46), 7.5)
+
+    def test_rejeita_zero_e_negativo(self):
+        for cvss in (0, -3):
+            with self.assertRaises(DadoInvalidoError):
+                validar_cvss(cvss)
+
+    def test_rejeita_maior_que_10(self):
+        with self.assertRaises(DadoInvalidoError):
+            validar_cvss(10.1)
+
+    def test_rejeita_o_que_vira_zero_ao_arredondar(self):
+        with self.assertRaises(DadoInvalidoError):
+            validar_cvss(0.04)
 
 
 # Catálogo ---------------------------------------
@@ -357,6 +387,25 @@ class TestAtualizarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
         with self.assertRaises(DadoInvalidoError):
             atualizar_vulnerabilidade_no_catalogo(self.catalogo, Vulnerabilidade(99, "Inexistente", 5.0))
         self.assertNotIn(99, self.catalogo)
+
+    def test_recusa_cvss_invalido_sem_salvar(self):
+        self.catalogo[3].cvss = 50
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_vulnerabilidade_no_catalogo(self.catalogo, self.catalogo[3])
+        self.assertEqual(carregar_catalogo(), {})
+
+
+class TestRegistrarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
+
+    def test_arredonda_o_cvss(self):
+        nova = registrar_vulnerabilidade_no_catalogo(criar_catalogo(), "SMB desatualizado", 8.14)
+        self.assertEqual(nova.cvss, 8.1)
+
+    def test_recusa_cvss_invalido_sem_guardar(self):
+        catalogo = criar_catalogo()
+        with self.assertRaises(DadoInvalidoError):
+            registrar_vulnerabilidade_no_catalogo(catalogo, "SMB desatualizado", 50)
+        self.assertEqual(len(catalogo), 2)
 
 
 class TestExcluirVulnerabilidadeDoCatalogo(TesteComArquivosTemporarios):

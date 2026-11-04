@@ -1,5 +1,5 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.dominio.validacoes import validar_nome_responsavel
+from inventario.dominio.validacoes import validar_cvss, validar_nome_responsavel
 from inventario.interface.conversao_das_opcoes_do_menu import (
     TIPOS_DE_ATIVOS,
     validar_cor,
@@ -147,14 +147,12 @@ def pedir_int(mensagem):
 
 
 def pedir_cvss(mensagem):
-
     while True:
         cvss = pedir_float(mensagem)
-
-        if cvss > 10:
-            print("O CVSS não pode ser maior que 10.")
-        else:
-            return round(cvss, 1)
+        try:
+            return validar_cvss(cvss)
+        except DadoInvalidoError as erro:
+            print(erro)
 
 
 def pedir_tipo(mensagem):
