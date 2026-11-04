@@ -10,11 +10,11 @@ from inventario.interface.entradas import (
     pedir_tecnologia,
     pedir_tipo,
 )
-from inventario.persistencia.arquivos_json import salvar_dados
 from inventario.servicos.ativos import (
     encontrar_ativo_por_id,
     obter_ativo,
     registrar_ativo_no_inventario,
+    remover_ativo_do_inventario,
 )
 
 
@@ -237,24 +237,16 @@ def editar_ativo(ativos):
 
 
 def excluir_ativo(ativos):
-    if ativos:
-        id_a_excluir = pedir_int("Digite o ID do ativo que deseja excluir: ")
-        ativo_encontrado = encontrar_ativo_por_id(id_a_excluir, ativos)
+    ativo = perguntar_ativo(ativos)
+    if ativo is None:
+        return
 
-        if ativo_encontrado:
+    if not confirmar_exclusao(ativo):
+        print("Exclusão cancelada.")
+        return
 
-            if confirmar_exclusao(ativo_encontrado):
-                del ativos[ativo_encontrado.id]
-                salvar_dados(ativos)
-                print("Ativo excluído com sucesso!")
-            else:
-                print("Exclusão cancelada.")
-
-        else:
-            print("Ativo não encontrado.")
-
-    else:
-        print("Nenhum ativo cadastrado.")
+    remover_ativo_do_inventario(ativos, ativo.id)
+    print("Ativo excluído com sucesso!")
 
 
 def confirmar_exclusao(ativo):

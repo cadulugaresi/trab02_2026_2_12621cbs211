@@ -51,3 +51,9 @@ def listar_ativos_por_tipo(classe, ativos):
             encontrados.append(ativo)
 
     return encontrados
+
+
+def remover_ativo_do_inventario(ativos, id_ativo):
+    obter_ativo(ativos, id_ativo)
+    del ativos[id_ativo]
+    salvar_dados(ativos)

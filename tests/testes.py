@@ -26,6 +26,7 @@ from inventario.interface.ativos import (
     cadastro_roteador,
     cadastro_servidor,
     confirmar_exclusao,
+    excluir_ativo,
     pedir_id_disponivel,
 )
 from inventario.servicos.ativos import (
@@ -35,6 +36,7 @@ from inventario.servicos.ativos import (
     listar_ativos_por_tipo,
     obter_ativo,
     registrar_ativo_no_inventario,
+    remover_ativo_do_inventario,
 )
 from inventario.dominio.validacoes import validar_nome_responsavel
 from inventario.interface.conversao_das_opcoes_do_menu import (
@@ -220,6 +222,24 @@ class TestObterAtivo(unittest.TestCase):
     def test_id_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
             obter_ativo(self.ativos, 99)
+
+
+class TestRemoverAtivoDoInventario(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.ativos = {1: self.notebook}
+
+    def test_remove_e_salva(self):
+        remover_ativo_do_inventario(self.ativos, 1)
+        self.assertNotIn(1, self.ativos)
+        self.assertNotIn(1, carregar_dados())
+
+    def test_id_inexistente_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            remover_ativo_do_inventario(self.ativos, 99)
+        self.assertIn(1, self.ativos)
 
 
 class TestEncontrarAtivosPorNome(unittest.TestCase):
@@ -588,6 +608,35 @@ class TestConfirmarExclusao(unittest.TestCase):
     def test_retorna_false_com_nao(self):
         with patch("builtins.input", return_value="nao"):
             self.assertFalse(confirmar_exclusao(self.ativo))
+
+
+# Excluir Ativo ----------------------------------
+
+
+class TestExcluirAtivo(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.ativos = {
+            1: Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        }
+
+    def test_confirmando_remove_e_salva(self):
+        with patch("builtins.input", side_effect=["1", "sim"]):
+            excluir_ativo(self.ativos)
+        self.assertNotIn(1, self.ativos)
+        self.assertNotIn(1, carregar_dados())
+
+    def test_cancelando_mantem_o_ativo(self):
+        with patch("builtins.input", side_effect=["1", ""]):
+            excluir_ativo(self.ativos)
+        self.assertIn(1, self.ativos)
+
+    def test_id_inexistente_nao_pede_confirmacao(self):
+        with patch("builtins.input", side_effect=["99"]) as entrada:
+            excluir_ativo(self.ativos)
+        self.assertEqual(entrada.call_count, 1)
+        self.assertIn(1, self.ativos)
 
 
 if __name__ == "__main__":
