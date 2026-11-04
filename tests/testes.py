@@ -1,6 +1,5 @@
 import os
 import unittest
-import inventario.persistencia
 from inventario.enums import (
     Cor,
     Setor,
@@ -31,6 +30,7 @@ from inventario.operacoes.ativos import (
     encontrar_ativo_por_nome,
     encontrar_ativos_por_status,
     listar_ativos_por_tipo,
+    obter_ativo,
     pedir_id_disponivel,
     registrar_ativo,
 )
@@ -42,6 +42,7 @@ from inventario.validacoes import (
     validar_tecnologia,
     validar_tipo,
 )
+from tests.apoio import TesteComArquivosTemporarios
 from unittest.mock import patch
 
 
@@ -205,6 +206,20 @@ class TestEncontrarAtivoPorId(unittest.TestCase):
         self.assertIsNone(ativo)
 
 
+class TestObterAtivo(unittest.TestCase):
+
+    def setUp(self):
+        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.ativos = {1: self.notebook}
+
+    def test_devolve_ativo_existente(self):
+        self.assertIs(obter_ativo(self.ativos, 1), self.notebook)
+
+    def test_id_inexistente_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):  # diferente do encontrar, que devolve None
+            obter_ativo(self.ativos, 99)
+
+
 class TestEncontrarAtivosPorNome(unittest.TestCase):
 
     def setUp(self):
@@ -336,22 +351,12 @@ class TestSerializacaoImpressora(unittest.TestCase):
 # Persistência de dados --------------------------
 
 
-class TestPersistencia(unittest.TestCase):
-
-    def setUp(self):
-        self.arquivo_teste = "teste_ativos_tmp.json"
-        self.arquivo_original = inventario.persistencia.ARQUIVO_DADOS
-        inventario.persistencia.ARQUIVO_DADOS = self.arquivo_teste
-
-    def tearDown(self):
-        inventario.persistencia.ARQUIVO_DADOS = self.arquivo_original
-        if os.path.exists(self.arquivo_teste):
-            os.remove(self.arquivo_teste)
+class TestPersistencia(TesteComArquivosTemporarios):
 
     def test_salvar_cria_arquivo(self):
         ativos = {1: Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)}
         salvar_dados(ativos)
-        self.assertTrue(os.path.exists(self.arquivo_teste))
+        self.assertTrue(os.path.exists(self.arquivo_dados))
 
     def test_carregar_devolve_o_que_foi_salvo(self):
         ativos = {1: Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)}
@@ -361,9 +366,7 @@ class TestPersistencia(unittest.TestCase):
         self.assertEqual(carregados[1].nome, "Dell")
 
     def test_carregar_arquivo_inexistente_retorna_vazio(self):
-        if os.path.exists(self.arquivo_teste):
-            os.remove(self.arquivo_teste)
-        self.assertEqual(carregar_dados(), {})
+        self.assertEqual(carregar_dados(), {})  # o setUp já começa sem arquivo
 
 
 # Testes de Input --------------------------------
@@ -515,16 +518,7 @@ class TestCadastroImpressora(unittest.TestCase):
 # Cadastrar Ativo --------------------------------
 
 
-class TestCadastrarAtivo(unittest.TestCase):
-
-    def setUp(self):
-        self.original = inventario.persistencia.ARQUIVO_DADOS
-        inventario.persistencia.ARQUIVO_DADOS = "teste_ativos_tmp.json"  # não mexe no real
-
-    def tearDown(self):
-        if os.path.exists(inventario.persistencia.ARQUIVO_DADOS):
-            os.remove(inventario.persistencia.ARQUIVO_DADOS)
-        inventario.persistencia.ARQUIVO_DADOS = self.original
+class TestCadastrarAtivo(TesteComArquivosTemporarios):
 
     def test_guarda_no_inventario(self):
         ativos = {}

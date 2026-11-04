@@ -170,8 +170,7 @@ while True:
                         .lower()
                     )
                     if resposta in ("sim", "s"):
-                        if vincular_a_um_ativo(nova_vulnerabilidade, ativos, catalogo):
-                            salvar_dados(ativos)
+                        vincular_a_um_ativo(nova_vulnerabilidade, ativos, catalogo)
                     else:
                         print(
                             "Nova vulnerabilidade criada com sucesso!\nNão vinculada a nenhum ativo."
@@ -189,8 +188,7 @@ while True:
                     vulnerabilidade_encontrada = encontrar_vulnerabilidade(catalogo)
 
                     if vulnerabilidade_encontrada:
-                        if vincular_a_um_ativo(vulnerabilidade_encontrada, ativos, catalogo):
-                            salvar_dados(ativos)
+                        vincular_a_um_ativo(vulnerabilidade_encontrada, ativos, catalogo)
 
                 elif opcao_vulnerabilidade == "4":
                     ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
@@ -209,9 +207,8 @@ while True:
 
                         try:
                             atualizar_status_vulnerabilidade(
-                                ativo_encontrado, id_vulnerabilidade, novo_status
+                                ativos, ativo_encontrado.id, id_vulnerabilidade, novo_status
                             )
-                            salvar_dados(ativos)
                             print(
                                 f"Status atualizado com sucesso! Novo status: {novo_status.name.lower()}"
                             )
@@ -228,8 +225,9 @@ while True:
                         )
 
                         try:
-                            desvincular_vulnerabilidade(ativo_encontrado, id_vulnerabilidade)
-                            salvar_dados(ativos)
+                            desvincular_vulnerabilidade(
+                                ativos, ativo_encontrado.id, id_vulnerabilidade
+                            )
                             print("Vulnerabilidade desvinculada com sucesso!")
                         except DadoInvalidoError as erro:
                             print(erro)
@@ -245,8 +243,6 @@ while True:
                             excluir_vulnerabilidade_do_catalogo(
                                 catalogo, ativos, vulnerabilidade_a_excluir.id_vulnerabilidade
                             )
-                            salvar_catalogo(catalogo)
-                            salvar_dados(ativos)
                             print(
                                 f'Vulnerabilidade "{vulnerabilidade_a_excluir.nome_vulnerabilidade}" excluída com sucesso!'
                             )

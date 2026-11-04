@@ -97,6 +97,15 @@ def encontrar_ativo_por_id(ID, ativos):
     return ativos.get(ID)
 
 
+def obter_ativo(ativos, id_ativo):
+    ativo = encontrar_ativo_por_id(id_ativo, ativos)
+
+    if ativo is None:  # regra: o ativo precisa existir
+        raise DadoInvalidoError("Ativo não encontrado.")
+
+    return ativo
+
+
 def encontrar_ativo_por_nome(nome, ativos):
 
     encontrados = []

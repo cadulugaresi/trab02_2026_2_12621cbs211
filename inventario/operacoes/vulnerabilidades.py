@@ -1,8 +1,8 @@
 from inventario.entradas import pedir_cvss, pedir_info, pedir_int, pedir_status_vulnerabilidade
-from inventario.operacoes.ativos import encontrar_ativo
+from inventario.operacoes.ativos import encontrar_ativo, obter_ativo
 from inventario.excecoes import DadoInvalidoError
 from inventario.modelos.vulnerabilidade import Vulnerabilidade
-from inventario.persistencia import salvar_catalogo
+from inventario.persistencia import salvar_catalogo, salvar_dados
 
 
 def proximo_id(dicionario):
@@ -49,25 +49,27 @@ def mostrar_vulnerabilidade(vulnerabilidade, status_tratamento=None):
         print(f"    Status neste ativo: {status_tratamento.name.lower()}")
 
 
-def vincular_vulnerabilidade(ativo, id_vulnerabilidade, status_tratamento, catalogo):
-    if id_vulnerabilidade in catalogo:
+def vincular_vulnerabilidade(ativos, catalogo, id_ativo, id_vulnerabilidade, status_tratamento):
+    ativo = obter_ativo(ativos, id_ativo)  # lança erro se o ativo não existir
 
-        if id_vulnerabilidade in ativo.vulnerabilidades:
-            raise DadoInvalidoError("Esta vulnerabilidade já está vinculada a este ativo.")
-
-        ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
-
-    else:
+    if id_vulnerabilidade not in catalogo:
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
 
+    if id_vulnerabilidade in ativo.vulnerabilidades:
+        raise DadoInvalidoError("Esta vulnerabilidade já está vinculada a este ativo.")
 
-def desvincular_vulnerabilidade(ativo, id_vulnerabilidade):
+    ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
+    salvar_dados(ativos)  # cozinha guarda na despensa
+
+
+def desvincular_vulnerabilidade(ativos, id_ativo, id_vulnerabilidade):
+    ativo = obter_ativo(ativos, id_ativo)
 
     if id_vulnerabilidade not in ativo.vulnerabilidades:
         raise DadoInvalidoError("Esta vulnerabilidade não está vinculada a este ativo.")
 
-    else:
-        del ativo.vulnerabilidades[id_vulnerabilidade]
+    del ativo.vulnerabilidades[id_vulnerabilidade]
+    salvar_dados(ativos)
 
 
 def mostrar_vulnerabilidades_do_ativo(ativo, catalogo):
@@ -76,13 +78,16 @@ def mostrar_vulnerabilidades_do_ativo(ativo, catalogo):
         mostrar_vulnerabilidade(vulnerabilidade, status_tratamento)
 
 
-def atualizar_status_vulnerabilidade(ativo_encontrado, id_vulnerabilidade, novo_status):
-    if id_vulnerabilidade not in ativo_encontrado.vulnerabilidades:
+def atualizar_status_vulnerabilidade(ativos, id_ativo, id_vulnerabilidade, novo_status):
+    ativo = obter_ativo(ativos, id_ativo)
+
+    if id_vulnerabilidade not in ativo.vulnerabilidades:
         raise DadoInvalidoError(
             "Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele."
         )
 
-    ativo_encontrado.vulnerabilidades[id_vulnerabilidade] = novo_status
+    ativo.vulnerabilidades[id_vulnerabilidade] = novo_status
+    salvar_dados(ativos)
 
 
 def encontrar_vulnerabilidade(catalogo):
@@ -110,9 +115,11 @@ def excluir_vulnerabilidade_do_catalogo(catalogo, ativos, id_vulnerabilidade):
 
     for ativo in ativos.values():
         if id_vulnerabilidade in ativo.vulnerabilidades:
-            desvincular_vulnerabilidade(ativo, id_vulnerabilidade)
+            del ativo.vulnerabilidades[id_vulnerabilidade]  # tira de todo ativo que a tinha
 
     del catalogo[id_vulnerabilidade]
+    salvar_catalogo(catalogo)  # salva uma vez só, no final
+    salvar_dados(ativos)
 
 
 def confirmar_exclusao_vuln(vulnerabilidade):
@@ -169,7 +176,11 @@ def vincular_a_um_ativo(vulnerabilidade, ativos, catalogo):
 
     try:
         vincular_vulnerabilidade(
-            ativo_encontrado, vulnerabilidade.id_vulnerabilidade, status_tratamento, catalogo
+            ativos,
+            catalogo,
+            ativo_encontrado.id,
+            vulnerabilidade.id_vulnerabilidade,
+            status_tratamento,
         )
     except DadoInvalidoError as erro:
         print(erro)
