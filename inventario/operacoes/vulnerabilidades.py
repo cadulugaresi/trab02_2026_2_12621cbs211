@@ -1,5 +1,5 @@
 from inventario.entradas import pedir_cvss, pedir_info, pedir_int, pedir_status_vulnerabilidade
-from inventario.operacoes.ativos import encontrar_ativo, obter_ativo
+from inventario.operacoes.ativos import obter_ativo, perguntar_ativo
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.persistencia import salvar_catalogo, salvar_dados
@@ -28,11 +28,11 @@ def cadastrar_vulnerabilidade(catalogo):
 
 
 def registrar_vulnerabilidade(catalogo, nome_vulnerabilidade, cvss):
-    id_vulnerabilidade = proximo_id(catalogo)  # regra: nunca repete ID
+    id_vulnerabilidade = proximo_id(catalogo)
 
     vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)
-    catalogo[id_vulnerabilidade] = vulnerabilidade  # guarda no catálogo
-    salvar_catalogo(catalogo)  # cozinha guarda na despensa
+    catalogo[id_vulnerabilidade] = vulnerabilidade
+    salvar_catalogo(catalogo)
 
     return vulnerabilidade
 
@@ -50,7 +50,7 @@ def mostrar_vulnerabilidade(vulnerabilidade, status_tratamento=None):
 
 
 def vincular_vulnerabilidade(ativos, catalogo, id_ativo, id_vulnerabilidade, status_tratamento):
-    ativo = obter_ativo(ativos, id_ativo)  # lança erro se o ativo não existir
+    ativo = obter_ativo(ativos, id_ativo)
 
     if id_vulnerabilidade not in catalogo:
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
@@ -59,7 +59,7 @@ def vincular_vulnerabilidade(ativos, catalogo, id_ativo, id_vulnerabilidade, sta
         raise DadoInvalidoError("Esta vulnerabilidade já está vinculada a este ativo.")
 
     ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
-    salvar_dados(ativos)  # cozinha guarda na despensa
+    salvar_dados(ativos)
 
 
 def desvincular_vulnerabilidade(ativos, id_ativo, id_vulnerabilidade):
@@ -115,10 +115,10 @@ def excluir_vulnerabilidade_do_catalogo(catalogo, ativos, id_vulnerabilidade):
 
     for ativo in ativos.values():
         if id_vulnerabilidade in ativo.vulnerabilidades:
-            del ativo.vulnerabilidades[id_vulnerabilidade]  # tira de todo ativo que a tinha
+            del ativo.vulnerabilidades[id_vulnerabilidade]
 
     del catalogo[id_vulnerabilidade]
-    salvar_catalogo(catalogo)  # salva uma vez só, no final
+    salvar_catalogo(catalogo)
     salvar_dados(ativos)
 
 
@@ -167,7 +167,7 @@ def editar_vulnerabilidade(vulnerabilidade):
 
 
 def vincular_a_um_ativo(vulnerabilidade, ativos, catalogo):
-    ativo_encontrado = encontrar_ativo(ativos)
+    ativo_encontrado = perguntar_ativo(ativos)
 
     if not ativo_encontrado:
         return False

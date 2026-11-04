@@ -8,7 +8,7 @@ from inventario.dominio.enums import NivelDaVulnerabilidade, Setor, StatusDaVuln
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import Notebook, Servidor
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
-from inventario.operacoes.ativos import encontrar_ativo, escolher_ativo_com_vulnerabilidades
+from inventario.operacoes.ativos import escolher_ativo_com_vulnerabilidades, perguntar_ativo
 from inventario.operacoes.vulnerabilidades import (
     atualizar_status_vulnerabilidade,
     cadastrar_vulnerabilidade,
@@ -196,7 +196,7 @@ class TestCadastrarVulnerabilidade(TesteComArquivosTemporarios):
         with patch("builtins.input", side_effect=["SMB desatualizado", "8.1"]):
             with redirect_stdout(io.StringIO()):
                 nova = cadastrar_vulnerabilidade(catalogo)
-        self.assertEqual(len(catalogo), 3)  # agora quem guarda é a própria função
+        self.assertEqual(len(catalogo), 3)
         self.assertIs(catalogo[4], nova)
 
     def test_salva_no_arquivo(self):
@@ -204,7 +204,7 @@ class TestCadastrarVulnerabilidade(TesteComArquivosTemporarios):
         with patch("builtins.input", side_effect=["SMB desatualizado", "8.1"]):
             with redirect_stdout(io.StringIO()):
                 cadastrar_vulnerabilidade(catalogo)
-        self.assertEqual(len(carregar_catalogo()), 3)  # relê o arquivo pra conferir
+        self.assertEqual(len(carregar_catalogo()), 3)
 
 
 class TestMostrarVulnerabilidade(unittest.TestCase):
@@ -232,7 +232,7 @@ class TestMostrarVulnerabilidade(unittest.TestCase):
 class TestVincularVulnerabilidade(TesteComArquivosTemporarios):
 
     def setUp(self):
-        super().setUp()  # liga os arquivos temporários
+        super().setUp()
         self.catalogo = criar_catalogo()
         self.notebook = criar_notebook()
         self.servidor = criar_servidor()
@@ -244,7 +244,7 @@ class TestVincularVulnerabilidade(TesteComArquivosTemporarios):
 
     def test_salva_no_arquivo(self):
         vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA)
-        self.assertIn(3, carregar_dados()[1].vulnerabilidades)  # relê o arquivo pra conferir
+        self.assertIn(3, carregar_dados()[1].vulnerabilidades)
 
     def test_nao_vincula_duas_vezes(self):
         vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA)
@@ -378,7 +378,7 @@ class TestExcluirVulnerabilidadeDoCatalogo(TesteComArquivosTemporarios):
     def test_salva_catalogo_e_ativos(self):
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
-        self.assertNotIn(3, carregar_catalogo())  # relê os dois arquivos
+        self.assertNotIn(3, carregar_catalogo())
         self.assertNotIn(3, carregar_dados()[1].vulnerabilidades)
 
 
@@ -510,7 +510,7 @@ class TestVincularAUmAtivo(TesteComArquivosTemporarios):
 # Escolhas feitas pelo usuário -------------------
 
 
-class TestEncontrarAtivo(unittest.TestCase):
+class TestPerguntarAtivo(unittest.TestCase):
 
     def setUp(self):
         self.ativos = {1: criar_notebook(), 2: criar_servidor()}
@@ -518,18 +518,23 @@ class TestEncontrarAtivo(unittest.TestCase):
     def test_sem_ativos_retorna_none_sem_perguntar(self):
         with patch("builtins.input") as entrada:
             with redirect_stdout(io.StringIO()):
-                self.assertIsNone(encontrar_ativo({}))
+                self.assertIsNone(perguntar_ativo({}))
         entrada.assert_not_called()  # nem chegou a pedir o ID
 
     def test_id_existente_retorna_o_ativo(self):
         with patch("builtins.input", return_value="2"):
             with redirect_stdout(io.StringIO()):
-                self.assertIs(encontrar_ativo(self.ativos), self.ativos[2])
+                self.assertIs(perguntar_ativo(self.ativos), self.ativos[2])
 
     def test_id_inexistente_retorna_none(self):
         with patch("builtins.input", return_value="99"):
             with redirect_stdout(io.StringIO()):
-                self.assertIsNone(encontrar_ativo(self.ativos))
+                self.assertIsNone(perguntar_ativo(self.ativos))
+
+    def test_id_inexistente_mostra_a_mensagem_do_obter_ativo(self):
+        with patch("builtins.input", return_value="99"):
+            saida = capturar_saida(perguntar_ativo, self.ativos)
+        self.assertIn("Ativo não encontrado.", saida)
 
 
 class TestEscolherAtivoComVulnerabilidades(unittest.TestCase):

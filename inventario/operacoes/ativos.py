@@ -79,18 +79,18 @@ def cadastrar_ativo(ativos):
         cor, tecnologia = cadastro_impressora()
         ativo = Impressora(ID_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
 
-    registrar_ativo(ativos, ativo)  # entrega o ativo pronto pra regra
+    registrar_ativo(ativos, ativo)
     print("Ativo cadastrado com sucesso!")
     print(ativo.exibir_detalhes())
     return ativo
 
 
 def registrar_ativo(ativos, ativo):
-    if ativo.id in ativos:  # regra: o ID não pode repetir
+    if ativo.id in ativos:
         raise DadoInvalidoError("Já existe um ativo cadastrado com este ID.")
 
-    ativos[ativo.id] = ativo  # guarda no inventário
-    salvar_dados(ativos)  # cozinha guarda na despensa
+    ativos[ativo.id] = ativo
+    salvar_dados(ativos)
 
 
 def encontrar_ativo_por_id(ID, ativos):
@@ -100,7 +100,7 @@ def encontrar_ativo_por_id(ID, ativos):
 def obter_ativo(ativos, id_ativo):
     ativo = encontrar_ativo_por_id(id_ativo, ativos)
 
-    if ativo is None:  # regra: o ativo precisa existir
+    if ativo is None:
         raise DadoInvalidoError("Ativo não encontrado.")
 
     return ativo
@@ -314,24 +314,23 @@ def confirmar_exclusao(ativo):
         return False
 
 
-def encontrar_ativo(ativos):
+def perguntar_ativo(ativos):
 
     if not ativos:
         print("Nenhum ativo cadastrado.")
         return None
 
     id_ativo = pedir_int("Digite o ID do ativo: ")
-    ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
 
-    if not ativo_encontrado:
-        print("Ativo não encontrado.")
+    try:
+        return obter_ativo(ativos, id_ativo)
+    except DadoInvalidoError as erro:
+        print(erro)
         return None
-
-    return ativo_encontrado
 
 
 def escolher_ativo_com_vulnerabilidades(ativos):
-    ativo_encontrado = encontrar_ativo(ativos)
+    ativo_encontrado = perguntar_ativo(ativos)
     if ativo_encontrado is None:
         return None
     elif not ativo_encontrado.vulnerabilidades:

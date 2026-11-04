@@ -4,7 +4,7 @@ import unittest
 import inventario.persistencia
 
 
-class TesteComArquivosTemporarios(unittest.TestCase):  # base: troca os JSON reais por temporários
+class TesteComArquivosTemporarios(unittest.TestCase):
 
     arquivo_dados = "teste_ativos_tmp.json"
     arquivo_catalogo = "teste_catalogo_tmp.json"
@@ -20,7 +20,7 @@ class TesteComArquivosTemporarios(unittest.TestCase):  # base: troca os JSON rea
     def tearDown(self):
         for arquivo in (self.arquivo_dados, self.arquivo_catalogo):
             if os.path.exists(arquivo):
-                os.remove(arquivo)  # apaga o que o teste criou
+                os.remove(arquivo)
         inventario.persistencia.ARQUIVO_DADOS, inventario.persistencia.ARQUIVO_CATALOGO = (
             self.originais
         )

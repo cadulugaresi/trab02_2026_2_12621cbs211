@@ -216,7 +216,7 @@ class TestObterAtivo(unittest.TestCase):
         self.assertIs(obter_ativo(self.ativos, 1), self.notebook)
 
     def test_id_inexistente_levanta_erro(self):
-        with self.assertRaises(DadoInvalidoError):  # diferente do encontrar, que devolve None
+        with self.assertRaises(DadoInvalidoError):
             obter_ativo(self.ativos, 99)
 
 
@@ -366,7 +366,7 @@ class TestPersistencia(TesteComArquivosTemporarios):
         self.assertEqual(carregados[1].nome, "Dell")
 
     def test_carregar_arquivo_inexistente_retorna_vazio(self):
-        self.assertEqual(carregar_dados(), {})  # o setUp já começa sem arquivo
+        self.assertEqual(carregar_dados(), {})
 
 
 # Testes de Input --------------------------------
@@ -525,8 +525,8 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
         respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6"]
         with patch("builtins.input", side_effect=respostas):
             ativo = cadastrar_ativo(ativos)
-        self.assertIs(ativos[5], ativo)  # agora quem guarda é a própria função
-        self.assertIn(5, carregar_dados())  # e já salvou no arquivo
+        self.assertIs(ativos[5], ativo)
+        self.assertIn(5, carregar_dados())
 
     def test_registrar_id_repetido_levanta_erro(self):
         ativo = Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)
