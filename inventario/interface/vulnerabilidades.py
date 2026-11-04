@@ -9,6 +9,7 @@ from inventario.interface.entradas import (
 from inventario.servicos.vulnerabilidades import (
     registrar_vulnerabilidade_no_catalogo,
     vincular_vulnerabilidade,
+    atualizar_vulnerabilidade_no_catalogo,
 )
 
 
@@ -73,7 +74,7 @@ def confirmar_exclusao_vuln(vulnerabilidade):
         return False
 
 
-def editar_vulnerabilidade(vulnerabilidade):
+def editar_vulnerabilidade(vulnerabilidade, catalogo):
     print("""
     1 - Editar nome
     2 - Editar CVSS
@@ -84,24 +85,22 @@ def editar_vulnerabilidade(vulnerabilidade):
     if opcao_edicao == "1":
         novo_nome = pedir_info("Digite o novo nome da vulnerabilidade: ")
         vulnerabilidade.nome_vulnerabilidade = novo_nome
-        print("Nome atualizado com sucesso!")
-        mostrar_vulnerabilidade(vulnerabilidade)
-        return True
 
     elif opcao_edicao == "2":
         novo_cvss = pedir_cvss("Digite a nova nota CVSS (0.1 a 10): ")
         vulnerabilidade.cvss = novo_cvss
-        print("CVSS atualizado com sucesso!")
-        mostrar_vulnerabilidade(vulnerabilidade)
-        return True
 
     elif opcao_edicao == "3":
         print("Voltando ao menu de vulnerabilidades...")
-        return False
+        return
 
     else:
         print("Opção inválida. Tente novamente.")
-        return False
+        return
+
+    atualizar_vulnerabilidade_no_catalogo(catalogo, vulnerabilidade)
+    print("Vulnerabilidade atualizada com sucesso!")
+    mostrar_vulnerabilidade(vulnerabilidade)
 
 
 def vincular_a_um_ativo(vulnerabilidade, ativos, catalogo):

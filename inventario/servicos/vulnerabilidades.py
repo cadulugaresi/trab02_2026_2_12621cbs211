@@ -71,3 +71,10 @@ def excluir_vulnerabilidade_do_catalogo(catalogo, ativos, id_vulnerabilidade):
     del catalogo[id_vulnerabilidade]
     salvar_catalogo(catalogo)
     salvar_dados(ativos)
+
+
+def atualizar_vulnerabilidade_no_catalogo(catalogo, vulnerabilidade_atualizada):
+    if vulnerabilidade_atualizada.id_vulnerabilidade not in catalogo:
+        raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
+    catalogo[vulnerabilidade_atualizada.id_vulnerabilidade] = vulnerabilidade_atualizada
+    salvar_catalogo(catalogo)

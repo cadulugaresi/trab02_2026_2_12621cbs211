@@ -7,8 +7,6 @@ from inventario.interface.entradas import (
     pedir_tipo,
 )
 
-from inventario.persistencia.arquivos_json import salvar_catalogo
-
 from inventario.interface.ativos import (
     cadastrar_ativo,
     editar_ativo,
@@ -185,8 +183,7 @@ def menu_vulnerabilidades(ativos, catalogo):
             vulnerabilidade = encontrar_vulnerabilidade(catalogo)
 
             if vulnerabilidade:
-                if editar_vulnerabilidade(vulnerabilidade):
-                    salvar_catalogo(catalogo)
+                editar_vulnerabilidade(vulnerabilidade, catalogo)
 
         elif opcao_vulnerabilidade == "9":
             print("Voltando ao menu principal...")

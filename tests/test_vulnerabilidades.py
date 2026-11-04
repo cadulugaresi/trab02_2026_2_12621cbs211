@@ -20,6 +20,7 @@ from inventario.interface.vulnerabilidades import (
 )
 from inventario.servicos.vulnerabilidades import (
     atualizar_status_vulnerabilidade,
+    atualizar_vulnerabilidade_no_catalogo,
     desvincular_vulnerabilidade,
     excluir_vulnerabilidade_do_catalogo,
     proximo_id,
@@ -341,6 +342,23 @@ class TestDesvincularVulnerabilidade(TesteComArquivosTemporarios):
             desvincular_vulnerabilidade(self.ativos, 99, 3)
 
 
+class TestAtualizarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
+
+    def setUp(self):
+        super().setUp()
+        self.catalogo = criar_catalogo()
+
+    def test_salva_a_alteracao(self):
+        self.catalogo[3].cvss = 7.5
+        atualizar_vulnerabilidade_no_catalogo(self.catalogo, self.catalogo[3])
+        self.assertEqual(carregar_catalogo()[3].cvss, 7.5)
+
+    def test_id_inexistente_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_vulnerabilidade_no_catalogo(self.catalogo, Vulnerabilidade(99, "Inexistente", 5.0))
+        self.assertNotIn(99, self.catalogo)
+
+
 class TestExcluirVulnerabilidadeDoCatalogo(TesteComArquivosTemporarios):
 
     def setUp(self):
@@ -413,26 +431,29 @@ class TestConfirmarExclusaoVuln(unittest.TestCase):
         self.assertIn("ID 3", saida)
 
 
-class TestEditarVulnerabilidade(unittest.TestCase):
+class TestEditarVulnerabilidade(TesteComArquivosTemporarios):
 
     def setUp(self):
+        super().setUp()
         self.catalogo = criar_catalogo()
         self.vulnerabilidade = self.catalogo[3]
 
     def editar(self, respostas):
         with patch("builtins.input", side_effect=respostas):
             with redirect_stdout(io.StringIO()):
-                return editar_vulnerabilidade(self.vulnerabilidade)
+                editar_vulnerabilidade(self.vulnerabilidade, self.catalogo)
 
     def test_edita_o_nome(self):
-        mudou = self.editar(["1", "TLS 1.0 habilitado"])
-        self.assertTrue(mudou)
+        self.editar(["1", "TLS 1.0 habilitado"])
         self.assertEqual(self.vulnerabilidade.nome_vulnerabilidade, "TLS 1.0 habilitado")
         self.assertEqual(self.vulnerabilidade.cvss, 5.3)
 
+    def test_salva_a_edicao_no_arquivo(self):
+        self.editar(["1", "TLS 1.0 habilitado"])
+        self.assertEqual(carregar_catalogo()[3].nome_vulnerabilidade, "TLS 1.0 habilitado")
+
     def test_edita_o_cvss_com_virgula(self):
-        mudou = self.editar(["2", "7,4"])
-        self.assertTrue(mudou)
+        self.editar(["2", "7,4"])
         self.assertEqual(self.vulnerabilidade.cvss, 7.4)
 
     def test_cvss_editado_muda_o_nivel(self):
@@ -448,14 +469,15 @@ class TestEditarVulnerabilidade(unittest.TestCase):
         self.assertEqual(self.vulnerabilidade.cvss, 3.9)
 
     def test_voltar_nao_muda_nada(self):
-        mudou = self.editar(["3"])
-        self.assertFalse(mudou)
+        self.editar(["3"])
         self.assertEqual(self.vulnerabilidade.nome_vulnerabilidade, "TLS 1.0 ativo")
         self.assertEqual(self.vulnerabilidade.cvss, 5.3)
+        self.assertEqual(carregar_catalogo(), {})
 
     def test_opcao_invalida_nao_muda_nada(self):
-        self.assertFalse(self.editar(["x"]))
+        self.editar(["x"])
         self.assertEqual(self.vulnerabilidade.cvss, 5.3)
+        self.assertEqual(carregar_catalogo(), {})
 
     def test_edita_o_mesmo_objeto_do_catalogo(self):
         self.editar(["2", "7.5"])
