@@ -1,4 +1,4 @@
-from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.excecoes import DadoInvalidoError, PersistenciaError
 from inventario.interface.entradas import (
     pedir_info,
     pedir_int,
@@ -6,7 +6,6 @@ from inventario.interface.entradas import (
     pedir_status_vulnerabilidade,
     pedir_tipo,
 )
-
 from inventario.interface.ativos import (
     cadastrar_ativo,
     editar_ativo,
@@ -78,6 +77,9 @@ def menu_principal(ativos, catalogo):
         except (EOFError, KeyboardInterrupt):
             print("Programa encerrado pelo usuário.")
             break
+
+        except PersistenciaError as erro:
+            print(erro)
 
 
 def menu_vulnerabilidades(ativos, catalogo):

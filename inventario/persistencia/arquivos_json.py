@@ -4,6 +4,7 @@ import os
 from inventario.dominio.enums import StatusDaVuln
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
+from inventario.dominio.excecoes import PersistenciaError
 
 ARQUIVO_DADOS = "ativos.json"
 ARQUIVO_CATALOGO = "vulnerabilidades.json"
@@ -40,9 +41,9 @@ def salvar_seguro(caminho, dados):
         os.replace(arquivo_temporario, caminho)
 
     except PermissionError:
-        print("Erro de Persistência: Sem permissão para gravar no arquivo no computador.")
+        raise PersistenciaError("Erro de Persistência: Sem permissão para gravar no arquivo no computador.")
     except IOError:
-        print("Erro de Persistência ao salvar os dados no arquivo.")
+        raise PersistenciaError("Erro de Persistência ao salvar os dados no arquivo.")
 
 
 def carregar_dados():
