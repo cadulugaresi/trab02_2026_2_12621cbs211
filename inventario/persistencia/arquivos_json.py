@@ -71,8 +71,7 @@ def carregar_dados():
         return {}
 
     except json.JSONDecodeError:
-        print("Aviso: ocorreu um erro no arquivo de dados. Criando um novo arquivo...")
-        return {}
+        raise PersistenciaError("Erro de Persistência: O arquivo de dados está corrompido ou com formato inválido.")
 
 
 def carregar_catalogo():
@@ -92,5 +91,4 @@ def carregar_catalogo():
         return {}
 
     except json.JSONDecodeError:
-        print("Aviso: ocorreu um erro no arquivo de dados. Criando um novo arquivo...")
-        return {}
+        raise PersistenciaError("Erro de Persistência: O catálogo de vulnerabilidades está corrompido ou com formato inválido.")
