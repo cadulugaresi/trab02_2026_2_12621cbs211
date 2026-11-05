@@ -1,0 +1,17 @@
+[
+    {
+        "id_vulnerabilidade": 1,
+        "nome_vulnerabilidade": "Senha padrão do fabricante",
+        "cvss": 9.8
+    },
+    {
+        "id_vulnerabilidade": 2,
+        "nome_vulnerabilidade": "Sistema operacional desatualizado",
+        "cvss": 7.5
+    },
+    {
+        "id_vulnerabilidade": 3,
+        "nome_vulnerabilidade": "Compartilhamento de arquivos sem criptografia",
+        "cvss": 5.3
+    }
+]
