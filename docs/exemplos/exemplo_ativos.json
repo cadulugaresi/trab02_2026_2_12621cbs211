@@ -1,0 +1,70 @@
+[
+    {
+        "id": 1,
+        "nome": "Notebook do Financeiro",
+        "tipo": "Notebook",
+        "setor": 2,
+        "responsavel": "Rafael Torres",
+        "status": 1,
+        "vulnerabilidades": [
+            {
+                "id_vulnerabilidade": 2,
+                "status_tratamento": 2
+            }
+        ],
+        "sistema_operacional": "Windows 11",
+        "tela": 14.0
+    },
+    {
+        "id": 2,
+        "nome": "Servidor de Arquivos",
+        "tipo": "Servidor",
+        "setor": 1,
+        "responsavel": "Rafael Torres",
+        "status": 1,
+        "vulnerabilidades": [
+            {
+                "id_vulnerabilidade": 3,
+                "status_tratamento": 1
+            },
+            {
+                "id_vulnerabilidade": 2,
+                "status_tratamento": 3
+            }
+        ],
+        "ram": 32,
+        "armazenamento": 2.0
+    },
+    {
+        "id": 3,
+        "nome": "Roteador da Recepção",
+        "tipo": "Roteador",
+        "setor": 1,
+        "responsavel": "Rafael Torres",
+        "status": 1,
+        "vulnerabilidades": [
+            {
+                "id_vulnerabilidade": 1,
+                "status_tratamento": 1
+            }
+        ],
+        "portas": 8,
+        "velocidade": 1000
+    },
+    {
+        "id": 4,
+        "nome": "Impressora do RH",
+        "tipo": "Impressora",
+        "setor": 4,
+        "responsavel": "Rafael Torres",
+        "status": 3,
+        "vulnerabilidades": [
+            {
+                "id_vulnerabilidade": 1,
+                "status_tratamento": 2
+            }
+        ],
+        "cor": 2,
+        "tecnologia": 2
+    }
+]

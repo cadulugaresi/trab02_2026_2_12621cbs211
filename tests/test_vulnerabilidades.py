@@ -363,7 +363,9 @@ class TestDesvincularVulnerabilidade(TesteComArquivosTemporarios):
             desvincular_vulnerabilidade(self.ativos, 1, 99)
 
     def test_remove_vinculo_orfao(self):
-        self.notebook.vulnerabilidades[50] = StatusDaVuln.ABERTA  # aponta para algo que não está no catálogo
+        self.notebook.vulnerabilidades[50] = (
+            StatusDaVuln.ABERTA
+        )  # aponta para algo que não está no catálogo
         desvincular_vulnerabilidade(self.ativos, 1, 50)
         self.assertNotIn(50, self.notebook.vulnerabilidades)
 
@@ -385,7 +387,9 @@ class TestAtualizarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
 
     def test_id_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            atualizar_vulnerabilidade_no_catalogo(self.catalogo, Vulnerabilidade(99, "Inexistente", 5.0))
+            atualizar_vulnerabilidade_no_catalogo(
+                self.catalogo, Vulnerabilidade(99, "Inexistente", 5.0)
+            )
         self.assertNotIn(99, self.catalogo)
 
     def test_recusa_cvss_invalido_sem_salvar(self):

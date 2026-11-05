@@ -1,5 +1,6 @@
 ativos.json
 vulnerabilidades.json
+*.tmp
 
 __pycache__/
 *.py[cod]
