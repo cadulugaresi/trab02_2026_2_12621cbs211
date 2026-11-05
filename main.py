@@ -10,6 +10,8 @@ if __name__ == "__main__":
 
     except PersistenciaError as erro:
         print(erro)
-        raise SystemExit("Erro de Persistência: Não foi possível carregar os dados do arquivo. Encerrando o programa.")
+        raise SystemExit(
+            "Erro de Persistência: Não foi possível carregar os dados do arquivo. Encerrando o programa."
+        )
 
     menu_principal(ativos, catalogo)

@@ -90,12 +90,16 @@ class TestExibirDetalhes(unittest.TestCase):
         self.assertIn("Velocidade: 1000MB", detalhes)
 
     def test_impressora_mostra_tipo(self):
-        i = Impressora(4, "HP", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, Cor.COLORIDA, Tecnologia.LASER)
+        i = Impressora(
+            4, "HP", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, Cor.COLORIDA, Tecnologia.LASER
+        )
         detalhes = i.exibir_detalhes()
         self.assertIn("Tipo: Impressora", detalhes)
 
     def test_impressora_mostra_campos_especificos(self):
-        i = Impressora(4, "HP", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, Cor.COLORIDA, Tecnologia.LASER)
+        i = Impressora(
+            4, "HP", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, Cor.COLORIDA, Tecnologia.LASER
+        )
         detalhes = i.exibir_detalhes()
         self.assertIn("Cor: COLORIDA", detalhes)
         self.assertIn("Tecnologia: LASER", detalhes)
@@ -199,8 +203,18 @@ class TestEncontrarAtivoPorId(unittest.TestCase):
             1: Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6),
             2: Servidor(2, "Dell PowerEdge", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, 32, 4),
             3: Roteador(3, "TP-Link", Setor.MARKETING, "Ana", StatusDoAtivo.INATIVO, 4, 1000),
-            4: Impressora(4, "HP", Setor.RH, "Bia", StatusDoAtivo.ATIVO, Cor.COLORIDA, Tecnologia.LASER),
-            5: Notebook(5, "Dellinho", Setor.FINANCEIRO, "Henrique", StatusDoAtivo.EM_MANUTENCAO, "Windows XP", 32),
+            4: Impressora(
+                4, "HP", Setor.RH, "Bia", StatusDoAtivo.ATIVO, Cor.COLORIDA, Tecnologia.LASER
+            ),
+            5: Notebook(
+                5,
+                "Dellinho",
+                Setor.FINANCEIRO,
+                "Henrique",
+                StatusDoAtivo.EM_MANUTENCAO,
+                "Windows XP",
+                32,
+            ),
         }
 
     def test_encontra_ativo_existente(self):
@@ -216,7 +230,9 @@ class TestEncontrarAtivoPorId(unittest.TestCase):
 class TestObterAtivo(unittest.TestCase):
 
     def setUp(self):
-        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.notebook = Notebook(
+            1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6
+        )
         self.ativos = {1: self.notebook}
 
     def test_devolve_ativo_existente(self):
@@ -231,7 +247,9 @@ class TestRemoverAtivoDoInventario(TesteComArquivosTemporarios):
 
     def setUp(self):
         super().setUp()
-        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.notebook = Notebook(
+            1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6
+        )
         self.ativos = {1: self.notebook}
 
     def test_remove_e_salva(self):
@@ -249,7 +267,9 @@ class TestAtualizarAtivoNoInventario(TesteComArquivosTemporarios):
 
     def setUp(self):
         super().setUp()
-        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.notebook = Notebook(
+            1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6
+        )
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         self.ativos = {1: self.notebook}
 
@@ -388,7 +408,9 @@ class TestSerializacaoRoteador(unittest.TestCase):
 class TestSerializacaoImpressora(unittest.TestCase):
 
     def setUp(self):
-        self.impressora = Impressora(4, "HP", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, Cor.COLORIDA, Tecnologia.LASER)
+        self.impressora = Impressora(
+            4, "HP", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, Cor.COLORIDA, Tecnologia.LASER
+        )
 
     def test_tipo_esta_correto(self):
         dicionario = self.impressora.para_dicionario()
@@ -676,7 +698,9 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
 
     def setUp(self):
         super().setUp()
-        self.notebook = Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6)
+        self.notebook = Notebook(
+            1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6
+        )
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         self.ativos = {1: self.notebook}
 

@@ -41,7 +41,9 @@ def salvar_seguro(caminho, dados):
         os.replace(arquivo_temporario, caminho)
 
     except PermissionError:
-        raise PersistenciaError("Erro de Persistência: Sem permissão para gravar no arquivo no computador.")
+        raise PersistenciaError(
+            "Erro de Persistência: Sem permissão para gravar no arquivo no computador."
+        )
     except IOError:
         raise PersistenciaError("Erro de Persistência ao salvar os dados no arquivo.")
 
@@ -71,7 +73,9 @@ def carregar_dados():
         return {}
 
     except json.JSONDecodeError:
-        raise PersistenciaError("Erro de Persistência: O arquivo de dados está corrompido ou com formato inválido.")
+        raise PersistenciaError(
+            "Erro de Persistência: O arquivo de dados está corrompido ou com formato inválido."
+        )
 
 
 def carregar_catalogo():
@@ -91,4 +95,6 @@ def carregar_catalogo():
         return {}
 
     except json.JSONDecodeError:
-        raise PersistenciaError("Erro de Persistência: O catálogo de vulnerabilidades está corrompido ou com formato inválido.")
+        raise PersistenciaError(
+            "Erro de Persistência: O catálogo de vulnerabilidades está corrompido ou com formato inválido."
+        )
