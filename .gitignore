@@ -24,4 +24,4 @@ rascunhos.py
 htmlcov/
 .pytest_cache/
 
-*.db
+*.dbin  
