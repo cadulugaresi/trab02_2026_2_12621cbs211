@@ -5,6 +5,7 @@ from inventario.dominio.enums import StatusDaVuln
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.dominio.excecoes import PersistenciaError
+from inventario.persistencia.repositorio import Repositorio
 
 ARQUIVO_DADOS = "ativos.json"
 ARQUIVO_CATALOGO = "vulnerabilidades.json"
@@ -98,3 +99,18 @@ def carregar_catalogo():
         raise PersistenciaError(
             "Erro de Persistência: O catálogo de vulnerabilidades está corrompido ou com formato inválido."
         )
+
+
+class RepositorioJSON(Repositorio):
+
+    def carregar_ativos(self):
+        return carregar_dados()
+
+    def salvar_ativos(self, ativos):
+        salvar_dados(ativos)
+
+    def carregar_catalogo(self):
+        return carregar_catalogo()
+
+    def salvar_catalogo(self, catalogo):
+        salvar_catalogo(catalogo)
