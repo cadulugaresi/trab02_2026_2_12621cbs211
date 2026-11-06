@@ -11,8 +11,8 @@ class TesteComArquivosTemporarios(unittest.TestCase):
     arquivo_catalogo = "teste_catalogo_tmp.json"
 
     def setUp(self):
-        self.originais = (arquivos_json.ARQUIVO_DADOS, arquivos_json.ARQUIVO_CATALOGO)
-        arquivos_json.ARQUIVO_DADOS = self.arquivo_dados
+        self.originais = (arquivos_json.ARQUIVO_ATIVOS, arquivos_json.ARQUIVO_CATALOGO)
+        arquivos_json.ARQUIVO_ATIVOS = self.arquivo_dados
         arquivos_json.ARQUIVO_CATALOGO = self.arquivo_catalogo
         self.repositorio = RepositorioJSON()
 
@@ -20,4 +20,4 @@ class TesteComArquivosTemporarios(unittest.TestCase):
         for arquivo in (self.arquivo_dados, self.arquivo_catalogo):
             if os.path.exists(arquivo):
                 os.remove(arquivo)
-        arquivos_json.ARQUIVO_DADOS, arquivos_json.ARQUIVO_CATALOGO = self.originais
+        arquivos_json.ARQUIVO_ATIVOS, arquivos_json.ARQUIVO_CATALOGO = self.originais

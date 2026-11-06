@@ -30,9 +30,9 @@ from inventario.servicos.vulnerabilidades import (
 )
 from inventario.persistencia.arquivos_json import (
     carregar_catalogo,
-    carregar_dados,
+    carregar_ativos,
     salvar_catalogo,
-    salvar_dados,
+    salvar_ativos,
 )
 from inventario.interface.conversao_das_opcoes_do_menu import validar_status_vulnerabilidade
 from tests.apoio import TesteComArquivosTemporarios
@@ -281,7 +281,7 @@ class TestVincularVulnerabilidade(TesteComArquivosTemporarios):
         vincular_vulnerabilidade(
             self.repositorio, self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA
         )
-        self.assertIn(3, carregar_dados()[1].vulnerabilidades)
+        self.assertIn(3, carregar_ativos()[1].vulnerabilidades)
 
     def test_nao_vincula_duas_vezes(self):
         vincular_vulnerabilidade(
@@ -478,7 +478,7 @@ class TestExcluirVulnerabilidadeDoCatalogo(TesteComArquivosTemporarios):
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         excluir_vulnerabilidade_do_catalogo(self.repositorio, self.catalogo, self.ativos, 3)
         self.assertNotIn(3, carregar_catalogo())
-        self.assertNotIn(3, carregar_dados()[1].vulnerabilidades)
+        self.assertNotIn(3, carregar_ativos()[1].vulnerabilidades)
 
 
 class TestConfirmarExclusaoVuln(unittest.TestCase):
@@ -719,8 +719,8 @@ class TestPersistenciaCatalogo(TesteComArquivosTemporarios):
         notebook = criar_notebook()
         notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA
         notebook.vulnerabilidades[3] = StatusDaVuln.EM_TRATAMENTO
-        salvar_dados({1: notebook})
-        carregado = carregar_dados()[1]
+        salvar_ativos({1: notebook})
+        carregado = carregar_ativos()[1]
         self.assertEqual(
             carregado.vulnerabilidades,
             {1: StatusDaVuln.ABERTA, 3: StatusDaVuln.EM_TRATAMENTO},  # IDs voltam como número

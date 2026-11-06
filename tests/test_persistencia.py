@@ -8,9 +8,9 @@ from inventario.dominio.excecoes import PersistenciaError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.persistencia.arquivos_json import (
     carregar_catalogo,
-    carregar_dados,
+    carregar_ativos,
     salvar_catalogo,
-    salvar_dados,
+    salvar_ativos,
 )
 from tests.apoio import TesteComArquivosTemporarios
 
@@ -40,7 +40,7 @@ def criar_um_ativo_de_cada_tipo():
 class TestEscritaAtomica(TesteComArquivosTemporarios):
 
     def test_salvar_dados_nao_deixa_arquivo_temporario(self):
-        salvar_dados(criar_um_ativo_de_cada_tipo())
+        salvar_ativos(criar_um_ativo_de_cada_tipo())
         self.assertTrue(os.path.exists(self.arquivo_dados))
         self.assertFalse(os.path.exists(self.arquivo_dados + ".tmp"))
 
@@ -50,27 +50,27 @@ class TestEscritaAtomica(TesteComArquivosTemporarios):
         self.assertFalse(os.path.exists(self.arquivo_catalogo + ".tmp"))
 
     def test_salvar_inventario_vazio_grava_lista_vazia(self):
-        salvar_dados(criar_um_ativo_de_cada_tipo())
-        salvar_dados({})
-        self.assertEqual(carregar_dados(), {})
+        salvar_ativos(criar_um_ativo_de_cada_tipo())
+        salvar_ativos({})
+        self.assertEqual(carregar_ativos(), {})
 
     def test_falha_na_gravacao_preserva_o_arquivo_anterior(self):
         self.addCleanup(os.remove, self.arquivo_dados + ".tmp")
-        salvar_dados(criar_um_ativo_de_cada_tipo())
+        salvar_ativos(criar_um_ativo_de_cada_tipo())
 
         with patch("inventario.persistencia.arquivos_json.os.replace", side_effect=OSError):
             with self.assertRaises(PersistenciaError):
-                salvar_dados({})
+                salvar_ativos({})
 
-        self.assertEqual(len(carregar_dados()), 4)
+        self.assertEqual(len(carregar_ativos()), 4)
 
     def test_sem_permissao_lanca_persistencia_error(self):
         with patch("builtins.open", side_effect=PermissionError):
             with self.assertRaises(PersistenciaError):
-                salvar_dados(criar_um_ativo_de_cada_tipo())
+                salvar_ativos(criar_um_ativo_de_cada_tipo())
 
     def test_grava_acentos_sem_escapar(self):
-        salvar_dados(criar_um_ativo_de_cada_tipo())
+        salvar_ativos(criar_um_ativo_de_cada_tipo())
 
         with open(self.arquivo_dados, encoding="utf-8") as arquivo:
             conteudo = arquivo.read()
@@ -88,7 +88,7 @@ class TestArquivoCorrompido(TesteComArquivosTemporarios):
         self.escrever_texto_invalido(self.arquivo_dados)
 
         with self.assertRaises(PersistenciaError):
-            carregar_dados()
+            carregar_ativos()
 
     def test_carregar_catalogo_corrompido_lanca_persistencia_error(self):
         self.escrever_texto_invalido(self.arquivo_catalogo)
@@ -100,7 +100,7 @@ class TestArquivoCorrompido(TesteComArquivosTemporarios):
         self.escrever_texto_invalido(self.arquivo_dados)
 
         with self.assertRaises(PersistenciaError):
-            carregar_dados()
+            carregar_ativos()
 
         with open(self.arquivo_dados, encoding="utf-8") as arquivo:
             self.assertEqual(arquivo.read(), '[{"id": 1, "nome": "Notebook"')
@@ -109,7 +109,7 @@ class TestArquivoCorrompido(TesteComArquivosTemporarios):
 class TestGravarERecarregar(TesteComArquivosTemporarios):
 
     def test_arquivo_e_um_array_de_objetos_com_campo_tipo(self):
-        salvar_dados(criar_um_ativo_de_cada_tipo())
+        salvar_ativos(criar_um_ativo_de_cada_tipo())
 
         with open(self.arquivo_dados, encoding="utf-8") as arquivo:
             dados_brutos = json.load(arquivo)
@@ -123,8 +123,8 @@ class TestGravarERecarregar(TesteComArquivosTemporarios):
         self.assertEqual(tipos_gravados, ["Notebook", "Servidor", "Roteador", "Impressora"])
 
     def test_recarrega_cada_ativo_na_subclasse_certa(self):
-        salvar_dados(criar_um_ativo_de_cada_tipo())
-        carregados = carregar_dados()
+        salvar_ativos(criar_um_ativo_de_cada_tipo())
+        carregados = carregar_ativos()
 
         self.assertIsInstance(carregados[1], Notebook)
         self.assertIsInstance(carregados[2], Servidor)
@@ -132,8 +132,8 @@ class TestGravarERecarregar(TesteComArquivosTemporarios):
         self.assertIsInstance(carregados[4], Impressora)
 
     def test_recarrega_atributos_proprios_de_cada_tipo(self):
-        salvar_dados(criar_um_ativo_de_cada_tipo())
-        carregados = carregar_dados()
+        salvar_ativos(criar_um_ativo_de_cada_tipo())
+        carregados = carregar_ativos()
 
         self.assertEqual(carregados[1].sistema_operacional, "Linux")
         self.assertEqual(carregados[2].ram, 32)
@@ -143,7 +143,7 @@ class TestGravarERecarregar(TesteComArquivosTemporarios):
     def test_vinculos_sao_gravados_so_com_o_id(self):
         ativos = criar_um_ativo_de_cada_tipo()
         ativos[2].vulnerabilidades[1] = StatusDaVuln.ABERTA
-        salvar_dados(ativos)
+        salvar_ativos(ativos)
 
         with open(self.arquivo_dados, encoding="utf-8") as arquivo:
             dados_brutos = json.load(arquivo)
@@ -162,10 +162,10 @@ class TestGravarERecarregar(TesteComArquivosTemporarios):
         ativos[3].vulnerabilidades[2] = StatusDaVuln.CORRIGIDA
 
         salvar_catalogo(catalogo)
-        salvar_dados(ativos)
+        salvar_ativos(ativos)
 
         catalogo_carregado = carregar_catalogo()
-        ativos_carregados = carregar_dados()
+        ativos_carregados = carregar_ativos()
 
         for ativo in ativos_carregados.values():
             for id_vulnerabilidade in ativo.vulnerabilidades:

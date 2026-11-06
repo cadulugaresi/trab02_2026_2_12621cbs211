@@ -7,18 +7,18 @@ from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.dominio.excecoes import PersistenciaError
 from inventario.persistencia.repositorio import Repositorio
 
-ARQUIVO_DADOS = "ativos.json"
+ARQUIVO_ATIVOS = "ativos.json"
 ARQUIVO_CATALOGO = "vulnerabilidades.json"
 
 
-def salvar_dados(ativos):
+def salvar_ativos(ativos):
 
     lista_para_salvar = []
 
     for ativo in ativos.values():
         lista_para_salvar.append(ativo.para_dicionario())
 
-    salvar_seguro(ARQUIVO_DADOS, lista_para_salvar)
+    salvar_seguro(ARQUIVO_ATIVOS, lista_para_salvar)
 
 
 def salvar_catalogo(catalogo):
@@ -49,10 +49,10 @@ def salvar_seguro(caminho, dados):
         raise PersistenciaError("Erro de Persistência ao salvar os dados no arquivo.")
 
 
-def carregar_dados():
+def carregar_ativos():
 
     try:
-        with open(ARQUIVO_DADOS, "r", encoding="utf-8") as arquivo:
+        with open(ARQUIVO_ATIVOS, "r", encoding="utf-8") as arquivo:
             dados_brutos = json.load(arquivo)
             ativos_carregados = {}
 
@@ -104,10 +104,10 @@ def carregar_catalogo():
 class RepositorioJSON(Repositorio):
 
     def carregar_ativos(self):
-        return carregar_dados()
+        return carregar_ativos()
 
     def salvar_ativos(self, ativos):
-        salvar_dados(ativos)
+        salvar_ativos(ativos)
 
     def carregar_catalogo(self):
         return carregar_catalogo()
