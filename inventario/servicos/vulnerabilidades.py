@@ -21,7 +21,7 @@ def registrar_vulnerabilidade_no_catalogo(repositorio, catalogo, nome_vulnerabil
 
     vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)
     catalogo[id_vulnerabilidade] = vulnerabilidade
-    repositorio.salvar_catalogo(catalogo)
+    repositorio.adicionar_vulnerabilidade(vulnerabilidade)
 
     return vulnerabilidade
 
@@ -38,7 +38,7 @@ def vincular_vulnerabilidade(
         raise DadoInvalidoError("Esta vulnerabilidade já está vinculada a este ativo.")
 
     ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
-    repositorio.salvar_ativos(ativos)
+    repositorio.vincular(id_ativo, id_vulnerabilidade, status_tratamento)
 
 
 def desvincular_vulnerabilidade(repositorio, ativos, id_ativo, id_vulnerabilidade):
@@ -48,7 +48,7 @@ def desvincular_vulnerabilidade(repositorio, ativos, id_ativo, id_vulnerabilidad
         raise DadoInvalidoError("Esta vulnerabilidade não está vinculada a este ativo.")
 
     del ativo.vulnerabilidades[id_vulnerabilidade]
-    repositorio.salvar_ativos(ativos)
+    repositorio.desvincular(id_ativo, id_vulnerabilidade)
 
 
 def atualizar_status_vulnerabilidade(
@@ -62,7 +62,7 @@ def atualizar_status_vulnerabilidade(
         )
 
     ativo.vulnerabilidades[id_vulnerabilidade] = novo_status
-    repositorio.salvar_ativos(ativos)
+    repositorio.atualizar_status_vinculo(id_ativo, id_vulnerabilidade, novo_status)
 
 
 def excluir_vulnerabilidade_do_catalogo(repositorio, catalogo, ativos, id_vulnerabilidade):
@@ -74,8 +74,7 @@ def excluir_vulnerabilidade_do_catalogo(repositorio, catalogo, ativos, id_vulner
             del ativo.vulnerabilidades[id_vulnerabilidade]
 
     del catalogo[id_vulnerabilidade]
-    repositorio.salvar_catalogo(catalogo)
-    repositorio.salvar_ativos(ativos)
+    repositorio.remover_vulnerabilidade(id_vulnerabilidade)
 
 
 def atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade_atualizada):
@@ -83,4 +82,4 @@ def atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
     vulnerabilidade_atualizada.cvss = validar_cvss(vulnerabilidade_atualizada.cvss)
     catalogo[vulnerabilidade_atualizada.id_vulnerabilidade] = vulnerabilidade_atualizada
-    repositorio.salvar_catalogo(catalogo)
+    repositorio.atualizar_vulnerabilidade(vulnerabilidade_atualizada)

@@ -272,6 +272,7 @@ class TestAtualizarAtivoNoInventario(TesteComArquivosTemporarios):
         )
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         self.ativos = {1: self.notebook}
+        salvar_ativos(self.ativos)
 
     def test_salva_edicao_simples(self):
         self.notebook.responsavel = "Ana Souza"
@@ -703,6 +704,7 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
         )
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         self.ativos = {1: self.notebook}
+        salvar_ativos(self.ativos)
 
     def test_editar_responsavel_salva_ao_voltar(self):
         with patch("builtins.input", side_effect=["1", "1", "Ana Souza", "6"]):

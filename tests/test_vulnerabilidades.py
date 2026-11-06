@@ -234,6 +234,7 @@ class TestCadastrarVulnerabilidade(TesteComArquivosTemporarios):
 
     def test_salva_no_arquivo(self):
         catalogo = criar_catalogo()
+        salvar_catalogo(catalogo)
         with patch("builtins.input", side_effect=["SMB desatualizado", "8.1"]):
             with redirect_stdout(io.StringIO()):
                 cadastrar_vulnerabilidade(self.repositorio, catalogo)
@@ -270,6 +271,8 @@ class TestVincularVulnerabilidade(TesteComArquivosTemporarios):
         self.notebook = criar_notebook()
         self.servidor = criar_servidor()
         self.ativos = {1: self.notebook, 2: self.servidor}
+        salvar_catalogo(self.catalogo)
+        salvar_ativos(self.ativos)
 
     def test_vincula_com_status(self):
         vincular_vulnerabilidade(
@@ -344,6 +347,7 @@ class TestAtualizarStatusVulnerabilidade(TesteComArquivosTemporarios):
         self.notebook = criar_notebook()
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         self.ativos = {1: self.notebook}
+        salvar_ativos(self.ativos)
 
     def test_atualiza_status_vinculado(self):
         atualizar_status_vulnerabilidade(
@@ -374,6 +378,8 @@ class TestDesvincularVulnerabilidade(TesteComArquivosTemporarios):
         self.notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         self.ativos = {1: self.notebook}
+        salvar_catalogo(self.catalogo)
+        salvar_ativos(self.ativos)
 
     def test_remove_so_do_ativo(self):
         desvincular_vulnerabilidade(self.repositorio, self.ativos, 1, 3)
@@ -476,6 +482,8 @@ class TestExcluirVulnerabilidadeDoCatalogo(TesteComArquivosTemporarios):
 
     def test_salva_catalogo_e_ativos(self):
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
+        salvar_catalogo(self.catalogo)
+        salvar_ativos(self.ativos)
         excluir_vulnerabilidade_do_catalogo(self.repositorio, self.catalogo, self.ativos, 3)
         self.assertNotIn(3, carregar_catalogo())
         self.assertNotIn(3, carregar_ativos()[1].vulnerabilidades)
@@ -579,6 +587,8 @@ class TestVincularAUmAtivo(TesteComArquivosTemporarios):
         self.notebook = criar_notebook()
         self.ativos = {1: self.notebook, 2: criar_servidor()}
         self.vulnerabilidade = self.catalogo[3]
+        salvar_catalogo(self.catalogo)
+        salvar_ativos(self.ativos)
 
     def vincular(self, respostas, ativos=None):
         if ativos is None:

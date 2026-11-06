@@ -6,7 +6,7 @@ def registrar_ativo_no_inventario(repositorio, ativos, ativo):
         raise DadoInvalidoError("Já existe um ativo cadastrado com este ID.")
 
     ativos[ativo.id] = ativo
-    repositorio.salvar_ativos(ativos)
+    repositorio.adicionar_ativo(ativo)
 
 
 def encontrar_ativo_por_id(ID, ativos):
@@ -56,10 +56,10 @@ def atualizar_ativo_no_inventario(repositorio, ativos, ativo_atualizado):
     ativo_antigo = obter_ativo(ativos, ativo_atualizado.id)
     ativo_atualizado.vulnerabilidades = ativo_antigo.vulnerabilidades
     ativos[ativo_atualizado.id] = ativo_atualizado
-    repositorio.salvar_ativos(ativos)
+    repositorio.atualizar_ativo(ativo_atualizado)
 
 
 def remover_ativo_do_inventario(repositorio, ativos, id_ativo):
     obter_ativo(ativos, id_ativo)
     del ativos[id_ativo]
-    repositorio.salvar_ativos(ativos)
+    repositorio.remover_ativo(id_ativo)
