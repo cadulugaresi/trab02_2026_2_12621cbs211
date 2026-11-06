@@ -1,12 +1,14 @@
 from inventario.interface.menu import menu_principal
-from inventario.persistencia.arquivos_json import carregar_catalogo, carregar_dados
+from inventario.persistencia.arquivos_json import RepositorioJSON
 from inventario.dominio.excecoes import PersistenciaError
 
 if __name__ == "__main__":
 
+    repositorio = RepositorioJSON()
+
     try:
-        ativos = carregar_dados()
-        catalogo = carregar_catalogo()
+        ativos = repositorio.carregar_ativos()
+        catalogo = repositorio.carregar_catalogo()
 
     except PersistenciaError as erro:
         print(erro)
@@ -14,4 +16,4 @@ if __name__ == "__main__":
             "Erro de Persistência: Não foi possível carregar os dados do arquivo. Encerrando o programa."
         )
 
-    menu_principal(ativos, catalogo)
+    menu_principal(repositorio, ativos, catalogo)
