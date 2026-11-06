@@ -5,6 +5,7 @@ from inventario.persistencia.repositorio import Repositorio
 ARQUIVO_BANCO_DE_DADOS = "inventario.db"
 ESQUEMA_SQL = os.path.join(os.path.dirname(__file__), "esquema.sql")
 
+
 class RepositorioSQLite(Repositorio):
     def __init__(self, caminho_banco_de_dados=ARQUIVO_BANCO_DE_DADOS):
         self.conexao = sqlite3.connect(caminho_banco_de_dados)
