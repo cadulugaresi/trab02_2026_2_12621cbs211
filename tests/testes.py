@@ -253,13 +253,13 @@ class TestRemoverAtivoDoInventario(TesteComArquivosTemporarios):
         self.ativos = {1: self.notebook}
 
     def test_remove_e_salva(self):
-        remover_ativo_do_inventario(self.ativos, 1)
+        remover_ativo_do_inventario(self.repositorio, self.ativos, 1)
         self.assertNotIn(1, self.ativos)
         self.assertNotIn(1, carregar_dados())
 
     def test_id_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            remover_ativo_do_inventario(self.ativos, 99)
+            remover_ativo_do_inventario(self.repositorio, self.ativos, 99)
         self.assertIn(1, self.ativos)
 
 
@@ -275,12 +275,12 @@ class TestAtualizarAtivoNoInventario(TesteComArquivosTemporarios):
 
     def test_salva_edicao_simples(self):
         self.notebook.responsavel = "Ana Souza"
-        atualizar_ativo_no_inventario(self.ativos, self.notebook)
+        atualizar_ativo_no_inventario(self.repositorio, self.ativos, self.notebook)
         self.assertEqual(carregar_dados()[1].responsavel, "Ana Souza")
 
     def test_troca_de_tipo_mantem_as_vulnerabilidades(self):
         servidor = Servidor(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 32, 4)
-        atualizar_ativo_no_inventario(self.ativos, servidor)
+        atualizar_ativo_no_inventario(self.repositorio, self.ativos, servidor)
         self.assertIs(self.ativos[1], servidor)
         self.assertEqual(servidor.vulnerabilidades, {3: StatusDaVuln.ABERTA})
         self.assertIsInstance(carregar_dados()[1], Servidor)
@@ -288,7 +288,7 @@ class TestAtualizarAtivoNoInventario(TesteComArquivosTemporarios):
     def test_id_inexistente_levanta_erro(self):
         roteador = Roteador(99, "TP-Link", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 4, 1000)
         with self.assertRaises(DadoInvalidoError):
-            atualizar_ativo_no_inventario(self.ativos, roteador)
+            atualizar_ativo_no_inventario(self.repositorio, self.ativos, roteador)
         self.assertNotIn(99, self.ativos)
 
 
@@ -598,7 +598,7 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
         ativos = {}
         respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6"]
         with patch("builtins.input", side_effect=respostas):
-            ativo = cadastrar_ativo(ativos)
+            ativo = cadastrar_ativo(self.repositorio, ativos)
         self.assertIs(ativos[5], ativo)
         self.assertIn(5, carregar_dados())
 
@@ -606,13 +606,13 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
         ativo = Notebook(1, "Dell", Setor.TI, "Cadu", StatusDoAtivo.ATIVO, "Linux", 15.6)
         ativos = {1: ativo}
         with self.assertRaises(DadoInvalidoError):
-            registrar_ativo_no_inventario(ativos, ativo)
+            registrar_ativo_no_inventario(self.repositorio, ativos, ativo)
 
     def test_cadastra_notebook(self):
         # Ordem: tipo, id, nome, setor, responsável, status, so, tela
         respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6"]
         with patch("builtins.input", side_effect=respostas):
-            ativo = cadastrar_ativo({})
+            ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Notebook)
         self.assertEqual(ativo.id, 5)
         self.assertEqual(ativo.nome, "Dell")
@@ -622,21 +622,21 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
     def test_cadastra_servidor(self):
         respostas = ["2", "6", "PowerEdge", "1", "Cadu", "1", "32", "4"]
         with patch("builtins.input", side_effect=respostas):
-            ativo = cadastrar_ativo({})
+            ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Servidor)
         self.assertEqual(ativo.ram, 32)
 
     def test_cadastra_roteador(self):
         respostas = ["3", "7", "TP-Link", "1", "Cadu", "1", "4", "1000"]
         with patch("builtins.input", side_effect=respostas):
-            ativo = cadastrar_ativo({})
+            ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Roteador)
         self.assertEqual(ativo.portas, 4)
 
     def test_cadastra_impressora(self):
         respostas = ["4", "8", "HP", "1", "Cadu", "1", "1", "2"]
         with patch("builtins.input", side_effect=respostas):
-            ativo = cadastrar_ativo({})
+            ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Impressora)
         self.assertEqual(ativo.cor, Cor.COLORIDA)
 
@@ -675,18 +675,18 @@ class TestExcluirAtivo(TesteComArquivosTemporarios):
 
     def test_confirmando_remove_e_salva(self):
         with patch("builtins.input", side_effect=["1", "sim"]):
-            excluir_ativo(self.ativos)
+            excluir_ativo(self.repositorio, self.ativos)
         self.assertNotIn(1, self.ativos)
         self.assertNotIn(1, carregar_dados())
 
     def test_cancelando_mantem_o_ativo(self):
         with patch("builtins.input", side_effect=["1", ""]):
-            excluir_ativo(self.ativos)
+            excluir_ativo(self.repositorio, self.ativos)
         self.assertIn(1, self.ativos)
 
     def test_id_inexistente_nao_pede_confirmacao(self):
         with patch("builtins.input", side_effect=["99"]) as entrada:
-            excluir_ativo(self.ativos)
+            excluir_ativo(self.repositorio, self.ativos)
         self.assertEqual(entrada.call_count, 1)
         self.assertIn(1, self.ativos)
 
@@ -706,19 +706,19 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
 
     def test_editar_responsavel_salva_ao_voltar(self):
         with patch("builtins.input", side_effect=["1", "1", "Ana Souza", "6"]):
-            editar_ativo(self.ativos)
+            editar_ativo(self.repositorio, self.ativos)
         self.assertEqual(carregar_dados()[1].responsavel, "Ana Souza")
 
     def test_trocar_tipo_mantem_as_vulnerabilidades(self):
         with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "6"]):
-            editar_ativo(self.ativos)
+            editar_ativo(self.repositorio, self.ativos)
         self.assertIsInstance(self.ativos[1], Servidor)
         self.assertEqual(self.ativos[1].vulnerabilidades, {3: StatusDaVuln.ABERTA})
         self.assertIsInstance(carregar_dados()[1], Servidor)
 
     def test_id_inexistente_nao_abre_o_menu(self):
         with patch("builtins.input", side_effect=["99"]) as entrada:
-            editar_ativo(self.ativos)
+            editar_ativo(self.repositorio, self.ativos)
         self.assertEqual(entrada.call_count, 1)
 
 

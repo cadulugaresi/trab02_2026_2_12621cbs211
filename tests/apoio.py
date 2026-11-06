@@ -2,6 +2,7 @@ import os
 import unittest
 
 from inventario.persistencia import arquivos_json
+from inventario.persistencia.arquivos_json import RepositorioJSON
 
 
 class TesteComArquivosTemporarios(unittest.TestCase):
@@ -13,6 +14,7 @@ class TesteComArquivosTemporarios(unittest.TestCase):
         self.originais = (arquivos_json.ARQUIVO_DADOS, arquivos_json.ARQUIVO_CATALOGO)
         arquivos_json.ARQUIVO_DADOS = self.arquivo_dados
         arquivos_json.ARQUIVO_CATALOGO = self.arquivo_catalogo
+        self.repositorio = RepositorioJSON()
 
     def tearDown(self):
         for arquivo in (self.arquivo_dados, self.arquivo_catalogo):

@@ -219,7 +219,7 @@ class TestCadastrarVulnerabilidade(TesteComArquivosTemporarios):
         catalogo = criar_catalogo()
         with patch("builtins.input", side_effect=["SMB desatualizado", "8,1"]):
             with redirect_stdout(io.StringIO()):
-                nova = cadastrar_vulnerabilidade(catalogo)
+                nova = cadastrar_vulnerabilidade(self.repositorio, catalogo)
         self.assertEqual(nova.id_vulnerabilidade, 4)
         self.assertEqual(nova.nome_vulnerabilidade, "SMB desatualizado")
         self.assertEqual(nova.cvss, 8.1)
@@ -228,7 +228,7 @@ class TestCadastrarVulnerabilidade(TesteComArquivosTemporarios):
         catalogo = criar_catalogo()
         with patch("builtins.input", side_effect=["SMB desatualizado", "8.1"]):
             with redirect_stdout(io.StringIO()):
-                nova = cadastrar_vulnerabilidade(catalogo)
+                nova = cadastrar_vulnerabilidade(self.repositorio, catalogo)
         self.assertEqual(len(catalogo), 3)
         self.assertIs(catalogo[4], nova)
 
@@ -236,7 +236,7 @@ class TestCadastrarVulnerabilidade(TesteComArquivosTemporarios):
         catalogo = criar_catalogo()
         with patch("builtins.input", side_effect=["SMB desatualizado", "8.1"]):
             with redirect_stdout(io.StringIO()):
-                cadastrar_vulnerabilidade(catalogo)
+                cadastrar_vulnerabilidade(self.repositorio, catalogo)
         self.assertEqual(len(carregar_catalogo()), 3)
 
 
@@ -272,30 +272,46 @@ class TestVincularVulnerabilidade(TesteComArquivosTemporarios):
         self.ativos = {1: self.notebook, 2: self.servidor}
 
     def test_vincula_com_status(self):
-        vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA)
+        vincular_vulnerabilidade(
+            self.repositorio, self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA
+        )
         self.assertEqual(self.notebook.vulnerabilidades, {3: StatusDaVuln.ABERTA})
 
     def test_salva_no_arquivo(self):
-        vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA)
+        vincular_vulnerabilidade(
+            self.repositorio, self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA
+        )
         self.assertIn(3, carregar_dados()[1].vulnerabilidades)
 
     def test_nao_vincula_duas_vezes(self):
-        vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA)
+        vincular_vulnerabilidade(
+            self.repositorio, self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA
+        )
         with self.assertRaises(DadoInvalidoError):
-            vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA)
+            vincular_vulnerabilidade(
+                self.repositorio, self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA
+            )
 
     def test_nao_vincula_vulnerabilidade_inexistente(self):
         with self.assertRaises(DadoInvalidoError):
-            vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 99, StatusDaVuln.ABERTA)
+            vincular_vulnerabilidade(
+                self.repositorio, self.ativos, self.catalogo, 1, 99, StatusDaVuln.ABERTA
+            )
         self.assertEqual(self.notebook.vulnerabilidades, {})
 
     def test_ativo_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            vincular_vulnerabilidade(self.ativos, self.catalogo, 99, 3, StatusDaVuln.ABERTA)
+            vincular_vulnerabilidade(
+                self.repositorio, self.ativos, self.catalogo, 99, 3, StatusDaVuln.ABERTA
+            )
 
     def test_mesma_vulnerabilidade_com_status_diferente_em_cada_ativo(self):
-        vincular_vulnerabilidade(self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA)
-        vincular_vulnerabilidade(self.ativos, self.catalogo, 2, 3, StatusDaVuln.CORRIGIDA)
+        vincular_vulnerabilidade(
+            self.repositorio, self.ativos, self.catalogo, 1, 3, StatusDaVuln.ABERTA
+        )
+        vincular_vulnerabilidade(
+            self.repositorio, self.ativos, self.catalogo, 2, 3, StatusDaVuln.CORRIGIDA
+        )
         self.assertEqual(self.notebook.vulnerabilidades[3], StatusDaVuln.ABERTA)
         self.assertEqual(self.servidor.vulnerabilidades[3], StatusDaVuln.CORRIGIDA)
 
@@ -330,17 +346,23 @@ class TestAtualizarStatusVulnerabilidade(TesteComArquivosTemporarios):
         self.ativos = {1: self.notebook}
 
     def test_atualiza_status_vinculado(self):
-        atualizar_status_vulnerabilidade(self.ativos, 1, 3, StatusDaVuln.CORRIGIDA)
+        atualizar_status_vulnerabilidade(
+            self.repositorio, self.ativos, 1, 3, StatusDaVuln.CORRIGIDA
+        )
         self.assertEqual(self.notebook.vulnerabilidades[3], StatusDaVuln.CORRIGIDA)
 
     def test_nao_cria_vinculo_novo(self):
         with self.assertRaises(DadoInvalidoError):
-            atualizar_status_vulnerabilidade(self.ativos, 1, 1, StatusDaVuln.CORRIGIDA)
+            atualizar_status_vulnerabilidade(
+                self.repositorio, self.ativos, 1, 1, StatusDaVuln.CORRIGIDA
+            )
         self.assertNotIn(1, self.notebook.vulnerabilidades)
 
     def test_ativo_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            atualizar_status_vulnerabilidade(self.ativos, 99, 3, StatusDaVuln.CORRIGIDA)
+            atualizar_status_vulnerabilidade(
+                self.repositorio, self.ativos, 99, 3, StatusDaVuln.CORRIGIDA
+            )
 
 
 class TestDesvincularVulnerabilidade(TesteComArquivosTemporarios):
@@ -354,24 +376,24 @@ class TestDesvincularVulnerabilidade(TesteComArquivosTemporarios):
         self.ativos = {1: self.notebook}
 
     def test_remove_so_do_ativo(self):
-        desvincular_vulnerabilidade(self.ativos, 1, 3)
+        desvincular_vulnerabilidade(self.repositorio, self.ativos, 1, 3)
         self.assertEqual(self.notebook.vulnerabilidades, {1: StatusDaVuln.ABERTA})
         self.assertIn(3, self.catalogo)
 
     def test_nao_vinculada_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            desvincular_vulnerabilidade(self.ativos, 1, 99)
+            desvincular_vulnerabilidade(self.repositorio, self.ativos, 1, 99)
 
     def test_remove_vinculo_orfao(self):
         self.notebook.vulnerabilidades[50] = (
             StatusDaVuln.ABERTA
         )  # aponta para algo que não está no catálogo
-        desvincular_vulnerabilidade(self.ativos, 1, 50)
+        desvincular_vulnerabilidade(self.repositorio, self.ativos, 1, 50)
         self.assertNotIn(50, self.notebook.vulnerabilidades)
 
     def test_ativo_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            desvincular_vulnerabilidade(self.ativos, 99, 3)
+            desvincular_vulnerabilidade(self.repositorio, self.ativos, 99, 3)
 
 
 class TestAtualizarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
@@ -382,33 +404,37 @@ class TestAtualizarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
 
     def test_salva_a_alteracao(self):
         self.catalogo[3].cvss = 7.5
-        atualizar_vulnerabilidade_no_catalogo(self.catalogo, self.catalogo[3])
+        atualizar_vulnerabilidade_no_catalogo(self.repositorio, self.catalogo, self.catalogo[3])
         self.assertEqual(carregar_catalogo()[3].cvss, 7.5)
 
     def test_id_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
             atualizar_vulnerabilidade_no_catalogo(
-                self.catalogo, Vulnerabilidade(99, "Inexistente", 5.0)
+                self.repositorio, self.catalogo, Vulnerabilidade(99, "Inexistente", 5.0)
             )
         self.assertNotIn(99, self.catalogo)
 
     def test_recusa_cvss_invalido_sem_salvar(self):
         self.catalogo[3].cvss = 50
         with self.assertRaises(DadoInvalidoError):
-            atualizar_vulnerabilidade_no_catalogo(self.catalogo, self.catalogo[3])
+            atualizar_vulnerabilidade_no_catalogo(self.repositorio, self.catalogo, self.catalogo[3])
         self.assertEqual(carregar_catalogo(), {})
 
 
 class TestRegistrarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
 
     def test_arredonda_o_cvss(self):
-        nova = registrar_vulnerabilidade_no_catalogo(criar_catalogo(), "SMB desatualizado", 8.14)
+        nova = registrar_vulnerabilidade_no_catalogo(
+            self.repositorio, criar_catalogo(), "SMB desatualizado", 8.14
+        )
         self.assertEqual(nova.cvss, 8.1)
 
     def test_recusa_cvss_invalido_sem_guardar(self):
         catalogo = criar_catalogo()
         with self.assertRaises(DadoInvalidoError):
-            registrar_vulnerabilidade_no_catalogo(catalogo, "SMB desatualizado", 50)
+            registrar_vulnerabilidade_no_catalogo(
+                self.repositorio, catalogo, "SMB desatualizado", 50
+            )
         self.assertEqual(len(catalogo), 2)
 
 
@@ -422,35 +448,35 @@ class TestExcluirVulnerabilidadeDoCatalogo(TesteComArquivosTemporarios):
         self.ativos = {1: self.notebook, 2: self.servidor}
 
     def test_remove_do_catalogo(self):
-        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
+        excluir_vulnerabilidade_do_catalogo(self.repositorio, self.catalogo, self.ativos, 3)
         self.assertNotIn(3, self.catalogo)
         self.assertIn(1, self.catalogo)
 
     def test_remove_de_todos_os_ativos_vinculados(self):
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
         self.servidor.vulnerabilidades[3] = StatusDaVuln.CORRIGIDA
-        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
+        excluir_vulnerabilidade_do_catalogo(self.repositorio, self.catalogo, self.ativos, 3)
         self.assertNotIn(3, self.notebook.vulnerabilidades)
         self.assertNotIn(3, self.servidor.vulnerabilidades)
 
     def test_mantem_os_outros_vinculos(self):
         self.notebook.vulnerabilidades[1] = StatusDaVuln.ABERTA
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
-        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
+        excluir_vulnerabilidade_do_catalogo(self.repositorio, self.catalogo, self.ativos, 3)
         self.assertEqual(self.notebook.vulnerabilidades, {1: StatusDaVuln.ABERTA})
 
     def test_exclui_mesmo_sem_nenhum_vinculo(self):
-        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
+        excluir_vulnerabilidade_do_catalogo(self.repositorio, self.catalogo, self.ativos, 3)
         self.assertNotIn(3, self.catalogo)
 
     def test_id_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 99)
+            excluir_vulnerabilidade_do_catalogo(self.repositorio, self.catalogo, self.ativos, 99)
         self.assertEqual(len(self.catalogo), 2)
 
     def test_salva_catalogo_e_ativos(self):
         self.notebook.vulnerabilidades[3] = StatusDaVuln.ABERTA
-        excluir_vulnerabilidade_do_catalogo(self.catalogo, self.ativos, 3)
+        excluir_vulnerabilidade_do_catalogo(self.repositorio, self.catalogo, self.ativos, 3)
         self.assertNotIn(3, carregar_catalogo())
         self.assertNotIn(3, carregar_dados()[1].vulnerabilidades)
 
@@ -494,7 +520,7 @@ class TestEditarVulnerabilidade(TesteComArquivosTemporarios):
     def editar(self, respostas):
         with patch("builtins.input", side_effect=respostas):
             with redirect_stdout(io.StringIO()):
-                editar_vulnerabilidade(self.vulnerabilidade, self.catalogo)
+                editar_vulnerabilidade(self.repositorio, self.vulnerabilidade, self.catalogo)
 
     def test_edita_o_nome(self):
         self.editar(["1", "TLS 1.0 habilitado"])
@@ -559,7 +585,9 @@ class TestVincularAUmAtivo(TesteComArquivosTemporarios):
             ativos = self.ativos
         with patch("builtins.input", side_effect=respostas) as entrada:
             with redirect_stdout(io.StringIO()):
-                resultado = vincular_a_um_ativo(self.vulnerabilidade, ativos, self.catalogo)
+                resultado = vincular_a_um_ativo(
+                    self.repositorio, self.vulnerabilidade, ativos, self.catalogo
+                )
         return resultado, entrada
 
     def test_vincula_e_devolve_true(self):
