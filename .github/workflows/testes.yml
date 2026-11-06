@@ -29,7 +29,7 @@ jobs:
 
       - name: Rodar testes com unittest
         run: |
-          python -m unittest tests/testes.py tests/test_vulnerabilidades.py tests/test_persistencia.py
+          python -m unittest tests/testes.py tests/test_vulnerabilidades.py tests/test_persistencia.py tests/test_repositorio.py tests/test_repositorio_sqlite.py
 
       - name: Rodar testes com pytest
         run: |
