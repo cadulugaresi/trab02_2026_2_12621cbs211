@@ -1,6 +1,7 @@
 import os
 import sqlite3
 from inventario.persistencia.repositorio import Repositorio
+from inventario.dominio.vulnerabilidade import Vulnerabilidade
 
 ARQUIVO_BANCO_DE_DADOS = "inventario.db"
 ESQUEMA_SQL = os.path.join(os.path.dirname(__file__), "esquema.sql")
@@ -18,7 +19,20 @@ class RepositorioSQLite(Repositorio):
         pass
 
     def carregar_catalogo(self):
-        pass
+        todas_as_vulnerabilidades = self.conexao.execute(
+            """SELECT id_vulnerabilidade,
+            nome_vulnerabilidade,
+            cvss FROM vulnerabilidades"""
+        ).fetchall()
+
+        catalogo = {}
+
+        for registro in todas_as_vulnerabilidades:
+            id_vulnerabilidade, nome_vulnerabilidade, cvss = registro
+            vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)
+            catalogo[id_vulnerabilidade] = vulnerabilidade
+
+        return catalogo
 
     def adicionar_ativo(self, ativo):
         pass
@@ -30,13 +44,34 @@ class RepositorioSQLite(Repositorio):
         pass
 
     def adicionar_vulnerabilidade(self, vulnerabilidade):
-        pass
+        self.conexao.execute(
+            """INSERT INTO vulnerabilidades
+            (id_vulnerabilidade, nome_vulnerabilidade, cvss)
+            VALUES (?, ?, ?)""",
+            (vulnerabilidade.id_vulnerabilidade,
+            vulnerabilidade.nome_vulnerabilidade,
+            vulnerabilidade.cvss,)
+        ,)
+        self.conexao.commit()
 
     def atualizar_vulnerabilidade(self, vulnerabilidade):
-        pass
+        self.conexao.execute(
+            """UPDATE vulnerabilidades
+            SET nome_vulnerabilidade = ?, cvss = ?
+            WHERE id_vulnerabilidade = ?""",
+            (vulnerabilidade.nome_vulnerabilidade,
+            vulnerabilidade.cvss,
+            vulnerabilidade.id_vulnerabilidade,)
+        ,)
+        self.conexao.commit()
 
     def remover_vulnerabilidade(self, id_vulnerabilidade):
-        pass
+        self.conexao.execute(
+            """DELETE FROM vulnerabilidades
+            WHERE id_vulnerabilidade = ?""",
+            (id_vulnerabilidade,),
+        )
+        self.conexao.commit()
 
     def vincular(self, id_ativo, id_vulnerabilidade, status):
         pass
