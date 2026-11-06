@@ -17,11 +17,32 @@ class RepositorioSQLite(Repositorio):
     def carregar_ativos(self):
         pass
 
-    def salvar_ativos(self, ativos):
-        pass
-
     def carregar_catalogo(self):
         pass
 
-    def salvar_catalogo(self, catalogo):
+    def adicionar_ativo(self, ativo):
+        pass
+
+    def atualizar_ativo(self, ativo):
+        pass
+
+    def remover_ativo(self, id_ativo):
+        pass
+
+    def adicionar_vulnerabilidade(self, vulnerabilidade):
+        pass
+
+    def atualizar_vulnerabilidade(self, vulnerabilidade):
+        pass
+
+    def remover_vulnerabilidade(self, id_vulnerabilidade):
+        pass
+
+    def vincular(self, id_ativo, id_vulnerabilidade, status):
+        pass
+
+    def atualizar_status_vinculo(self, id_ativo, id_vulnerabilidade, status):
+        pass
+
+    def desvincular(self, id_ativo, id_vulnerabilidade):
         pass
