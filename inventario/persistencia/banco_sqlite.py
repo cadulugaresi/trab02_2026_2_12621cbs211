@@ -44,34 +44,34 @@ class RepositorioSQLite(Repositorio):
         pass
 
     def adicionar_vulnerabilidade(self, vulnerabilidade):
-        self.conexao.execute(
-            """INSERT INTO vulnerabilidades
-            (id_vulnerabilidade, nome_vulnerabilidade, cvss)
-            VALUES (?, ?, ?)""",
-            (vulnerabilidade.id_vulnerabilidade,
-            vulnerabilidade.nome_vulnerabilidade,
+        with self.conexao:
+            self.conexao.execute(
+                """INSERT INTO vulnerabilidades
+                (id_vulnerabilidade, nome_vulnerabilidade, cvss)
+                VALUES (?, ?, ?)""",
+                (vulnerabilidade.id_vulnerabilidade,
+                vulnerabilidade.nome_vulnerabilidade,
             vulnerabilidade.cvss,)
-        ,)
-        self.conexao.commit()
+            ,)
 
     def atualizar_vulnerabilidade(self, vulnerabilidade):
-        self.conexao.execute(
-            """UPDATE vulnerabilidades
-            SET nome_vulnerabilidade = ?, cvss = ?
-            WHERE id_vulnerabilidade = ?""",
-            (vulnerabilidade.nome_vulnerabilidade,
-            vulnerabilidade.cvss,
+        with self.conexao:
+            self.conexao.execute(
+                """UPDATE vulnerabilidades
+                SET nome_vulnerabilidade = ?, cvss = ?
+                WHERE id_vulnerabilidade = ?""",
+                (vulnerabilidade.nome_vulnerabilidade,
+                vulnerabilidade.cvss,
             vulnerabilidade.id_vulnerabilidade,)
         ,)
-        self.conexao.commit()
 
     def remover_vulnerabilidade(self, id_vulnerabilidade):
-        self.conexao.execute(
-            """DELETE FROM vulnerabilidades
-            WHERE id_vulnerabilidade = ?""",
-            (id_vulnerabilidade,),
-        )
-        self.conexao.commit()
+        with self.conexao:
+            self.conexao.execute(
+                """DELETE FROM vulnerabilidades
+                WHERE id_vulnerabilidade = ?""",
+                (id_vulnerabilidade,),
+            )
 
     def vincular(self, id_ativo, id_vulnerabilidade, status):
         pass
