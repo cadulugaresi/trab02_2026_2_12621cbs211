@@ -19,5 +19,7 @@ def validar_nome_responsavel(nome):
 def validar_soma_fracao(soma_atual, fracao_nova):
     soma = round(soma_atual + fracao_nova, 6)
     if soma >= 1:
-        raise DadoInvalidoError("A soma das frações passaria de 1. Ainda cabem {:.3f}.".format(1 - soma_atual))
+        raise DadoInvalidoError(
+            "A soma das frações passaria de 1. Ainda cabem {:.3f}.".format(1 - soma_atual)
+        )
     return fracao_nova

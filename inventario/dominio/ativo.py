@@ -33,7 +33,9 @@ class Ativo:
         lista_de_dependencias = []
 
         for id_ativo_do_qual_depende, fracao in self.dependencias.items():
-            lista_de_dependencias.append({"id_ativo_do_qual_depende": id_ativo_do_qual_depende, "fracao": fracao})
+            lista_de_dependencias.append(
+                {"id_ativo_do_qual_depende": id_ativo_do_qual_depende, "fracao": fracao}
+            )
 
         return {
             "id": self.id,
