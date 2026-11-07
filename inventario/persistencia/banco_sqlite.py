@@ -254,3 +254,17 @@ class RepositorioSQLite(Repositorio):
                 id_ativo_do_qual_depende = ?""",
                 (id_ativo_que_depende, id_ativo_do_qual_depende),
             )
+
+    def editar_dependencia(self, id_ativo_que_depende, id_ativo_do_qual_depende_antigo, id_ativo_do_qual_depende_novo, fracao_nova,):
+        with self.conexao:
+            self.executar(
+                """UPDATE dependencias
+                SET id_ativo_do_qual_depende = ?, fracao = ?
+                WHERE id_ativo_que_depende = ?
+                AND id_ativo_do_qual_depende = ?""",
+                (
+                    id_ativo_do_qual_depende_novo,
+                    fracao_nova, id_ativo_que_depende,
+                    id_ativo_do_qual_depende_antigo,
+                ),
+            )
