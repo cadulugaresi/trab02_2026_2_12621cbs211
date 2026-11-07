@@ -66,6 +66,11 @@ def carregar_ativos():
                     status_tratamento = StatusDaVuln(vinculo["status_tratamento"])
                     novo_ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
 
+                for dependencia in ativo_dicionario.get("dependencias", []):
+                    id_ativo_do_qual_depende = dependencia["id_ativo_do_qual_depende"]
+                    fracao = dependencia["fracao"]
+                    novo_ativo.dependencias[id_ativo_do_qual_depende] = fracao
+
                 ativos_carregados[novo_ativo.id] = novo_ativo
 
             return ativos_carregados
@@ -143,12 +148,17 @@ class RepositorioJSON(Repositorio):
         ativos = self.obter_ativos_guardados()
         ativo_atualizado = copiar_ativo_sem_vinculos(ativo)
         ativo_atualizado.vulnerabilidades = ativos[ativo.id].vulnerabilidades
+        ativo_atualizado.dependencias = ativos[ativo.id].dependencias
         ativos[ativo.id] = ativo_atualizado
         salvar_ativos(ativos)
 
     def remover_ativo(self, id_ativo):
         ativos = self.obter_ativos_guardados()
         ativos.pop(id_ativo, None)
+
+        for ativo in ativos.values():
+            ativo.dependencias.pop(id_ativo, None)
+
         salvar_ativos(ativos)
 
     def adicionar_vulnerabilidade(self, vulnerabilidade):
@@ -185,4 +195,14 @@ class RepositorioJSON(Repositorio):
     def desvincular(self, id_ativo, id_vulnerabilidade):
         ativos = self.obter_ativos_guardados()
         ativos[id_ativo].vulnerabilidades.pop(id_vulnerabilidade, None)
+        salvar_ativos(ativos)
+
+    def adicionar_dependencia(self, id_ativo_que_depende, id_ativo_do_qual_depende, fracao):
+        ativos = self.obter_ativos_guardados()
+        ativos[id_ativo_que_depende].dependencias[id_ativo_do_qual_depende] = fracao
+        salvar_ativos(ativos)
+
+    def remover_dependencia(self, id_ativo_que_depende, id_ativo_do_qual_depende):
+        ativos = self.obter_ativos_guardados()
+        ativos[id_ativo_que_depende].dependencias.pop(id_ativo_do_qual_depende, None)
         salvar_ativos(ativos)
