@@ -3,6 +3,7 @@ import sqlite3
 from inventario.persistencia.repositorio import Repositorio
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.dominio.enums import StatusDaVuln
+from inventario.dominio.excecoes import PersistenciaError
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 
 ARQUIVO_BANCO_DE_DADOS = "inventario.db"
@@ -18,10 +19,20 @@ TABELAS_DOS_TIPOS = {
 class RepositorioSQLite(Repositorio):
     def __init__(self, caminho_banco_de_dados=ARQUIVO_BANCO_DE_DADOS):
         self.conexao = sqlite3.connect(caminho_banco_de_dados)
-        self.conexao.execute("PRAGMA foreign_keys = ON")
+        self.executar("PRAGMA foreign_keys = ON")
+        try:
+            with open(ESQUEMA_SQL, encoding="utf-8") as arquivo:
+                self.conexao.executescript(arquivo.read())
+        except sqlite3.Error:
+            raise PersistenciaError(
+                "Erro de Persistência: o banco de dados está corrompido ou inacessível."
+            )
 
-        with open(ESQUEMA_SQL, encoding="utf-8") as arquivo:
-            self.conexao.executescript(arquivo.read())
+    def executar(self, sql, valores=()):
+        try:
+            return self.conexao.execute(sql, valores)
+        except sqlite3.Error:
+            raise PersistenciaError("Erro de Persistência: falha ao acessar o banco de dados.")
 
     def carregar_ativos(self):
         ativos = {}
@@ -29,7 +40,7 @@ class RepositorioSQLite(Repositorio):
         for tipo in TABELAS_DOS_TIPOS.keys():
             tabela, colunas_do_tipo = TABELAS_DOS_TIPOS[tipo]
 
-            registros = self.conexao.execute(
+            registros = self.executar(
                 """SELECT ativos.id, ativos.nome,
                 ativos.setor, ativos.responsavel,
                 ativos.status, """
@@ -55,7 +66,7 @@ class RepositorioSQLite(Repositorio):
                 ativo = MAPA_DE_TIPOS[tipo].de_dicionario(dados_do_ativo)
                 ativos[ativo.id] = ativo
 
-                todos_os_vinculos = self.conexao.execute(
+                todos_os_vinculos = self.executar(
                     """SELECT id_vulnerabilidade, status_tratamento
                     FROM vinculos WHERE id_ativo = ?""",
                     (ativo.id,),
@@ -68,7 +79,7 @@ class RepositorioSQLite(Repositorio):
         return ativos
 
     def carregar_catalogo(self):
-        todas_as_vulnerabilidades = self.conexao.execute("""SELECT id_vulnerabilidade,
+        todas_as_vulnerabilidades = self.executar("""SELECT id_vulnerabilidade,
             nome_vulnerabilidade,
             cvss FROM vulnerabilidades""").fetchall()
 
@@ -91,7 +102,7 @@ class RepositorioSQLite(Repositorio):
             valores_para_inserir.append(dados_do_ativo[coluna])
             marcadores.append("?")
 
-        self.conexao.execute(
+        self.executar(
             f"INSERT INTO {tabela} (id_ativo, {', '.join(colunas_do_tipo)}) "
             f"VALUES ({', '.join(marcadores)})",
             valores_para_inserir,
@@ -102,7 +113,7 @@ class RepositorioSQLite(Repositorio):
         dados_do_ativo = ativo.para_dicionario()
 
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """INSERT INTO ativos
                 (id, nome, tipo, setor, responsavel, status)
                 VALUES (?, ?, ?, ?, ?, ?)""",
@@ -123,7 +134,7 @@ class RepositorioSQLite(Repositorio):
         dados_do_ativo = ativo.para_dicionario()
 
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """UPDATE ativos
                 SET nome = ?, tipo = ?, setor = ?,
                 responsavel = ?, status = ?
@@ -139,7 +150,7 @@ class RepositorioSQLite(Repositorio):
             )
 
             for tabela, colunas_do_tipo in TABELAS_DOS_TIPOS.values():
-                self.conexao.execute(
+                self.executar(
                     f"DELETE FROM {tabela} WHERE id_ativo = ?",
                     (dados_do_ativo["id"],),
                 )
@@ -148,7 +159,7 @@ class RepositorioSQLite(Repositorio):
 
     def remover_ativo(self, id_ativo):
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """DELETE FROM ativos
                 WHERE id = ?""",
                 (id_ativo,),
@@ -156,7 +167,7 @@ class RepositorioSQLite(Repositorio):
 
     def adicionar_vulnerabilidade(self, vulnerabilidade):
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """INSERT INTO vulnerabilidades
                 (id_vulnerabilidade, nome_vulnerabilidade, cvss)
                 VALUES (?, ?, ?)""",
@@ -169,7 +180,7 @@ class RepositorioSQLite(Repositorio):
 
     def atualizar_vulnerabilidade(self, vulnerabilidade):
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """UPDATE vulnerabilidades
                 SET nome_vulnerabilidade = ?, cvss = ?
                 WHERE id_vulnerabilidade = ?""",
@@ -182,7 +193,7 @@ class RepositorioSQLite(Repositorio):
 
     def remover_vulnerabilidade(self, id_vulnerabilidade):
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """DELETE FROM vulnerabilidades
                 WHERE id_vulnerabilidade = ?""",
                 (id_vulnerabilidade,),
@@ -190,7 +201,7 @@ class RepositorioSQLite(Repositorio):
 
     def vincular(self, id_ativo, id_vulnerabilidade, status_tratamento):
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """INSERT INTO vinculos
                 (id_ativo, id_vulnerabilidade,
                 status_tratamento)
@@ -200,7 +211,7 @@ class RepositorioSQLite(Repositorio):
 
     def atualizar_status_vinculo(self, id_ativo, id_vulnerabilidade, status_tratamento):
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """UPDATE vinculos
                 SET status_tratamento = ?
                 WHERE id_ativo = ? AND id_vulnerabilidade = ?""",
@@ -209,7 +220,7 @@ class RepositorioSQLite(Repositorio):
 
     def desvincular(self, id_ativo, id_vulnerabilidade):
         with self.conexao:
-            self.conexao.execute(
+            self.executar(
                 """DELETE FROM vinculos
                 WHERE id_ativo = ? AND id_vulnerabilidade = ?""",
                 (id_ativo, id_vulnerabilidade),
