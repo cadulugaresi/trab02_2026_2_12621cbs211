@@ -5,19 +5,20 @@ from inventario.dominio.enums import StatusDaVuln
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.dominio.excecoes import PersistenciaError
+from inventario.persistencia.repositorio import Repositorio
 
-ARQUIVO_DADOS = "ativos.json"
+ARQUIVO_ATIVOS = "ativos.json"
 ARQUIVO_CATALOGO = "vulnerabilidades.json"
 
 
-def salvar_dados(ativos):
+def salvar_ativos(ativos):
 
     lista_para_salvar = []
 
     for ativo in ativos.values():
         lista_para_salvar.append(ativo.para_dicionario())
 
-    salvar_seguro(ARQUIVO_DADOS, lista_para_salvar)
+    salvar_seguro(ARQUIVO_ATIVOS, lista_para_salvar)
 
 
 def salvar_catalogo(catalogo):
@@ -48,10 +49,10 @@ def salvar_seguro(caminho, dados):
         raise PersistenciaError("Erro de Persistência ao salvar os dados no arquivo.")
 
 
-def carregar_dados():
+def carregar_ativos():
 
     try:
-        with open(ARQUIVO_DADOS, "r", encoding="utf-8") as arquivo:
+        with open(ARQUIVO_ATIVOS, "r", encoding="utf-8") as arquivo:
             dados_brutos = json.load(arquivo)
             ativos_carregados = {}
 
@@ -98,3 +99,90 @@ def carregar_catalogo():
         raise PersistenciaError(
             "Erro de Persistência: O catálogo de vulnerabilidades está corrompido ou com formato inválido."
         )
+
+
+def copiar_ativo_sem_vinculos(ativo):
+    classe = type(ativo)
+    return classe.de_dicionario(ativo.para_dicionario())
+
+
+def copiar_vulnerabilidade(vulnerabilidade):
+    return Vulnerabilidade.de_dicionario(vulnerabilidade.para_dicionario())
+
+
+class RepositorioJSON(Repositorio):
+
+    def __init__(self):
+        self.ativos_guardados = None
+        self.catalogo_guardado = None
+
+    def obter_ativos_guardados(self):
+        if self.ativos_guardados is None:
+            self.ativos_guardados = carregar_ativos()
+        return self.ativos_guardados
+
+    def obter_catalogo_guardado(self):
+        if self.catalogo_guardado is None:
+            self.catalogo_guardado = carregar_catalogo()
+        return self.catalogo_guardado
+
+    def carregar_ativos(self):
+        self.ativos_guardados = carregar_ativos()
+        return carregar_ativos()
+
+    def carregar_catalogo(self):
+        self.catalogo_guardado = carregar_catalogo()
+        return carregar_catalogo()
+
+    def adicionar_ativo(self, ativo):
+        ativos = self.obter_ativos_guardados()
+        ativos[ativo.id] = copiar_ativo_sem_vinculos(ativo)
+        salvar_ativos(ativos)
+
+    def atualizar_ativo(self, ativo):
+        ativos = self.obter_ativos_guardados()
+        ativo_atualizado = copiar_ativo_sem_vinculos(ativo)
+        ativo_atualizado.vulnerabilidades = ativos[ativo.id].vulnerabilidades
+        ativos[ativo.id] = ativo_atualizado
+        salvar_ativos(ativos)
+
+    def remover_ativo(self, id_ativo):
+        ativos = self.obter_ativos_guardados()
+        ativos.pop(id_ativo, None)
+        salvar_ativos(ativos)
+
+    def adicionar_vulnerabilidade(self, vulnerabilidade):
+        catalogo = self.obter_catalogo_guardado()
+        catalogo[vulnerabilidade.id_vulnerabilidade] = copiar_vulnerabilidade(vulnerabilidade)
+        salvar_catalogo(catalogo)
+
+    def atualizar_vulnerabilidade(self, vulnerabilidade):
+        catalogo = self.obter_catalogo_guardado()
+        catalogo[vulnerabilidade.id_vulnerabilidade] = copiar_vulnerabilidade(vulnerabilidade)
+        salvar_catalogo(catalogo)
+
+    def remover_vulnerabilidade(self, id_vulnerabilidade):
+        ativos = self.obter_ativos_guardados()
+        catalogo = self.obter_catalogo_guardado()
+
+        for ativo in ativos.values():
+            ativo.vulnerabilidades.pop(id_vulnerabilidade, None)
+        catalogo.pop(id_vulnerabilidade, None)
+
+        salvar_ativos(ativos)
+        salvar_catalogo(catalogo)
+
+    def vincular(self, id_ativo, id_vulnerabilidade, status):
+        ativos = self.obter_ativos_guardados()
+        ativos[id_ativo].vulnerabilidades[id_vulnerabilidade] = status
+        salvar_ativos(ativos)
+
+    def atualizar_status_vinculo(self, id_ativo, id_vulnerabilidade, status):
+        ativos = self.obter_ativos_guardados()
+        ativos[id_ativo].vulnerabilidades[id_vulnerabilidade] = status
+        salvar_ativos(ativos)
+
+    def desvincular(self, id_ativo, id_vulnerabilidade):
+        ativos = self.obter_ativos_guardados()
+        ativos[id_ativo].vulnerabilidades.pop(id_vulnerabilidade, None)
+        salvar_ativos(ativos)

@@ -38,14 +38,16 @@ Vulnerabilities live in a single **catalog**, independent of the assets. Each as
 Model based on linear algebra that estimates the risk of each asset from its vulnerabilities and dependencies between assets. The catalog and the links are the basis of the incidence matrix `M` and of the severity vector `v` used to compute each asset's own risk (`b = Mv`).
 
 ### General
-- **Data persistence**: assets and their links are saved to `ativos.json`, and the catalog to `vulnerabilidades.json`, both as a list of JSON objects, and reloaded on every run
+- **Data persistence**: assets, the catalog, and the links are saved to a SQLite database (`inventario.db`), with one table per asset type and an associative `vinculos` table between assets and vulnerabilities, and reloaded on every run
+- **Swappable storage**: the program depends only on the abstract `Repositorio` interface; `RepositorioSQLite` is the storage in use, and `RepositorioJSON` (JSON files) is kept as a second implementation that passes the same tests
 - **ID index**: assets and catalog vulnerabilities are stored in dictionaries indexed by ID, allowing efficient constant-time search (O(1))
 - **Global error handling**: Ctrl+C and Ctrl+D anywhere in the program exit cleanly, without a traceback
 
 ## 🫧 Tech Stack
 
 - Python 3.8+
-- Standard library modules: `json`, `enum`
+- Standard library modules: `sqlite3`, `abc`, `json`, `enum`
+- Database: SQLite (no server to install; schema in `inventario/persistencia/esquema.sql`)
 - Tests: `unittest` and `pytest`; linting: `flake8` and `black`; CI with GitHub Actions
 - **In development**: linear algebra library (TBD), Docker
 
@@ -55,16 +57,22 @@ The project is organized in **layers**. Each layer is a package inside `inventar
 
 ```mermaid
 flowchart TD
-    main["main.py<br/>loads the data and opens the menu"]
+    main["main.py<br/>creates the RepositorioSQLite, loads the data,<br/>and opens the menu"]
     interface["INTERFACE<br/>inventario/interface<br/>menu.py, ativos.py, vulnerabilidades.py,<br/>entradas.py, conversao_das_opcoes_do_menu.py"]
     servicos["SERVICES<br/>inventario/servicos<br/>ativos.py, vulnerabilidades.py"]
-    persistencia["PERSISTENCE<br/>inventario/persistencia<br/>arquivos_json.py"]
+    subgraph persistencia["PERSISTENCE · inventario/persistencia"]
+        repositorio["Repositorio<br/>repositorio.py<br/>abstract interface"]
+        repositorioSQLite["RepositorioSQLite<br/>banco_sqlite.py + esquema.sql<br/>storage in use (inventario.db)"]
+        repositorioJSON["RepositorioJSON<br/>arquivos_json.py<br/>second implementation"]
+    end
     dominio["DOMAIN<br/>inventario/dominio<br/>ativo.py, vulnerabilidade.py, enums.py,<br/>excecoes.py, validacoes.py"]
 
     main --> interface
-    main --> persistencia
+    main -->|creates and injects| repositorioSQLite
     interface --> servicos
-    servicos --> persistencia
+    servicos --> repositorio
+    repositorio -->|implemented by| repositorioSQLite
+    repositorio -->|implemented by| repositorioJSON
     interface -.-> dominio
     servicos -.-> dominio
     persistencia -.-> dominio
@@ -78,13 +86,14 @@ flowchart TD
     class main corMain
     class interface corInterface
     class servicos corServicos
-    class persistencia corPersistencia
+    class repositorio,repositorioSQLite,repositorioJSON corPersistencia
     class dominio corDominio
+    style persistencia fill:#181825,stroke:#fab387,stroke-width:2px,color:#cdd6f4
 
     linkStyle default stroke:#9399b2,stroke-width:2px
 ```
 
-**Dependency rule:** arrows only point downward. The interface calls the services, and the services call the persistence layer. Every layer may use the domain (dashed arrows), but the domain imports no other layer.
+**Dependency rule:** arrows only point downward. The interface calls the services, and the services call the persistence layer through the abstract `Repositorio`, never through a concrete implementation. Only `main.py` knows which implementation is used: it creates the `RepositorioSQLite` and injects it into the menu, which passes it on to the interface screens and the services. Every layer may use the domain (dashed arrows), but the domain imports no other layer.
 
 ### Responsibility of each layer
 
@@ -94,27 +103,31 @@ flowchart TD
   - `vulnerabilidades.py`: catalog and link screens (`cadastrar_vulnerabilidade`, `editar_vulnerabilidade`, `vincular_a_um_ativo`, `mostrar_vulnerabilidade`...)
   - `entradas.py`: `pedir_*` functions, which read and validate what was typed
   - `conversao_das_opcoes_do_menu.py`: converts a numbered menu option into a domain value (`"1"` → `StatusDoAtivo.ATIVO`, `"1"` → `Notebook`...)
-- **Services** (`inventario/servicos/`): hold the registration, search, editing, deletion, and linking operations. They receive ready-made data as parameters, apply the rules, save through the persistence layer, and raise `DadoInvalidoError` when something is wrong. They never use `input` or `print`.
+- **Services** (`inventario/servicos/`): hold the registration, search, editing, deletion, and linking operations. They receive the repository and ready-made data as parameters, apply the rules, save through the repository (`repositorio.adicionar_ativo`, `repositorio.vincular`...), and raise `DadoInvalidoError` when something is wrong. They never use `input` or `print`.
   - `ativos.py`: `registrar_ativo_no_inventario`, `atualizar_ativo_no_inventario`, `remover_ativo_do_inventario`, `obter_ativo`, and the searches (`encontrar_ativo_por_id`, `encontrar_ativo_por_nome`, `encontrar_ativos_por_status`, `listar_ativos_por_tipo`)
   - `vulnerabilidades.py`: `registrar_vulnerabilidade_no_catalogo`, `atualizar_vulnerabilidade_no_catalogo`, `excluir_vulnerabilidade_do_catalogo`, `vincular_vulnerabilidade`, `desvincular_vulnerabilidade`, `atualizar_status_vulnerabilidade`, and `proximo_id`
-- **Persistence** (`inventario/persistencia/`): saves and loads the data. The current implementation uses JSON files (`arquivos_json.py`: `salvar_dados`, `carregar_dados`, `salvar_catalogo`, `carregar_catalogo`).
+- **Persistence** (`inventario/persistencia/`): saves and loads the data, and translates storage failures into `PersistenciaError`.
+  - `repositorio.py`: `Repositorio`, the abstract interface (`ABC`) with the 11 operations every storage must provide: `carregar_ativos`, `carregar_catalogo`, `adicionar_ativo`, `atualizar_ativo`, `remover_ativo`, `adicionar_vulnerabilidade`, `atualizar_vulnerabilidade`, `remover_vulnerabilidade`, `vincular`, `atualizar_status_vinculo`, and `desvincular`
+  - `banco_sqlite.py`: `RepositorioSQLite`, the storage used by the program (`inventario.db`); it creates the tables on startup, enables foreign keys, and rebuilds each asset with a `JOIN` between `ativos` and its type table
+  - `esquema.sql`: the database schema: the `ativos` table, one table per type (`notebooks`, `servidores`, `roteadores`, `impressoras`), `vulnerabilidades`, and the associative `vinculos` table, all with `ON DELETE CASCADE`
+  - `arquivos_json.py`: `RepositorioJSON`, the second implementation, which saves to `ativos.json` and `vulnerabilidades.json` with atomic writes
 - **Domain** (`inventario/dominio/`): the entities and the rules that hold for any interface, depending on no one.
   - `ativo.py`: `Ativo` and its subclasses `Notebook`, `Servidor`, `Roteador`, `Impressora`, plus `MAPA_DE_TIPOS`
   - `vulnerabilidade.py`: `Vulnerabilidade`, with the level calculated from the CVSS score
   - `enums.py`: `Setor`, `StatusDoAtivo`, `StatusDaVuln`, `NivelDaVulnerabilidade`, `Cor`, `Tecnologia`
-  - `excecoes.py`: `DadoInvalidoError`
+  - `excecoes.py`: `DadoInvalidoError` and `PersistenciaError`
   - `validacoes.py`: validation rules (`validar_nome_responsavel`, `validar_cvss`)
 
 ### Example flow: deleting an asset
 
 ```
-menu_principal                      (interface)    user picks option 3
-└── excluir_ativo                   (interface)
-    ├── perguntar_ativo             (interface)    asks for the ID
-    │   └── obter_ativo             (service)      searches; raises an error if missing
-    ├── confirmar_exclusao          (interface)    asks for "sim"
-    └── remover_ativo_do_inventario (service)      removes it from the inventory
-        └── salvar_dados            (persistence)
+menu_principal                         (interface)     user picks option 3
+└── excluir_ativo                      (interface)
+    ├── perguntar_ativo                (interface)     asks for the ID
+    │   └── obter_ativo                (service)       searches; raises an error if missing
+    ├── confirmar_exclusao             (interface)     asks for "sim"
+    └── remover_ativo_do_inventario    (service)       removes it from the inventory
+        └── repositorio.remover_ativo  (persistence)   DELETE FROM ativos (ON DELETE CASCADE)
 ```
 
 ### Design decisions
@@ -123,7 +136,9 @@ menu_principal                      (interface)    user picks option 3
 - **Errors go up, the interface displays them:** services and the domain raise `DadoInvalidoError` with the message; the interface catches it and shows that message. Each error text is written in a single place.
 - **Defense in depth:** rules such as the CVSS range (`validar_cvss`) live in the domain and are used both by the interface (to ask again) and by the services (as a guarantee, wherever the data comes from).
 - **A single list of types:** the list of asset types lives in the domain (`MAPA_DE_TIPOS`); the menu numbering (`TIPOS_DE_ATIVOS`) is generated from it by the interface.
-- **Ready for change:** replacing the terminal with an HTTP service only touches the interface layer, and replacing the JSON files with a SQL database only touches the persistence layer.
+- **Depend on the abstraction:** services receive a `Repositorio` as a parameter instead of importing a storage module. Swapping the JSON files for the SQLite database only touched the persistence layer and the repository created in `main.py`.
+- **Each operation saves only what changed:** instead of rewriting everything, each service calls the matching repository operation (`adicionar_ativo`, `desvincular`...), which becomes a single `INSERT`, `UPDATE`, or `DELETE` in the database.
+- **Ready for change:** replacing the terminal with an HTTP service only touches the interface layer.
 
 ### Domain model
 
@@ -150,6 +165,9 @@ menu_principal                      (interface)    user picks option 3
 │   │   ├── ativos.py
 │   │   └── vulnerabilidades.py
 │   ├── persistencia/
+│   │   ├── repositorio.py
+│   │   ├── banco_sqlite.py
+│   │   ├── esquema.sql
 │   │   └── arquivos_json.py
 │   └── dominio/
 │       ├── ativo.py
@@ -159,6 +177,10 @@ menu_principal                      (interface)    user picks option 3
 │       └── validacoes.py
 ├── tests/
 │   ├── apoio.py
+│   ├── contrato_repositorio.py
+│   ├── test_repositorio.py
+│   ├── test_repositorio_sqlite.py
+│   ├── test_persistencia.py
 │   ├── testes.py
 │   ├── test_vulnerabilidades.py
 │   └── test_exemplos.py
@@ -169,7 +191,12 @@ menu_principal                      (interface)    user picks option 3
 │   ├── criterios_aceitacao.md
 │   ├── especificacao.md
 │   ├── relatorio_testes.md
-│   └── entrega_final.md
+│   ├── entrega_final.md
+│   ├── solid.md
+│   ├── consultas_joins.sql
+│   └── exemplos/
+│       ├── exemplo_ativos.json
+│       └── exemplo_vulnerabilidades.json
 ├── .github/workflows/testes.yml
 ├── .flake8
 ├── pyproject.toml
@@ -177,7 +204,9 @@ menu_principal                      (interface)    user picks option 3
 └── README.md
 ```
 
-> The data files `ativos.json` and `vulnerabilidades.json` are generated automatically on first run and are not version-controlled.
+> The database `inventario.db` is created automatically on first run, with the tables from `esquema.sql`, and is not version-controlled. The JSON files used by `RepositorioJSON` are not version-controlled either; `docs/exemplos/` has sample files in the same format.
+>
+> `docs/solid.md` is the SOLID report (S4_02), and `docs/consultas_joins.sql` has commented `INNER JOIN` and `LEFT JOIN` queries over the database (S4_06).
 
 ## ✨ Getting Started
 
@@ -225,19 +254,25 @@ Inside option 5 (Editar ativo), a submenu lets you update the owner, status, dep
 ### Running the tests
 
 ```bash
-python3 -m unittest tests/testes.py tests/test_vulnerabilidades.py
+python3 -m unittest tests/testes.py tests/test_vulnerabilidades.py tests/test_persistencia.py tests/test_repositorio.py tests/test_repositorio_sqlite.py
 python3 -m pytest tests/test_exemplos.py
 python3 -m flake8 main.py inventario
 python3 -m black --check main.py inventario
 ```
 
-Tests that save data inherit from `TesteComArquivosTemporarios` (`tests/apoio.py`), which swaps the real JSON files for temporary ones during each test.
+**Repository contract suite:** `tests/contrato_repositorio.py` defines `ContratoDoRepositorio`, a set of 17 tests describing what any `Repositorio` must do: save and reload assets, the catalog, and the links; update them, including changing an asset's type; and remove them, taking a removed vulnerability out of every asset. The same suite runs on both implementations:
+- `tests/test_repositorio.py`: `TestRepositorioJSON`, using temporary JSON files
+- `tests/test_repositorio_sqlite.py`: `TestRepositorioSQLite`, using a temporary database, plus a test that a corrupted database raises `PersistenciaError`
+
+Tests that save data never touch the real files: the JSON ones inherit from `TesteComArquivosTemporarios` (`tests/apoio.py`), and the SQLite ones use a temporary database removed after each test.
 
 ## 🫧 Deletion Policy
 
 The system uses **physical deletion**:
-- When an **asset** is removed, the record is permanently erased from `ativos.json`, along with its links. The vulnerabilities themselves remain in the catalog.
-- When a **vulnerability** is removed from the catalog, it is permanently erased from `vulnerabilidades.json` and unlinked from every asset, so no asset is left pointing to a vulnerability that no longer exists.
+- When an **asset** is removed, its row is permanently erased from the `ativos` table. The foreign keys with `ON DELETE CASCADE` also erase its row in the type table and its links in `vinculos`. The vulnerabilities themselves remain in the catalog.
+- When a **vulnerability** is removed from the catalog, its row is permanently erased from the `vulnerabilidades` table, and `ON DELETE CASCADE` erases its links in `vinculos`, so no asset is left pointing to a vulnerability that no longer exists.
+
+`RepositorioJSON` follows the same policy, removing the links manually.
 
 **Rationale:**
 - The project scope does not require audit or removal history;
@@ -258,13 +293,15 @@ The system uses **physical deletion**:
 
 ## 🫧 Assignment 2 Requirements
 
-| #   | Requirement                               | Status |
-| --- | ----------------------------------------- | ------ |
-| 1   | Assets as individual objects (subclasses) | ✅     |
-| 2   | JSON persistence                          | ✅     |
-| 3   | Layered architecture (S4_01)              | ✅     |
-| 4   | Docker container execution                | ⏳     |
-| 5   | Risk calculation (linear algebra)         | ⏳     |
+| #   | Requirement                                | Status |
+| --- | ------------------------------------------ | ------ |
+| 1   | Assets as individual objects (subclasses)  | ✅     |
+| 2   | Persistence in a SQL database (SQLite)     | ✅     |
+| 3   | Layered architecture (S4_01)               | ✅     |
+| 4   | Docker container execution                 | ⏳     |
+| 5   | Risk calculation (linear algebra)          | ⏳     |
+
+> Requirement 2 was originally JSON persistence; persisting to a SQLite database was confirmed by the professor as valid.
 
 ## ✨ License
 

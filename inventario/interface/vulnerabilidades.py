@@ -13,11 +13,13 @@ from inventario.servicos.vulnerabilidades import (
 )
 
 
-def cadastrar_vulnerabilidade(catalogo):
+def cadastrar_vulnerabilidade(repositorio, catalogo):
     nome_vulnerabilidade = pedir_info("Digite o nome da vulnerabilidade: ")
     cvss = pedir_cvss("Digite a nota CVSS da vulnerabilidade (0.1 a 10): ")
 
-    vulnerabilidade = registrar_vulnerabilidade_no_catalogo(catalogo, nome_vulnerabilidade, cvss)
+    vulnerabilidade = registrar_vulnerabilidade_no_catalogo(
+        repositorio, catalogo, nome_vulnerabilidade, cvss
+    )
 
     mostrar_vulnerabilidade(vulnerabilidade)
 
@@ -74,7 +76,7 @@ def confirmar_exclusao_vuln(vulnerabilidade):
         return False
 
 
-def editar_vulnerabilidade(vulnerabilidade, catalogo):
+def editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo):
     print("""
     1 - Editar nome
     2 - Editar CVSS
@@ -98,12 +100,12 @@ def editar_vulnerabilidade(vulnerabilidade, catalogo):
         print("Opção inválida. Tente novamente.")
         return
 
-    atualizar_vulnerabilidade_no_catalogo(catalogo, vulnerabilidade)
+    atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade)
     print("Vulnerabilidade atualizada com sucesso!")
     mostrar_vulnerabilidade(vulnerabilidade)
 
 
-def vincular_a_um_ativo(vulnerabilidade, ativos, catalogo):
+def vincular_a_um_ativo(repositorio, vulnerabilidade, ativos, catalogo):
     ativo_encontrado = perguntar_ativo(ativos)
 
     if not ativo_encontrado:
@@ -113,6 +115,7 @@ def vincular_a_um_ativo(vulnerabilidade, ativos, catalogo):
 
     try:
         vincular_vulnerabilidade(
+            repositorio,
             ativos,
             catalogo,
             ativo_encontrado.id,

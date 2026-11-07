@@ -60,7 +60,7 @@ def cadastro_impressora():
     return cor, tecnologia
 
 
-def cadastrar_ativo(ativos):
+def cadastrar_ativo(repositorio, ativos):
 
     tipo = pedir_tipo("Digite o tipo do ativo: ")
     ID_do_ativo = pedir_id_disponivel(ativos)
@@ -85,13 +85,13 @@ def cadastrar_ativo(ativos):
         cor, tecnologia = cadastro_impressora()
         ativo = Impressora(ID_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
 
-    registrar_ativo_no_inventario(ativos, ativo)
+    registrar_ativo_no_inventario(repositorio, ativos, ativo)
     print("Ativo cadastrado com sucesso!")
     print(ativo.exibir_detalhes())
     return ativo
 
 
-def editar_ativo(ativos):
+def editar_ativo(repositorio, ativos):
 
     ativo_encontrado = perguntar_ativo(ativos)
     if ativo_encontrado is None:
@@ -224,7 +224,7 @@ def editar_ativo(ativos):
                 """)
 
         elif opcao == "6":
-            atualizar_ativo_no_inventario(ativos, ativo_encontrado)
+            atualizar_ativo_no_inventario(repositorio, ativos, ativo_encontrado)
             print("Voltando...")
             break
 
@@ -232,7 +232,7 @@ def editar_ativo(ativos):
             print("Opção inválida.")
 
 
-def excluir_ativo(ativos):
+def excluir_ativo(repositorio, ativos):
     ativo = perguntar_ativo(ativos)
     if ativo is None:
         return
@@ -241,7 +241,7 @@ def excluir_ativo(ativos):
         print("Exclusão cancelada.")
         return
 
-    remover_ativo_do_inventario(ativos, ativo.id)
+    remover_ativo_do_inventario(repositorio, ativos, ativo.id)
     print("Ativo excluído com sucesso!")
 
 

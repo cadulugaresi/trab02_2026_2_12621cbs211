@@ -34,7 +34,7 @@ from inventario.servicos.vulnerabilidades import (
 )
 
 
-def menu_principal(ativos, catalogo):
+def menu_principal(repositorio, ativos, catalogo):
     while True:
 
         try:
@@ -53,19 +53,19 @@ def menu_principal(ativos, catalogo):
             opcao = input("Escolha uma opção: ").strip()
 
             if opcao == "1":
-                cadastrar_ativo(ativos)
+                cadastrar_ativo(repositorio, ativos)
 
             elif opcao == "2":
                 menu_listagem(ativos)
 
             elif opcao == "3":
-                excluir_ativo(ativos)
+                excluir_ativo(repositorio, ativos)
 
             elif opcao == "4":
-                menu_vulnerabilidades(ativos, catalogo)
+                menu_vulnerabilidades(repositorio, ativos, catalogo)
 
             elif opcao == "5":
-                editar_ativo(ativos)
+                editar_ativo(repositorio, ativos)
 
             elif opcao == "6":
                 print("Saindo do programa...")
@@ -82,7 +82,7 @@ def menu_principal(ativos, catalogo):
             print(erro)
 
 
-def menu_vulnerabilidades(ativos, catalogo):
+def menu_vulnerabilidades(repositorio, ativos, catalogo):
     while True:
         print("""MENU DE VULNERABILIDADES
 
@@ -99,7 +99,7 @@ def menu_vulnerabilidades(ativos, catalogo):
         opcao_vulnerabilidade = input("Escolha uma opção: ").strip()
 
         if opcao_vulnerabilidade == "1":
-            nova_vulnerabilidade = cadastrar_vulnerabilidade(catalogo)
+            nova_vulnerabilidade = cadastrar_vulnerabilidade(repositorio, catalogo)
             resposta = (
                 input(
                     "Deseja vincular a um ativo agora? (Tecle 'sim'para confirmar ou enter para seguir sem vincular): "
@@ -108,7 +108,7 @@ def menu_vulnerabilidades(ativos, catalogo):
                 .lower()
             )
             if resposta in ("sim", "s"):
-                vincular_a_um_ativo(nova_vulnerabilidade, ativos, catalogo)
+                vincular_a_um_ativo(repositorio, nova_vulnerabilidade, ativos, catalogo)
             else:
                 print("Nova vulnerabilidade criada com sucesso!\nNão vinculada a nenhum ativo.")
 
@@ -124,7 +124,7 @@ def menu_vulnerabilidades(ativos, catalogo):
             vulnerabilidade_encontrada = encontrar_vulnerabilidade(catalogo)
 
             if vulnerabilidade_encontrada:
-                vincular_a_um_ativo(vulnerabilidade_encontrada, ativos, catalogo)
+                vincular_a_um_ativo(repositorio, vulnerabilidade_encontrada, ativos, catalogo)
 
         elif opcao_vulnerabilidade == "4":
             ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
@@ -143,7 +143,7 @@ def menu_vulnerabilidades(ativos, catalogo):
 
                 try:
                     atualizar_status_vulnerabilidade(
-                        ativos, ativo_encontrado.id, id_vulnerabilidade, novo_status
+                        repositorio, ativos, ativo_encontrado.id, id_vulnerabilidade, novo_status
                     )
                     print(f"Status atualizado com sucesso! Novo status: {novo_status.name.lower()}")
                 except DadoInvalidoError as erro:
@@ -159,7 +159,9 @@ def menu_vulnerabilidades(ativos, catalogo):
                 )
 
                 try:
-                    desvincular_vulnerabilidade(ativos, ativo_encontrado.id, id_vulnerabilidade)
+                    desvincular_vulnerabilidade(
+                        repositorio, ativos, ativo_encontrado.id, id_vulnerabilidade
+                    )
                     print("Vulnerabilidade desvinculada com sucesso!")
                 except DadoInvalidoError as erro:
                     print(erro)
@@ -173,7 +175,7 @@ def menu_vulnerabilidades(ativos, catalogo):
 
                 if confirmou:
                     excluir_vulnerabilidade_do_catalogo(
-                        catalogo, ativos, vulnerabilidade_a_excluir.id_vulnerabilidade
+                        repositorio, catalogo, ativos, vulnerabilidade_a_excluir.id_vulnerabilidade
                     )
                     print(
                         f'Vulnerabilidade "{vulnerabilidade_a_excluir.nome_vulnerabilidade}" excluída com sucesso!'
@@ -185,7 +187,7 @@ def menu_vulnerabilidades(ativos, catalogo):
             vulnerabilidade = encontrar_vulnerabilidade(catalogo)
 
             if vulnerabilidade:
-                editar_vulnerabilidade(vulnerabilidade, catalogo)
+                editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo)
 
         elif opcao_vulnerabilidade == "9":
             print("Voltando ao menu principal...")

@@ -23,3 +23,5 @@ Thumbs.db
 rascunhos.py
 htmlcov/
 .pytest_cache/
+
+*.db

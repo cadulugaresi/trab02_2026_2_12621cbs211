@@ -1,17 +1,18 @@
 from inventario.interface.menu import menu_principal
-from inventario.persistencia.arquivos_json import carregar_catalogo, carregar_dados
+from inventario.persistencia.banco_sqlite import RepositorioSQLite
 from inventario.dominio.excecoes import PersistenciaError
 
 if __name__ == "__main__":
 
     try:
-        ativos = carregar_dados()
-        catalogo = carregar_catalogo()
+        repositorio = RepositorioSQLite()
+        ativos = repositorio.carregar_ativos()
+        catalogo = repositorio.carregar_catalogo()
 
     except PersistenciaError as erro:
         print(erro)
         raise SystemExit(
-            "Erro de Persistência: Não foi possível carregar os dados do arquivo. Encerrando o programa."
+            "Erro de Persistência: Não foi possível carregar os dados do banco de dados. Encerrando o programa."
         )
 
-    menu_principal(ativos, catalogo)
+    menu_principal(repositorio, ativos, catalogo)

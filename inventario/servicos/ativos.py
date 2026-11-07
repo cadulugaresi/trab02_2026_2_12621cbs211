@@ -1,13 +1,12 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.persistencia.arquivos_json import salvar_dados
 
 
-def registrar_ativo_no_inventario(ativos, ativo):
+def registrar_ativo_no_inventario(repositorio, ativos, ativo):
     if ativo.id in ativos:
         raise DadoInvalidoError("Já existe um ativo cadastrado com este ID.")
 
     ativos[ativo.id] = ativo
-    salvar_dados(ativos)
+    repositorio.adicionar_ativo(ativo)
 
 
 def encontrar_ativo_por_id(ID, ativos):
@@ -53,14 +52,14 @@ def listar_ativos_por_tipo(classe, ativos):
     return encontrados
 
 
-def atualizar_ativo_no_inventario(ativos, ativo_atualizado):
+def atualizar_ativo_no_inventario(repositorio, ativos, ativo_atualizado):
     ativo_antigo = obter_ativo(ativos, ativo_atualizado.id)
     ativo_atualizado.vulnerabilidades = ativo_antigo.vulnerabilidades
     ativos[ativo_atualizado.id] = ativo_atualizado
-    salvar_dados(ativos)
+    repositorio.atualizar_ativo(ativo_atualizado)
 
 
-def remover_ativo_do_inventario(ativos, id_ativo):
+def remover_ativo_do_inventario(repositorio, ativos, id_ativo):
     obter_ativo(ativos, id_ativo)
     del ativos[id_ativo]
-    salvar_dados(ativos)
+    repositorio.remover_ativo(id_ativo)
