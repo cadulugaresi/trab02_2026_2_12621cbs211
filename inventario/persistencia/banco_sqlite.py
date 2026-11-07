@@ -2,9 +2,16 @@ import os
 import sqlite3
 from inventario.persistencia.repositorio import Repositorio
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
+from inventario.dominio.ativo import MAPA_DE_TIPOS
 
 ARQUIVO_BANCO_DE_DADOS = "inventario.db"
 ESQUEMA_SQL = os.path.join(os.path.dirname(__file__), "esquema.sql")
+TABELAS_DOS_TIPOS = {
+    "Notebook": ("notebooks", ("tela", "sistema_operacional")),
+    "Servidor": ("servidores", ("ram", "armazenamento")),
+    "Roteador": ("roteadores", ("portas", "velocidade")),
+    "Impressora": ("impressoras", ("tecnologia", "cor")),
+}
 
 
 class RepositorioSQLite(Repositorio):
@@ -16,7 +23,38 @@ class RepositorioSQLite(Repositorio):
             self.conexao.executescript(arquivo.read())
 
     def carregar_ativos(self):
-        pass
+        ativos = {}
+
+        for tipo in TABELAS_DOS_TIPOS.keys():
+            tabela, colunas_do_tipo = TABELAS_DOS_TIPOS[tipo]
+
+            registros = self.conexao.execute(
+                """SELECT ativos.id, ativos.nome,
+                ativos.setor, ativos.responsavel,
+                ativos.status, """
+                f"""{', '.join(colunas_do_tipo)}
+                FROM ativos JOIN {tabela} ON
+                {tabela}.id_ativo = ativos.id"""
+            ).fetchall()
+
+            for registro in registros:
+                dados_do_ativo = {
+                    "id": registro[0],
+                    "nome": registro[1],
+                    "setor": registro[2],
+                    "responsavel": registro[3],
+                    "status": registro[4],
+                }
+
+                posicao = 5
+                for coluna in colunas_do_tipo:
+                    dados_do_ativo[coluna] = registro[posicao]
+                    posicao = posicao + 1
+
+                ativo = MAPA_DE_TIPOS[tipo].de_dicionario(dados_do_ativo)
+                ativos[ativo.id] = ativo
+
+        return ativos
 
     def carregar_catalogo(self):
         todas_as_vulnerabilidades = self.conexao.execute(
@@ -34,14 +72,75 @@ class RepositorioSQLite(Repositorio):
 
         return catalogo
 
+    def inserir_dados_do_tipo(self, dados_do_ativo):
+        tabela, colunas_do_tipo = TABELAS_DOS_TIPOS[dados_do_ativo["tipo"]]
+
+        valores_para_inserir = [dados_do_ativo["id"]]
+        marcadores = ["?"]
+
+        for coluna in colunas_do_tipo:
+            valores_para_inserir.append(dados_do_ativo[coluna])
+            marcadores.append("?")
+
+        self.conexao.execute(
+            f"INSERT INTO {tabela} (id_ativo, {', '.join(colunas_do_tipo)}) "
+            f"VALUES ({', '.join(marcadores)})",
+            valores_para_inserir,
+        )
+
     def adicionar_ativo(self, ativo):
-        pass
+
+        dados_do_ativo = ativo.para_dicionario()
+
+        with self.conexao:
+            self.conexao.execute(
+                """INSERT INTO ativos
+                (id, nome, tipo, setor, responsavel, status)
+                VALUES (?, ?, ?, ?, ?, ?)""",
+                (
+                dados_do_ativo["id"],
+                dados_do_ativo["nome"],
+                dados_do_ativo["tipo"],
+                dados_do_ativo["setor"],
+                dados_do_ativo["responsavel"],
+                dados_do_ativo["status"],
+                )
+            )
+
+            self.inserir_dados_do_tipo(dados_do_ativo)
 
     def atualizar_ativo(self, ativo):
-        pass
+
+        dados_do_ativo = ativo.para_dicionario()
+
+        with self.conexao:
+            self.conexao.execute(
+                """UPDATE ativos
+                SET nome = ?, tipo = ?, setor = ?,
+                responsavel = ?, status = ?
+                WHERE id = ?""",
+                (dados_do_ativo["nome"], dados_do_ativo["tipo"],
+                 dados_do_ativo["setor"], dados_do_ativo["responsavel"],
+                 dados_do_ativo["status"], dados_do_ativo["id"]),
+            )
+
+            for tabela, colunas_do_tipo in TABELAS_DOS_TIPOS.values():
+                self.conexao.execute(
+                    f"DELETE FROM {tabela} WHERE id_ativo = ?",
+                    (dados_do_ativo["id"],),
+                )
+
+            self.inserir_dados_do_tipo(dados_do_ativo)
+
 
     def remover_ativo(self, id_ativo):
-        pass
+        with self.conexao:
+            self.conexao.execute(
+                """DELETE FROM ativos
+                WHERE id = ?""",
+                (id_ativo,),
+            )
+
 
     def adicionar_vulnerabilidade(self, vulnerabilidade):
         with self.conexao:
@@ -51,8 +150,8 @@ class RepositorioSQLite(Repositorio):
                 VALUES (?, ?, ?)""",
                 (vulnerabilidade.id_vulnerabilidade,
                 vulnerabilidade.nome_vulnerabilidade,
-            vulnerabilidade.cvss,)
-            ,)
+                vulnerabilidade.cvss,)
+            )
 
     def atualizar_vulnerabilidade(self, vulnerabilidade):
         with self.conexao:
@@ -63,7 +162,7 @@ class RepositorioSQLite(Repositorio):
                 (vulnerabilidade.nome_vulnerabilidade,
                 vulnerabilidade.cvss,
             vulnerabilidade.id_vulnerabilidade,)
-        ,)
+            )
 
     def remover_vulnerabilidade(self, id_vulnerabilidade):
         with self.conexao:
