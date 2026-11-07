@@ -33,6 +33,8 @@ from inventario.servicos.vulnerabilidades import (
     excluir_vulnerabilidade_do_catalogo,
 )
 
+from inventario.servicos.ordenacao import listar_ativos_ordenados, CRITERIOS_DE_ORDENACAO
+
 
 def menu_principal(repositorio, ativos, catalogo):
     while True:
@@ -205,11 +207,17 @@ def menu_listagem(ativos):
 
         if todos_ou_um == "todos":
             if ativos:
+                opcoes = "/".join(CRITERIOS_DE_ORDENACAO)
+
+                criterio_escolhido = ""
+                while criterio_escolhido not in CRITERIOS_DE_ORDENACAO:
+                    criterio_escolhido = input(f"Ordenar por ({opcoes}): ").strip().lower()
+
+                estrategia = CRITERIOS_DE_ORDENACAO[criterio_escolhido]
+
                 print("Listando todos os ativos...")
-                for ativo in ativos.values():
+                for ativo in listar_ativos_ordenados(ativos, estrategia):
                     print(ativo.exibir_detalhes())
-            else:
-                print("Nenhum ativo cadastrado.")
 
         elif todos_ou_um == "filtrar":
 
