@@ -193,7 +193,6 @@ menu_principal                         (interface)     usuário escolhe a opçã
 │   ├── relatorio_testes.md
 │   ├── entrega_final.md
 │   ├── solid.md
-│   ├── consultas_sql.sql
 │   └── exemplos/
 │       ├── exemplo_ativos.json
 │       └── exemplo_vulnerabilidades.json
@@ -206,7 +205,7 @@ menu_principal                         (interface)     usuário escolhe a opçã
 
 > O banco `inventario.db` é criado automaticamente na primeira execução, com as tabelas do `esquema.sql`, e não é versionado. Os arquivos JSON usados pelo `RepositorioJSON` também não são versionados; `docs/exemplos/` tem arquivos de exemplo no mesmo formato.
 >
-> `docs/solid.md` é o relatório SOLID (S4_02), e `docs/consultas_sql.sql` traz consultas comentadas com `INNER JOIN` e `LEFT JOIN` sobre o banco (S4_06), além de consultas de agregação com `COUNT`, `SUM`, `GROUP BY`, `HAVING` e `CASE` (S4_07).
+> `docs/solid.md` é o relatório SOLID (S4_02), e as [consultas SQL](https://github.com/cadulugaresi/ciberseguranca-ufu-t2/tree/main/Sprint%204/s4_07) (no repositório de exercícios) trazem consultas comentadas com `INNER JOIN` e `LEFT JOIN` sobre o banco (S4_06), além de consultas de agregação com `COUNT`, `SUM`, `GROUP BY`, `HAVING` e `CASE` (S4_07).
 
 ## ✨ Como executar
 
