@@ -1,7 +1,7 @@
--- Este documento se refere as atividades entregáveis de SQL do primeiro semestre do curso de Cibersegurança da UFU.
+-- Este documento se refere às atividades entregáveis de SQL do primeiro semestre do curso de Cibersegurança da UFU.
 
 --------------------------------------------------
---                    s4_06
+--                    S4_06
 --------------------------------------------------
 
 -- NOTEBOOKS E SUAS TELAS
