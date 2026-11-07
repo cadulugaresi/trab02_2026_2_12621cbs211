@@ -193,7 +193,7 @@ menu_principal                         (interface)     user picks option 3
 │   ├── relatorio_testes.md
 │   ├── entrega_final.md
 │   ├── solid.md
-│   ├── consultas_joins.sql
+│   ├── consultas_sql.sql
 │   └── exemplos/
 │       ├── exemplo_ativos.json
 │       └── exemplo_vulnerabilidades.json
@@ -206,7 +206,7 @@ menu_principal                         (interface)     user picks option 3
 
 > The database `inventario.db` is created automatically on first run, with the tables from `esquema.sql`, and is not version-controlled. The JSON files used by `RepositorioJSON` are not version-controlled either; `docs/exemplos/` has sample files in the same format.
 >
-> `docs/solid.md` is the SOLID report (S4_02), and `docs/consultas_joins.sql` has commented `INNER JOIN` and `LEFT JOIN` queries over the database (S4_06).
+> `docs/solid.md` is the SOLID report (S4_02), and `docs/consultas_sql.sql` has commented `INNER JOIN` and `LEFT JOIN` queries over the database (S4_06), plus aggregation queries with `COUNT`, `SUM`, `GROUP BY`, `HAVING` and `CASE` (S4_07).
 
 ## ✨ Getting Started
 
