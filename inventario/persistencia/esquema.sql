@@ -51,3 +51,13 @@ CREATE TABLE IF NOT EXISTS vinculos (
     FOREIGN KEY (id_ativo) REFERENCES ativos(id) ON DELETE CASCADE,
     FOREIGN KEY (id_vulnerabilidade) REFERENCES vulnerabilidades(id_vulnerabilidade) ON DELETE CASCADE
 );
+
+CREATE TABLE IF NOT EXISTS dependencias (
+    id_ativo_que_depende INTEGER NOT NULL,
+    id_ativo_do_qual_depende INTEGER NOT NULL,
+    fracao REAL NOT NULL CHECK (fracao > 0 AND fracao < 1),
+    PRIMARY KEY (id_ativo_que_depende, id_ativo_do_qual_depende),
+    CHECK (id_ativo_que_depende != id_ativo_do_qual_depende),
+    FOREIGN KEY (id_ativo_que_depende) REFERENCES ativos(id) ON DELETE CASCADE,
+    FOREIGN KEY (id_ativo_do_qual_depende) REFERENCES ativos(id) ON DELETE CASCADE
+);
