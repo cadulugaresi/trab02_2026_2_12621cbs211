@@ -1,3 +1,5 @@
+-- Este documento se refere é o entregável da atividade S4_06 do curso de Cibersegurança da UFU.
+
 -- NOTEBOOKS E SUAS TELAS
 -- Selecione os ativos que são notebooks e mostre o nome, o responsável, a tela e o sistema operacional de cada um.
 SELECT ativos.id, ativos.nome, ativos.responsavel, notebooks.tela, notebooks.sistema_operacional
