@@ -1,5 +1,6 @@
 from inventario.servicos.dependencias import somar_fracoes
 
+
 def mostrar_dependencias(ativo, ativos):
     if not ativo.dependencias:
         print("Este ativo não depende de nenhum outro ativo.")
@@ -14,5 +15,5 @@ def mostrar_dependencias(ativo, ativos):
     Fração herdada: {fracao}""")
 
     soma = somar_fracoes(ativo.dependencias)
-    print(f'''
-    Soma das frações: {soma}. Ainda cabem {round(1 - soma, 6)}.''')
+    print(f"""
+    Soma das frações: {soma}. Ainda cabem {round(1 - soma, 6)}.""")
