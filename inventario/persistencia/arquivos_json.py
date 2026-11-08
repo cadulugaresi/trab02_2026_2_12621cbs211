@@ -206,3 +206,16 @@ class RepositorioJSON(Repositorio):
         ativos = self.obter_ativos_guardados()
         ativos[id_ativo_que_depende].dependencias.pop(id_ativo_do_qual_depende, None)
         salvar_ativos(ativos)
+
+    def atualizar_dependencia(
+        self,
+        id_ativo_que_depende,
+        id_ativo_do_qual_depende_antigo,
+        id_ativo_do_qual_depende_novo,
+        fracao_nova,
+    ):
+        ativos = self.obter_ativos_guardados()
+        dependencias = ativos[id_ativo_que_depende].dependencias
+        dependencias.pop(id_ativo_do_qual_depende_antigo, None)
+        dependencias[id_ativo_do_qual_depende_novo] = fracao_nova
+        salvar_ativos(ativos)
