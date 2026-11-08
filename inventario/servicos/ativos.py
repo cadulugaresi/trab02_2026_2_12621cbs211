@@ -62,7 +62,7 @@ def atualizar_ativo_no_inventario(repositorio, ativos, ativo_atualizado):
 def remover_ativo_do_inventario(repositorio, ativos, id_ativo):
     obter_ativo(ativos, id_ativo)
     del ativos[id_ativo]
-    
+
     for ativo in ativos.values():
         ativo.dependencias.pop(id_ativo, None)
 

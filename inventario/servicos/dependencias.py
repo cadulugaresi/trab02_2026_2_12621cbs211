@@ -33,6 +33,7 @@ def remover_dependencia(repositorio, ativos, id_ativo_que_depende, id_ativo_do_q
     del ativo_que_depende.dependencias[id_ativo_do_qual_depende]
     repositorio.remover_dependencia(id_ativo_que_depende, id_ativo_do_qual_depende)
 
+
 def somar_fracoes(dependencias):
     soma = 0
     for fracao in dependencias.values():
