@@ -56,5 +56,11 @@ class Repositorio(ABC):
         pass
 
     @abstractmethod
-    def editar_dependencia(self, id_ativo_que_depende, id_ativo_do_qual_depende_antigo, id_ativo_do_qual_depende_novo, fracao_nova):
+    def atualizar_dependencia(
+        self,
+        id_ativo_que_depende,
+        id_ativo_do_qual_depende_antigo,
+        id_ativo_do_qual_depende_novo,
+        fracao_nova,
+    ):
         pass
