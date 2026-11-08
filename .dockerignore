@@ -6,8 +6,8 @@ docs/
 .github/
 README.md
 
-__pycache__/
-*.py[cod]
+**/__pycache__/
+**/*.py[cod]
 .pytest_cache/
 .coverage
 htmlcov/
@@ -15,14 +15,14 @@ venv/
 env/
 .venv/
 
-*.db
-*.json
-*.tmp
+**/*.db
+**/*.json
+**/*.tmp
 
 .vscode/
 .idea/
-.DS_Store
-rascunhos.py
+**/.DS_Store
+**/rascunhos.py
 
 Dockerfile
 .dockerignore
