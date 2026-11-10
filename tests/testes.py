@@ -10,8 +10,10 @@ from inventario.dominio.enums import (
 from inventario.interface.entradas import (
     pedir_cor,
     pedir_float,
+    pedir_float_ou_manter,
     pedir_info,
     pedir_int,
+    pedir_int_ou_manter,
     pedir_setor,
     pedir_status,
     pedir_tecnologia,
@@ -471,6 +473,48 @@ class TestPedirFloat(unittest.TestCase):
     def test_rejeita_zero_e_aceita_depois(self):
         with patch("builtins.input", side_effect=["0", "2.5"]):
             self.assertEqual(pedir_float("Digite: "), 2.5)
+
+
+class TestPedirIntOuManter(unittest.TestCase):
+
+    def test_enter_mantem_o_valor_atual(self):
+        with patch("builtins.input", return_value=""):
+            self.assertEqual(pedir_int_ou_manter("Digite: ", 3), 3)
+
+    def test_numero_valido_troca_o_valor(self):
+        with patch("builtins.input", return_value="8"):
+            self.assertEqual(pedir_int_ou_manter("Digite: ", 3), 8)
+
+    def test_texto_pergunta_de_novo(self):
+        with patch("builtins.input", side_effect=["abc", "8"]):
+            self.assertEqual(pedir_int_ou_manter("Digite: ", 3), 8)
+
+    def test_zero_pergunta_de_novo(self):
+        with patch("builtins.input", side_effect=["0", "-2", ""]):
+            self.assertEqual(pedir_int_ou_manter("Digite: ", 3), 3)
+
+
+class TestPedirFloatOuManter(unittest.TestCase):
+
+    def test_enter_mantem_o_valor_atual(self):
+        with patch("builtins.input", return_value=""):
+            self.assertEqual(pedir_float_ou_manter("Digite: ", 0.5), 0.5)
+
+    def test_numero_valido_troca_o_valor(self):
+        with patch("builtins.input", return_value="0.3"):
+            self.assertEqual(pedir_float_ou_manter("Digite: ", 0.5), 0.3)
+
+    def test_aceita_virgula(self):
+        with patch("builtins.input", return_value="0,3"):
+            self.assertEqual(pedir_float_ou_manter("Digite: ", 0.5), 0.3)
+
+    def test_texto_pergunta_de_novo(self):
+        with patch("builtins.input", side_effect=["abc", "0.2"]):
+            self.assertEqual(pedir_float_ou_manter("Digite: ", 0.5), 0.2)
+
+    def test_zero_pergunta_de_novo(self):
+        with patch("builtins.input", side_effect=["0", "0.4"]):
+            self.assertEqual(pedir_float_ou_manter("Digite: ", 0.5), 0.4)
 
 
 class TestPedirInfo(unittest.TestCase):

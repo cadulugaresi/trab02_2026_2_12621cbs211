@@ -3,7 +3,11 @@ from inventario.dominio.enums import Setor, StatusDoAtivo
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.persistencia.arquivos_json import carregar_ativos, salvar_ativos
 from inventario.servicos.ativos import remover_ativo_do_inventario
-from inventario.servicos.dependencias import cadastrar_dependencia, remover_dependencia
+from inventario.servicos.dependencias import (
+    atualizar_dependencia,
+    cadastrar_dependencia,
+    remover_dependencia,
+)
 from tests.apoio import TesteComArquivosTemporarios
 
 
@@ -93,6 +97,56 @@ class TestRemoverDependencia(TesteComTresAtivos):
     def test_remover_dependencia_inexistente_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
             remover_dependencia(self.repositorio, self.ativos, 1, 2)
+
+
+class TestAtualizarDependencia(TesteComTresAtivos):
+
+    def setUp(self):
+        super().setUp()
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
+
+    def test_troca_so_a_fracao(self):
+        atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 2, 0.3)
+        self.assertEqual(self.notebook.dependencias, {2: 0.3})
+
+    def test_troca_so_o_ativo_mantendo_a_fracao(self):
+        atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 3, 0.5)
+        self.assertEqual(self.notebook.dependencias, {3: 0.5})
+
+    def test_troca_o_ativo_e_a_fracao(self):
+        atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 3, 0.25)
+        self.assertEqual(self.notebook.dependencias, {3: 0.25})
+
+    def test_mudanca_fica_salva_no_arquivo(self):
+        atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 3, 0.25)
+        self.assertEqual(carregar_ativos()[1].dependencias, {3: 0.25})
+
+    def test_ativo_nao_pode_passar_a_depender_dele_proprio(self):
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 1, 0.5)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5})
+
+    def test_dependencia_antiga_inexistente_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_dependencia(self.repositorio, self.ativos, 1, 3, 2, 0.5)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5})
+
+    def test_novo_ativo_que_ja_e_dependencia_levanta_erro(self):
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 3, 0.2)
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 3, 0.1)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5, 3: 0.2})
+
+    def test_soma_que_passaria_de_1_levanta_erro(self):
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 3, 0.4)
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 2, 0.6)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5, 3: 0.4})
+
+    def test_soma_desconta_a_fracao_antiga(self):
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 3, 0.4)
+        atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 2, 0.55)
+        self.assertEqual(self.notebook.dependencias, {2: 0.55, 3: 0.4})
 
 
 class TestRemoverAtivoComDependencias(TesteComTresAtivos):
