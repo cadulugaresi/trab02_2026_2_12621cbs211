@@ -28,3 +28,13 @@ def validar_soma_fracao(soma_atual, fracao_nova):
 def validar_fracao(fracao):
     if fracao <= 0:
         raise DadoInvalidoError("A fração precisa ser maior que zero.")
+
+
+def validar_dependencia_de_si_mesmo(id_ativo_que_depende, id_ativo_do_qual_depende):
+    if id_ativo_que_depende == id_ativo_do_qual_depende:
+        raise DadoInvalidoError("Um ativo não pode depender dele próprio.")
+
+
+def validar_fracao_da_dependencia(soma_atual, fracao):
+    validar_fracao(fracao)
+    validar_soma_fracao(soma_atual, fracao)

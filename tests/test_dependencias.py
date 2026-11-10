@@ -1,10 +1,15 @@
 import io
+import unittest
 from contextlib import redirect_stdout
 from unittest.mock import patch
 
 from inventario.dominio.ativo import Notebook, Roteador, Servidor
 from inventario.dominio.enums import Setor, StatusDoAtivo
 from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.validacoes import (
+    validar_dependencia_de_si_mesmo,
+    validar_fracao_da_dependencia,
+)
 from inventario.interface.menu import menu_dependencias
 from inventario.persistencia.arquivos_json import carregar_ativos, salvar_ativos
 from inventario.servicos.ativos import (
@@ -368,3 +373,40 @@ class TestMenuListarDependencias(TesteDoMenuDeDependencias):
         self.assertNotIn("2 - PowerEdge (Servidor)", saida)
         self.assertNotIn("3 - Cisco (Roteador)", saida)
         self.assertNotIn("Nenhum ativo possui dependências cadastradas.", saida)
+
+
+class TestValidarDependenciaDeSiMesmo(unittest.TestCase):
+
+    def test_ids_iguais_levantam_erro(self):
+        with self.assertRaises(DadoInvalidoError) as contexto:
+            validar_dependencia_de_si_mesmo(1, 1)
+        self.assertEqual(str(contexto.exception), "Um ativo não pode depender dele próprio.")
+
+    def test_ids_diferentes_passam(self):
+        validar_dependencia_de_si_mesmo(1, 2)
+
+
+class TestValidarFracaoDaDependencia(unittest.TestCase):
+
+    def test_fracao_valida_que_cabe_na_soma_passa(self):
+        validar_fracao_da_dependencia(0.4, 0.5)
+
+    def test_fracao_zero_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError) as contexto:
+            validar_fracao_da_dependencia(0, 0)
+        self.assertEqual(str(contexto.exception), "A fração precisa ser maior que zero.")
+
+    def test_fracao_negativa_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError) as contexto:
+            validar_fracao_da_dependencia(0, -0.2)
+        self.assertEqual(str(contexto.exception), "A fração precisa ser maior que zero.")
+
+    def test_soma_que_chega_a_1_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError) as contexto:
+            validar_fracao_da_dependencia(0.6, 0.4)
+        self.assertIn("A soma das frações precisa ficar abaixo de 1.", str(contexto.exception))
+
+    def test_fracao_e_conferida_antes_da_soma(self):
+        with self.assertRaises(DadoInvalidoError) as contexto:
+            validar_fracao_da_dependencia(0.99, -5)
+        self.assertEqual(str(contexto.exception), "A fração precisa ser maior que zero.")
