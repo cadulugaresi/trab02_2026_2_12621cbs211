@@ -5,7 +5,6 @@ from inventario.dominio.enums import StatusDaVuln
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.dominio.excecoes import PersistenciaError
-from inventario.persistencia.repositorio import Repositorio
 
 ARQUIVO_ATIVOS = "ativos.json"
 ARQUIVO_CATALOGO = "vulnerabilidades.json"
@@ -115,7 +114,7 @@ def copiar_vulnerabilidade(vulnerabilidade):
     return Vulnerabilidade.de_dicionario(vulnerabilidade.para_dicionario())
 
 
-class RepositorioJSON(Repositorio):
+class RepositorioJSON:
 
     def __init__(self):
         self.ativos_guardados = None

@@ -1,6 +1,5 @@
 import os
 import sqlite3
-from inventario.persistencia.repositorio import Repositorio
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.dominio.enums import StatusDaVuln
 from inventario.dominio.excecoes import PersistenciaError
@@ -16,7 +15,7 @@ TABELAS_DOS_TIPOS = {
 }
 
 
-class RepositorioSQLite(Repositorio):
+class RepositorioSQLite:
     def __init__(self, caminho_banco_de_dados=ARQUIVO_BANCO_DE_DADOS):
         self.conexao = sqlite3.connect(caminho_banco_de_dados)
         self.executar("PRAGMA foreign_keys = ON")
