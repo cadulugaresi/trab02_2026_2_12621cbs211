@@ -91,6 +91,16 @@ class TestCadastrarDependencia(TesteComTresAtivos):
             cadastrar_dependencia(self.repositorio, self.ativos, 1, 4, 0.7)
         self.assertEqual(self.notebook.dependencias, {2: 0.1, 3: 0.2})
 
+    def test_fracao_zero_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0)
+        self.assertEqual(self.notebook.dependencias, {})
+
+    def test_fracao_negativa_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, -0.3)
+        self.assertEqual(self.notebook.dependencias, {})
+
 
 class TestRemoverDependencia(TesteComTresAtivos):
 
@@ -155,6 +165,16 @@ class TestAtualizarDependencia(TesteComTresAtivos):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 3, 0.4)
         atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 2, 0.55)
         self.assertEqual(self.notebook.dependencias, {2: 0.55, 3: 0.4})
+
+    def test_fracao_zero_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 2, 0)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5})
+
+    def test_fracao_negativa_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 2, -0.3)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5})
 
 
 class TestRemoverAtivoComDependencias(TesteComTresAtivos):

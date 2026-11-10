@@ -23,3 +23,8 @@ def validar_soma_fracao(soma_atual, fracao_nova):
             "A soma das frações passaria de 1. Ainda cabem {:.3f}.".format(1 - soma_atual)
         )
     return fracao_nova
+
+
+def validar_fracao(fracao):
+    if fracao <= 0:
+        raise DadoInvalidoError("A fração precisa ser maior que zero.")

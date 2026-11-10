@@ -1,5 +1,8 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.dominio.validacoes import validar_soma_fracao
+from inventario.dominio.validacoes import (
+    validar_soma_fracao,
+    validar_fracao,
+)
 from inventario.servicos.ativos import obter_ativo
 
 
@@ -16,7 +19,7 @@ def cadastrar_dependencia(
         raise DadoInvalidoError("Este ativo já possui essa dependência.")
 
     soma_atual = somar_fracoes(ativo_que_depende.dependencias)
-
+    validar_fracao(fracao)
     validar_soma_fracao(soma_atual, fracao)
 
     ativo_que_depende.dependencias[id_ativo_do_qual_depende] = fracao
@@ -61,6 +64,7 @@ def atualizar_dependencia(
 
     fracao_antiga = ativo_que_depende.dependencias[id_ativo_do_qual_depende_antigo]
     soma_sem_a_antiga = somar_fracoes(ativo_que_depende.dependencias) - fracao_antiga
+    validar_fracao(fracao_nova)
     validar_soma_fracao(soma_sem_a_antiga, fracao_nova)
 
     del ativo_que_depende.dependencias[id_ativo_do_qual_depende_antigo]
