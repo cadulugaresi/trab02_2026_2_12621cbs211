@@ -146,6 +146,51 @@ def pedir_int(mensagem):
             print(erro)
 
 
+def pedir_int_ou_manter(mensagem, valor_atual):
+
+    while True:
+        try:
+            numero_int = input(mensagem).strip()
+
+            if not numero_int:
+                return valor_atual
+
+            if int(numero_int) <= 0:
+                raise DadoInvalidoError(
+                    "Este campo não pode ser nulo ou negativo. Tente novamente."
+                )
+
+            return int(numero_int)
+
+        except ValueError:
+            print("Digite um número válido")
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+
+def pedir_float_ou_manter(mensagem, valor_atual):
+    while True:
+        try:
+            numero = input(mensagem).strip().replace(",", ".")
+
+            if not numero:
+                return valor_atual
+
+            if float(numero) <= 0:
+                raise DadoInvalidoError(
+                    "Este campo não pode ser nulo ou negativo. Tente novamente."
+                )
+
+            return float(numero)
+
+        except ValueError:
+            print("Digite um número válido")
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+
 def pedir_cvss(mensagem):
     while True:
         cvss = pedir_float(mensagem)
