@@ -26,9 +26,9 @@ from inventario.interface.vulnerabilidades import (
 )
 from inventario.servicos.ativos import (
     encontrar_ativo_por_id,
-    encontrar_ativo_por_nome,
+    encontrar_ativos_por_nome,
     encontrar_ativos_por_status,
-    listar_ativos_por_tipo,
+    encontrar_ativos_por_tipo,
     obter_ativo,
 )
 from inventario.servicos.vulnerabilidades import (
@@ -260,11 +260,11 @@ def menu_listagem(ativos):
 
             if filtro == "1":
                 tipo = pedir_tipo("Qual tipo de ativos deseja listar? ")
-                encontrados = listar_ativos_por_tipo(tipo, ativos)
+                encontrados = encontrar_ativos_por_tipo(ativos, tipo)
 
             elif filtro == "2":
                 status = pedir_status("Qual status de ativos deseja listar? ")
-                encontrados = encontrar_ativos_por_status(status, ativos)
+                encontrados = encontrar_ativos_por_status(ativos, status)
 
             else:
                 print("Opção inválida.")
@@ -287,7 +287,7 @@ def menu_listagem(ativos):
                 if nome_ou_id == "nome":
 
                     nome = pedir_info("Digite o nome do ativo que deseja listar: ")
-                    encontrados = encontrar_ativo_por_nome(nome, ativos)
+                    encontrados = encontrar_ativos_por_nome(ativos, nome)
 
                     if encontrados:
                         for ativo in encontrados:
@@ -297,7 +297,7 @@ def menu_listagem(ativos):
                 elif nome_ou_id == "id":
 
                     id_ativo = pedir_int("Digite o ID do ativo que deseja listar: ")
-                    ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
+                    ativo_encontrado = encontrar_ativo_por_id(ativos, id_ativo)
 
                     if ativo_encontrado:
                         print(ativo_encontrado.exibir_detalhes())

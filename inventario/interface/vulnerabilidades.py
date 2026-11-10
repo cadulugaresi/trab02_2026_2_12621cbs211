@@ -106,7 +106,7 @@ def editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo):
 
 
 def vincular_a_um_ativo(repositorio, vulnerabilidade, ativos, catalogo):
-    ativo_encontrado = perguntar_ativo(ativos)
+    ativo_encontrado = perguntar_ativo(ativos, "Digite o ID do ativo: ")
 
     if not ativo_encontrado:
         return False
