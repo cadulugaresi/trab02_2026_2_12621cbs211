@@ -7,7 +7,10 @@ from inventario.dominio.enums import Setor, StatusDoAtivo
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.interface.menu import menu_dependencias
 from inventario.persistencia.arquivos_json import carregar_ativos, salvar_ativos
-from inventario.servicos.ativos import remover_ativo_do_inventario
+from inventario.servicos.ativos import (
+    atualizar_ativo_no_inventario,
+    remover_ativo_do_inventario,
+)
 from inventario.servicos.dependencias import (
     atualizar_dependencia,
     cadastrar_dependencia,
@@ -165,6 +168,20 @@ class TestRemoverAtivoComDependencias(TesteComTresAtivos):
 
         self.assertEqual(self.notebook.dependencias, {})
         self.assertEqual(self.roteador.dependencias, {1: 0.3})
+
+
+class TestTrocarTipoDoAtivoComDependencias(TesteComTresAtivos):
+
+    def test_trocar_o_tipo_preserva_as_dependencias(self):
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
+        notebook_que_virou_servidor = Servidor(
+            1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 16, 2
+        )
+
+        atualizar_ativo_no_inventario(self.repositorio, self.ativos, notebook_que_virou_servidor)
+
+        self.assertIsInstance(self.ativos[1], Servidor)
+        self.assertEqual(self.ativos[1].dependencias, {2: 0.5})
 
 
 class TesteDoMenuDeDependencias(TesteComTresAtivos):
