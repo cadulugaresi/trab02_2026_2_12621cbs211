@@ -254,7 +254,7 @@ python3 -m flake8 main.py inventario
 python3 -m black --check main.py inventario
 ```
 
-**Repository contract suite:** `tests/contrato_repositorio.py` defines `ContratoDoRepositorio`, a set of 17 tests describing what any repository must do: save and reload assets, the catalog, and the links; update them, including changing an asset's type; and remove them, taking a removed vulnerability out of every asset. The same suite runs on both implementations:
+**Repository contract suite:** `tests/contrato_repositorio.py` defines `ContratoDoRepositorio`, a set of 24 tests describing what any repository must do: save and reload assets, the catalog, the links, and the dependencies between assets; update them, including changing an asset's type; and remove them, taking a removed vulnerability out of every asset. The same suite runs on both implementations:
 - `tests/test_repositorio.py`: `TestRepositorioJSON`, using temporary JSON files
 - `tests/test_repositorio_sqlite.py`: `TestRepositorioSQLite`, using a temporary database, plus a test that a corrupted database raises `PersistenciaError`
 

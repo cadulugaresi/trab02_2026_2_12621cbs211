@@ -45,7 +45,7 @@ Um tipo novo pede a subclasse, uma linha em cada mapa e a tabela no `esquema.sql
 
 ## ✨ 4. Uma implementação pode substituir a outra? → LSP
 
-**Verificação:** a suíte `tests/contrato_repositorio.py` reúne 17 testes de contrato que gravam, recarregam com um repositório novo e conferem o resultado. A mesma suíte roda nas duas implementações (`tests/test_repositorio.py` e `tests/test_repositorio_sqlite.py`) e passa nas duas. Isso mostra que o `RepositorioSQLite` substitui o `RepositorioJSON` sem mudar o comportamento esperado pelos serviços.
+**Verificação:** a suíte `tests/contrato_repositorio.py` reúne 24 testes de contrato que gravam, recarregam com um repositório novo e conferem o resultado. A mesma suíte roda nas duas implementações (`tests/test_repositorio.py` e `tests/test_repositorio_sqlite.py`) e passa nas duas. Isso mostra que o `RepositorioSQLite` substitui o `RepositorioJSON` sem mudar o comportamento esperado pelos serviços.
 
 As subclasses de `Ativo` (Notebook, Servidor, Roteador, Impressora) também respeitam o princípio: elas estendem `exibir_detalhes` e `para_dicionario` chamando `super()`, sem mudar o que a classe base promete.
 
