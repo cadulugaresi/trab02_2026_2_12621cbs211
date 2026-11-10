@@ -42,6 +42,7 @@ from inventario.interface.dependencias import mostrar_dependencias
 from inventario.servicos.dependencias import (
     atualizar_dependencia,
     cadastrar_dependencia,
+    remover_dependencia,
 )
 
 from inventario.servicos.ordenacao import (
@@ -391,6 +392,35 @@ def menu_dependencias(repositorio, ativos):
                 )
 
                 print("Dependência atualizada com sucesso.")
+
+            except DadoInvalidoError as erro:
+                print(erro)
+
+        elif opcao == "3":
+            for ativo in listar_ativos_ordenados(ativos, por_nome):
+                print(f"""{ativo.id} - {ativo.nome} ({type(ativo).__name__})""")
+
+            try:
+                id_ativo_que_depende = pedir_int(
+                    "ID do ativo do qual deseja remover uma dependência: "
+                )
+                ativo_que_depende = obter_ativo(ativos, id_ativo_que_depende)
+
+                if not ativo_que_depende.dependencias:
+                    print("Este ativo não possui dependências cadastradas.")
+                    continue
+
+                mostrar_dependencias(ativo_que_depende, ativos)
+
+                id_ativo_do_qual_depende = pedir_int(
+                    "Digite o ID do ativo (dependência) que deseja remover: "
+                )
+
+                remover_dependencia(
+                    repositorio, ativos, id_ativo_que_depende, id_ativo_do_qual_depende
+                )
+
+                print("Dependência removida com sucesso.")
 
             except DadoInvalidoError as erro:
                 print(erro)
