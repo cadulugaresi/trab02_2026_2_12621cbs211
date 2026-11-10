@@ -1,7 +1,6 @@
 from inventario.dominio.excecoes import DadoInvalidoError, PersistenciaError
 from inventario.interface.entradas import (
     pedir_info,
-    pedir_float,
     pedir_float_ou_manter,
     pedir_int,
     pedir_int_ou_manter,
@@ -14,6 +13,9 @@ from inventario.interface.ativos import (
     editar_ativo,
     escolher_ativo_com_vulnerabilidades,
     excluir_ativo,
+    mostrar_cabecalho_do_ativo,
+    mostrar_lista_de_ativos,
+    perguntar_ativo,
 )
 from inventario.interface.vulnerabilidades import (
     cadastrar_vulnerabilidade,
@@ -29,7 +31,6 @@ from inventario.servicos.ativos import (
     encontrar_ativos_por_nome,
     encontrar_ativos_por_status,
     encontrar_ativos_por_tipo,
-    obter_ativo,
 )
 from inventario.servicos.vulnerabilidades import (
     atualizar_status_vulnerabilidade,
@@ -37,12 +38,14 @@ from inventario.servicos.vulnerabilidades import (
     excluir_vulnerabilidade_do_catalogo,
 )
 
-from inventario.interface.dependencias import mostrar_dependencias
+from inventario.interface.dependencias import (
+    mostrar_dependencias,
+    cadastrar_dependencia_menu,
+    deletar_dependencia_menu,
+)
 
 from inventario.servicos.dependencias import (
     atualizar_dependencia,
-    cadastrar_dependencia,
-    remover_dependencia,
 )
 
 from inventario.servicos.ordenacao import (
@@ -325,42 +328,24 @@ def menu_dependencias(repositorio, ativos):
         opcao = input("Escolha uma opção: ").strip()
 
         if opcao == "1":
-            for ativo in listar_ativos_ordenados(ativos, por_nome):
-                print(f"""{ativo.id} - {ativo.nome} ({type(ativo).__name__})""")
-
-            try:
-                id_ativo_que_depende = pedir_int(
-                    "ID do ativo ao qual deseja adicionar uma dependência: "
-                )
-                ativo_que_depende = obter_ativo(ativos, id_ativo_que_depende)
-
-                mostrar_dependencias(ativo_que_depende, ativos)
-
-                id_ativo_do_qual_depende = pedir_int("ID do ativo do qual ele depende: ")
-                fracao = pedir_float("Fração do risco herdada (exemplo: 0,3): ")
-
-                cadastrar_dependencia(
-                    repositorio, ativos, id_ativo_que_depende, id_ativo_do_qual_depende, fracao
-                )
-                print("Dependência cadastrada com sucesso.")
-
-            except DadoInvalidoError as erro:
-                print(erro)
+            mostrar_lista_de_ativos(ativos)
+            cadastrar_dependencia_menu(repositorio, ativos)
 
         elif opcao == "2":
-            for ativo in listar_ativos_ordenados(ativos, por_nome):
-                print(f"""{ativo.id} - {ativo.nome} ({type(ativo).__name__})""")
+            mostrar_lista_de_ativos(ativos)
+
+            ativo_que_depende = perguntar_ativo(
+                ativos, "ID do ativo do qual deseja atualizar as dependências: "
+            )
+
+            if ativo_que_depende is None:
+                continue
+
+            if not ativo_que_depende.dependencias:
+                print("Este ativo não possui dependências cadastradas.")
+                continue
 
             try:
-                id_ativo_que_depende = pedir_int(
-                    "ID do ativo do qual deseja atualizar as dependências: "
-                )
-                ativo_que_depende = obter_ativo(ativos, id_ativo_que_depende)
-
-                if not ativo_que_depende.dependencias:
-                    print("Este ativo não possui dependências cadastradas.")
-                    continue
-
                 mostrar_dependencias(ativo_que_depende, ativos)
 
                 id_ativo_do_qual_depende_antigo = pedir_int(
@@ -385,7 +370,7 @@ def menu_dependencias(repositorio, ativos):
                 atualizar_dependencia(
                     repositorio,
                     ativos,
-                    id_ativo_que_depende,
+                    ativo_que_depende.id,
                     id_ativo_do_qual_depende_antigo,
                     id_ativo_do_qual_depende_novo,
                     fracao_nova,
@@ -397,33 +382,8 @@ def menu_dependencias(repositorio, ativos):
                 print(erro)
 
         elif opcao == "3":
-            for ativo in listar_ativos_ordenados(ativos, por_nome):
-                print(f"""{ativo.id} - {ativo.nome} ({type(ativo).__name__})""")
-
-            try:
-                id_ativo_que_depende = pedir_int(
-                    "ID do ativo do qual deseja remover uma dependência: "
-                )
-                ativo_que_depende = obter_ativo(ativos, id_ativo_que_depende)
-
-                if not ativo_que_depende.dependencias:
-                    print("Este ativo não possui dependências cadastradas.")
-                    continue
-
-                mostrar_dependencias(ativo_que_depende, ativos)
-
-                id_ativo_do_qual_depende = pedir_int(
-                    "Digite o ID do ativo (dependência) que deseja remover: "
-                )
-
-                remover_dependencia(
-                    repositorio, ativos, id_ativo_que_depende, id_ativo_do_qual_depende
-                )
-
-                print("Dependência removida com sucesso.")
-
-            except DadoInvalidoError as erro:
-                print(erro)
+            mostrar_lista_de_ativos(ativos)
+            deletar_dependencia_menu(repositorio, ativos)
 
         elif opcao == "4":
             todos_ou_um = ""
@@ -434,24 +394,19 @@ def menu_dependencias(repositorio, ativos):
                 if todos_ou_um == "todos":
                     print("Listando as dependências de todos os ativos...")
                     for ativo in listar_ativos_ordenados(ativos, por_nome):
-                        print(f"""
-        {ativo.id} - {ativo.nome} ({type(ativo).__name__})""")
+                        mostrar_cabecalho_do_ativo(ativo)
                         mostrar_dependencias(ativo, ativos)
 
                 elif todos_ou_um == "um":
-                    for ativo in listar_ativos_ordenados(ativos, por_nome):
-                        print(f"""{ativo.id} - {ativo.nome} ({type(ativo).__name__})""")
+                    mostrar_lista_de_ativos(ativos)
 
-                    try:
-                        id_ativo = pedir_int("ID do ativo do qual deseja listar as dependências: ")
-                        ativo_escolhido = obter_ativo(ativos, id_ativo)
+                    ativo_escolhido = perguntar_ativo(
+                        ativos, "ID do ativo do qual deseja listar as dependências: "
+                    )
 
-                        print(f"""
-        {ativo_escolhido.id} - {ativo_escolhido.nome} ({type(ativo_escolhido).__name__})""")
+                    if ativo_escolhido is not None:
+                        mostrar_cabecalho_do_ativo(ativo_escolhido)
                         mostrar_dependencias(ativo_escolhido, ativos)
-
-                    except DadoInvalidoError as erro:
-                        print(erro)
 
                 else:
                     print('Opção inválida. Digite "todos" ou "um".')
