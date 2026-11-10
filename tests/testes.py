@@ -36,9 +36,9 @@ from inventario.interface.ativos import (
 from inventario.servicos.ativos import (
     atualizar_ativo_no_inventario,
     encontrar_ativo_por_id,
-    encontrar_ativo_por_nome,
+    encontrar_ativos_por_nome,
     encontrar_ativos_por_status,
-    listar_ativos_por_tipo,
+    encontrar_ativos_por_tipo,
     obter_ativo,
     registrar_ativo_no_inventario,
     remover_ativo_do_inventario,
@@ -220,12 +220,12 @@ class TestEncontrarAtivoPorId(unittest.TestCase):
         }
 
     def test_encontra_ativo_existente(self):
-        ativo = encontrar_ativo_por_id(1, self.ativos)
+        ativo = encontrar_ativo_por_id(self.ativos, 1)
         self.assertIsNotNone(ativo)
         self.assertEqual(ativo.nome, "Dell")
 
     def test_retorna_none_quando_id_nao_existe(self):
-        ativo = encontrar_ativo_por_id(99, self.ativos)
+        ativo = encontrar_ativo_por_id(self.ativos, 99)
         self.assertIsNone(ativo)
 
 
@@ -305,15 +305,15 @@ class TestEncontrarAtivosPorNome(unittest.TestCase):
         }
 
     def test_busca_nome_exato(self):
-        encontrados = encontrar_ativo_por_nome("Dell", self.ativos)
+        encontrados = encontrar_ativos_por_nome(self.ativos, "Dell")
         self.assertEqual(len(encontrados), 2)
 
     def test_busca_parcial_case_insensitive(self):
-        encontrados = encontrar_ativo_por_nome("dell", self.ativos)
+        encontrados = encontrar_ativos_por_nome(self.ativos, "dell")
         self.assertEqual(len(encontrados), 2)
 
     def test_busca_sem_resultado(self):
-        encontrados = encontrar_ativo_por_nome("Xyz", self.ativos)
+        encontrados = encontrar_ativos_por_nome(self.ativos, "Xyz")
         self.assertEqual(len(encontrados), 0)
 
 
@@ -327,11 +327,11 @@ class TestEncontrarAtivosPorStatus(unittest.TestCase):
         }
 
     def test_status_ativo_retorna_2(self):
-        encontrados = encontrar_ativos_por_status(StatusDoAtivo.ATIVO, self.ativos)
+        encontrados = encontrar_ativos_por_status(self.ativos, StatusDoAtivo.ATIVO)
         self.assertEqual(len(encontrados), 2)
 
     def test_status_inativo_retorna_1(self):
-        encontrados = encontrar_ativos_por_status(StatusDoAtivo.INATIVO, self.ativos)
+        encontrados = encontrar_ativos_por_status(self.ativos, StatusDoAtivo.INATIVO)
         self.assertEqual(len(encontrados), 1)
 
 
@@ -345,11 +345,11 @@ class TestListarAtivosPorTipo(unittest.TestCase):
         }
 
     def test_listar_notebooks_retorna_um(self):
-        encontrados = listar_ativos_por_tipo(Notebook, self.ativos)
+        encontrados = encontrar_ativos_por_tipo(self.ativos, Notebook)
         self.assertEqual(len(encontrados), 1)
 
     def test_listar_impressora_retorna_vazio(self):
-        encontrados = listar_ativos_por_tipo(Impressora, self.ativos)
+        encontrados = encontrar_ativos_por_tipo(self.ativos, Impressora)
         self.assertEqual(len(encontrados), 0)
 
 
