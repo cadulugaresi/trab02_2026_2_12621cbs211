@@ -17,8 +17,9 @@ from inventario.servicos.ativos import (
     registrar_ativo_no_inventario,
     remover_ativo_do_inventario,
 )
-from inventario.servicos.ordenacao import(
-    listar_ativos_ordenados, por_nome,
+from inventario.servicos.ordenacao import (
+    listar_ativos_ordenados,
+    por_nome,
 )
 
 
@@ -287,4 +288,8 @@ def escolher_ativo_com_vulnerabilidades(ativos):
 
 def mostrar_lista_de_ativos(ativos):
     for ativo in listar_ativos_ordenados(ativos, por_nome):
-        print(f"    {ativo.id} - {ativo.nome} ({type(ativo).__name__})")
+        mostrar_cabecalho_do_ativo(ativo)
+
+
+def mostrar_cabecalho_do_ativo(ativo):
+    print(f"{ativo.id} - {ativo.nome} ({type(ativo).__name__})")
