@@ -23,10 +23,7 @@ def cadastrar_dependencia(
     repositorio.adicionar_dependencia(id_ativo_que_depende, id_ativo_do_qual_depende, fracao)
 
 
-def remover_dependencia(
-    repositorio,
-    ativos, id_ativo_que_depende,
-    id_ativo_do_qual_depende):
+def remover_dependencia(repositorio, ativos, id_ativo_que_depende, id_ativo_do_qual_depende):
     ativo_que_depende = obter_ativo(ativos, id_ativo_que_depende)
     obter_ativo(ativos, id_ativo_do_qual_depende)
 
@@ -58,7 +55,9 @@ def atualizar_dependencia(
     # já cadastrada no mesmo ativo:
     trocou_de_ativo = id_ativo_do_qual_depende_novo != id_ativo_do_qual_depende_antigo
     if trocou_de_ativo and id_ativo_do_qual_depende_novo in ativo_que_depende.dependencias:
-        raise DadoInvalidoError(f"Este ativo já depende do ativo {id_ativo_do_qual_depende_novo}. Edite essa dependência em vez disso.")
+        raise DadoInvalidoError(
+            f"Este ativo já depende do ativo {id_ativo_do_qual_depende_novo}. Edite essa dependência em vez disso."
+        )
 
     fracao_antiga = ativo_que_depende.dependencias[id_ativo_do_qual_depende_antigo]
     soma_sem_a_antiga = somar_fracoes(ativo_que_depende.dependencias) - fracao_antiga
