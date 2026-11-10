@@ -9,12 +9,12 @@ def registrar_ativo_no_inventario(repositorio, ativos, ativo):
     repositorio.adicionar_ativo(ativo)
 
 
-def encontrar_ativo_por_id(ID, ativos):
-    return ativos.get(ID)
+def encontrar_ativo_por_id(ativos, id_ativo):
+    return ativos.get(id_ativo)
 
 
 def obter_ativo(ativos, id_ativo):
-    ativo = encontrar_ativo_por_id(id_ativo, ativos)
+    ativo = encontrar_ativo_por_id(ativos, id_ativo)
 
     if ativo is None:
         raise DadoInvalidoError("Ativo não encontrado.")
@@ -22,7 +22,7 @@ def obter_ativo(ativos, id_ativo):
     return ativo
 
 
-def encontrar_ativo_por_nome(nome, ativos):
+def encontrar_ativos_por_nome(ativos, nome):
 
     encontrados = []
 
@@ -33,7 +33,7 @@ def encontrar_ativo_por_nome(nome, ativos):
     return encontrados
 
 
-def encontrar_ativos_por_status(status, ativos):
+def encontrar_ativos_por_status(ativos, status):
     encontrados = []
     for ativo in ativos.values():
         if ativo.status == status:
@@ -41,7 +41,7 @@ def encontrar_ativos_por_status(status, ativos):
     return encontrados
 
 
-def listar_ativos_por_tipo(classe, ativos):
+def encontrar_ativos_por_tipo(ativos, classe):
 
     encontrados = []
 
@@ -55,6 +55,7 @@ def listar_ativos_por_tipo(classe, ativos):
 def atualizar_ativo_no_inventario(repositorio, ativos, ativo_atualizado):
     ativo_antigo = obter_ativo(ativos, ativo_atualizado.id)
     ativo_atualizado.vulnerabilidades = ativo_antigo.vulnerabilidades
+    ativo_atualizado.dependencias = ativo_antigo.dependencias
     ativos[ativo_atualizado.id] = ativo_atualizado
     repositorio.atualizar_ativo(ativo_atualizado)
 
@@ -62,4 +63,8 @@ def atualizar_ativo_no_inventario(repositorio, ativos, ativo_atualizado):
 def remover_ativo_do_inventario(repositorio, ativos, id_ativo):
     obter_ativo(ativos, id_ativo)
     del ativos[id_ativo]
+
+    for ativo in ativos.values():
+        ativo.dependencias.pop(id_ativo, None)
+
     repositorio.remover_ativo(id_ativo)

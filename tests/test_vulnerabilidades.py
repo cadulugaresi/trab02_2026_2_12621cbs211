@@ -633,22 +633,24 @@ class TestPerguntarAtivo(unittest.TestCase):
     def test_sem_ativos_retorna_none_sem_perguntar(self):
         with patch("builtins.input") as entrada:
             with redirect_stdout(io.StringIO()):
-                self.assertIsNone(perguntar_ativo({}))
+                self.assertIsNone(perguntar_ativo({}, "Digite o ID do ativo: "))
         entrada.assert_not_called()
 
     def test_id_existente_retorna_o_ativo(self):
         with patch("builtins.input", return_value="2"):
             with redirect_stdout(io.StringIO()):
-                self.assertIs(perguntar_ativo(self.ativos), self.ativos[2])
+                self.assertIs(
+                    perguntar_ativo(self.ativos, "Digite o ID do ativo: "), self.ativos[2]
+                )
 
     def test_id_inexistente_retorna_none(self):
         with patch("builtins.input", return_value="99"):
             with redirect_stdout(io.StringIO()):
-                self.assertIsNone(perguntar_ativo(self.ativos))
+                self.assertIsNone(perguntar_ativo(self.ativos, "Digite o ID do ativo: "))
 
     def test_id_inexistente_mostra_a_mensagem_do_obter_ativo(self):
         with patch("builtins.input", return_value="99"):
-            saida = capturar_saida(perguntar_ativo, self.ativos)
+            saida = capturar_saida(perguntar_ativo, self.ativos, "Digite o ID do ativo: ")
         self.assertIn("Ativo não encontrado.", saida)
 
 

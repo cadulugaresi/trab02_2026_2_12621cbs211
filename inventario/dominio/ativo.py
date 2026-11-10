@@ -10,6 +10,7 @@ class Ativo:
         self.responsavel = responsavel
         self.status = status
         self.vulnerabilidades = {}
+        self.dependencias = {}
 
     def exibir_detalhes(self):
         return f"""
@@ -29,6 +30,13 @@ class Ativo:
                 {"id_vulnerabilidade": id_vulnerabilidade, "status_tratamento": status.value}
             )
 
+        lista_de_dependencias = []
+
+        for id_ativo_do_qual_depende, fracao in self.dependencias.items():
+            lista_de_dependencias.append(
+                {"id_ativo_do_qual_depende": id_ativo_do_qual_depende, "fracao": fracao}
+            )
+
         return {
             "id": self.id,
             "nome": self.nome,
@@ -37,6 +45,7 @@ class Ativo:
             "responsavel": self.responsavel,
             "status": self.status.value,
             "vulnerabilidades": lista_de_vulns,
+            "dependencias": lista_de_dependencias,
         }
 
 

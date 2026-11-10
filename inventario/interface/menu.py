@@ -11,6 +11,9 @@ from inventario.interface.ativos import (
     editar_ativo,
     escolher_ativo_com_vulnerabilidades,
     excluir_ativo,
+    mostrar_cabecalho_do_ativo,
+    mostrar_lista_de_ativos,
+    perguntar_ativo,
 )
 from inventario.interface.vulnerabilidades import (
     cadastrar_vulnerabilidade,
@@ -23,9 +26,9 @@ from inventario.interface.vulnerabilidades import (
 )
 from inventario.servicos.ativos import (
     encontrar_ativo_por_id,
-    encontrar_ativo_por_nome,
+    encontrar_ativos_por_nome,
     encontrar_ativos_por_status,
-    listar_ativos_por_tipo,
+    encontrar_ativos_por_tipo,
 )
 from inventario.servicos.vulnerabilidades import (
     atualizar_status_vulnerabilidade,
@@ -33,7 +36,18 @@ from inventario.servicos.vulnerabilidades import (
     excluir_vulnerabilidade_do_catalogo,
 )
 
-from inventario.servicos.ordenacao import listar_ativos_ordenados, CRITERIOS_DE_ORDENACAO
+from inventario.interface.dependencias import (
+    mostrar_dependencias,
+    atualizar_dependencia_menu,
+    cadastrar_dependencia_menu,
+    excluir_dependencia_menu,
+)
+
+from inventario.servicos.ordenacao import (
+    listar_ativos_ordenados,
+    CRITERIOS_DE_ORDENACAO,
+    por_nome,
+)
 
 
 def menu_principal(repositorio, ativos, catalogo):
@@ -42,14 +56,15 @@ def menu_principal(repositorio, ativos, catalogo):
         try:
 
             print("""
-            MENU
+            MENU PRINCIPAL
 
             1 - Cadastrar ativo
             2 - Listar ativo
             3 - Excluir ativo
             4 - Menu de vulnerabilidades
             5 - Editar ativo
-            6 - Sair
+            6 - Menu de dependências
+            7 - Sair
             """)
 
             opcao = input("Escolha uma opção: ").strip()
@@ -70,6 +85,14 @@ def menu_principal(repositorio, ativos, catalogo):
                 editar_ativo(repositorio, ativos)
 
             elif opcao == "6":
+                if len(ativos) < 2:
+                    print(
+                        "É preciso ter pelo menos dois ativos cadastrados para acessar o menu de dependências."
+                    )
+                else:
+                    menu_dependencias(repositorio, ativos)
+
+            elif opcao == "7":
                 print("Saindo do programa...")
                 break
 
@@ -234,11 +257,11 @@ def menu_listagem(ativos):
 
             if filtro == "1":
                 tipo = pedir_tipo("Qual tipo de ativos deseja listar? ")
-                encontrados = listar_ativos_por_tipo(tipo, ativos)
+                encontrados = encontrar_ativos_por_tipo(ativos, tipo)
 
             elif filtro == "2":
                 status = pedir_status("Qual status de ativos deseja listar? ")
-                encontrados = encontrar_ativos_por_status(status, ativos)
+                encontrados = encontrar_ativos_por_status(ativos, status)
 
             else:
                 print("Opção inválida.")
@@ -261,7 +284,7 @@ def menu_listagem(ativos):
                 if nome_ou_id == "nome":
 
                     nome = pedir_info("Digite o nome do ativo que deseja listar: ")
-                    encontrados = encontrar_ativo_por_nome(nome, ativos)
+                    encontrados = encontrar_ativos_por_nome(ativos, nome)
 
                     if encontrados:
                         for ativo in encontrados:
@@ -271,7 +294,7 @@ def menu_listagem(ativos):
                 elif nome_ou_id == "id":
 
                     id_ativo = pedir_int("Digite o ID do ativo que deseja listar: ")
-                    ativo_encontrado = encontrar_ativo_por_id(id_ativo, ativos)
+                    ativo_encontrado = encontrar_ativo_por_id(ativos, id_ativo)
 
                     if ativo_encontrado:
                         print(ativo_encontrado.exibir_detalhes())
@@ -282,3 +305,71 @@ def menu_listagem(ativos):
 
         else:
             print('Opção inválida. Digite "todos" ou "um".')
+
+
+def menu_dependencias(repositorio, ativos):
+    while True:
+        print("""
+        MENU DE DEPENDÊNCIAS
+
+        1 - Adicionar dependência
+        2 - Atualizar dependência
+        3 - Remover dependência
+        4 - Listar dependências
+        5 - Voltar ao menu principal
+        """)
+
+        opcao = input("Escolha uma opção: ").strip()
+
+        if opcao == "1":
+            mostrar_lista_de_ativos(ativos)
+            cadastrar_dependencia_menu(repositorio, ativos)
+
+        elif opcao == "2":
+            mostrar_lista_de_ativos(ativos)
+            atualizar_dependencia_menu(repositorio, ativos)
+
+        elif opcao == "3":
+            mostrar_lista_de_ativos(ativos)
+            excluir_dependencia_menu(repositorio, ativos)
+
+        elif opcao == "4":
+            todos_ou_um = ""
+            while todos_ou_um not in ("todos", "um"):
+                print("Deseja listar as dependências de todos os ativos ou de apenas um?")
+                todos_ou_um = input("(todos/um): ").strip().lower()
+
+                if todos_ou_um == "todos":
+                    ativos_com_dependencias = []
+
+                    for ativo in listar_ativos_ordenados(ativos, por_nome):
+                        if ativo.dependencias:
+                            ativos_com_dependencias.append(ativo)
+
+                    if not ativos_com_dependencias:
+                        print("Nenhum ativo possui dependências cadastradas.")
+
+                    for ativo in ativos_com_dependencias:
+                        mostrar_cabecalho_do_ativo(ativo)
+                        mostrar_dependencias(ativo, ativos)
+
+                elif todos_ou_um == "um":
+                    mostrar_lista_de_ativos(ativos)
+
+                    ativo_escolhido = perguntar_ativo(
+                        ativos, "ID do ativo cujas dependências deseja listar: "
+                    )
+
+                    if ativo_escolhido is not None:
+                        mostrar_cabecalho_do_ativo(ativo_escolhido)
+                        mostrar_dependencias(ativo_escolhido, ativos)
+
+                else:
+                    print('Opção inválida. Digite "todos" ou "um".')
+
+        elif opcao == "5":
+            print("Voltando ao menu principal...")
+            break
+
+        else:
+            print("Opção inválida. Tente novamente.")

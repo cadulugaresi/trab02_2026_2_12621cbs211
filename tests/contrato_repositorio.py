@@ -1,4 +1,4 @@
-from inventario.dominio.ativo import Notebook, Servidor
+from inventario.dominio.ativo import Notebook, Roteador, Servidor
 from inventario.dominio.enums import Setor, StatusDaVuln, StatusDoAtivo
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 
@@ -12,6 +12,12 @@ def criar_notebook():
 def criar_servidor():
     return Servidor(
         2, "Servidor de Arquivos", Setor.FINANCEIRO, "Rafael Torres", StatusDoAtivo.ATIVO, 32, 4
+    )
+
+
+def criar_roteador():
+    return Roteador(
+        3, "Roteador do Térreo", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 24, 1000
     )
 
 
@@ -193,3 +199,67 @@ class ContratoDoRepositorio:
         self.assertEqual(ativos[1].vulnerabilidades, {2: StatusDaVuln.EM_TRATAMENTO})
         self.assertEqual(ativos[2].vulnerabilidades, {1: StatusDaVuln.ACEITA})
         self.assertIn(1, self.recarregar_catalogo())
+
+    def test_adicionar_dependencia_grava_o_id_e_a_fracao(self):
+        self.repositorio.adicionar_ativo(criar_notebook())
+        self.repositorio.adicionar_ativo(criar_servidor())
+
+        self.repositorio.adicionar_dependencia(1, 2, 0.5)
+
+        ativos = self.recarregar_ativos()
+        self.assertEqual(ativos[1].dependencias, {2: 0.5})
+        self.assertEqual(ativos[2].dependencias, {})
+
+    def test_remover_dependencia_tira_a_dependencia(self):
+        self.repositorio.adicionar_ativo(criar_notebook())
+        self.repositorio.adicionar_ativo(criar_servidor())
+        self.repositorio.adicionar_dependencia(1, 2, 0.5)
+
+        self.repositorio.remover_dependencia(1, 2)
+
+        self.assertEqual(self.recarregar_ativos()[1].dependencias, {})
+
+    def test_atualizar_ativo_nao_mexe_nas_dependencias(self):
+        self.repositorio.adicionar_ativo(criar_notebook())
+        self.repositorio.adicionar_ativo(criar_servidor())
+        self.repositorio.adicionar_dependencia(1, 2, 0.5)
+
+        self.repositorio.atualizar_ativo(criar_notebook())
+
+        self.assertEqual(self.recarregar_ativos()[1].dependencias, {2: 0.5})
+
+    def test_remover_ativo_tira_as_dependencias_que_apontavam_para_ele(self):
+        self.repositorio.adicionar_ativo(criar_notebook())
+        self.repositorio.adicionar_ativo(criar_servidor())
+        self.repositorio.adicionar_dependencia(1, 2, 0.5)
+
+        self.repositorio.remover_ativo(2)
+
+        self.assertEqual(self.recarregar_ativos()[1].dependencias, {})
+
+    def preparar_tres_ativos_com_uma_dependencia(self):
+        self.repositorio.adicionar_ativo(criar_notebook())
+        self.repositorio.adicionar_ativo(criar_servidor())
+        self.repositorio.adicionar_ativo(criar_roteador())
+        self.repositorio.adicionar_dependencia(1, 2, 0.5)
+
+    def test_atualizar_dependencia_troca_so_a_fracao(self):
+        self.preparar_tres_ativos_com_uma_dependencia()
+
+        self.repositorio.atualizar_dependencia(1, 2, 2, 0.3)
+
+        self.assertEqual(self.recarregar_ativos()[1].dependencias, {2: 0.3})
+
+    def test_atualizar_dependencia_troca_so_o_ativo_mantendo_a_fracao(self):
+        self.preparar_tres_ativos_com_uma_dependencia()
+
+        self.repositorio.atualizar_dependencia(1, 2, 3, 0.5)
+
+        self.assertEqual(self.recarregar_ativos()[1].dependencias, {3: 0.5})
+
+    def test_atualizar_dependencia_troca_o_ativo_e_a_fracao(self):
+        self.preparar_tres_ativos_com_uma_dependencia()
+
+        self.repositorio.atualizar_dependencia(1, 2, 3, 0.25)
+
+        self.assertEqual(self.recarregar_ativos()[1].dependencias, {3: 0.25})

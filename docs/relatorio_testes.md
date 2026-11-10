@@ -55,4 +55,4 @@ def encontrar_ativos_por_categ(categoria, ativos):
     return encontrados
 ```
 
-> A categoria do ativo foi substituída depois pelas subclasses (`Notebook`, `Servidor`...). Hoje, o filtro equivalente é `listar_ativos_por_tipo(classe, ativos)`, em `inventario/servicos/ativos.py`, e segue o mesmo padrão corrigido.
+> A categoria do ativo foi substituída depois pelas subclasses (`Notebook`, `Servidor`...). Hoje, o filtro equivalente é `encontrar_ativos_por_tipo(ativos, classe)`, em `inventario/servicos/ativos.py`, e segue o mesmo padrão corrigido.

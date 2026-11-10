@@ -76,6 +76,16 @@ class RepositorioSQLite(Repositorio):
                     id_vulnerabilidade, status_tratamento = registro_vinculo
                     ativo.vulnerabilidades[id_vulnerabilidade] = StatusDaVuln(status_tratamento)
 
+                todas_as_dependencias = self.executar(
+                    """SELECT id_ativo_do_qual_depende, fracao
+                    FROM dependencias WHERE id_ativo_que_depende = ?""",
+                    (ativo.id,),
+                ).fetchall()
+
+                for registro_dependencia in todas_as_dependencias:
+                    id_ativo_do_qual_depende, fracao = registro_dependencia
+                    ativo.dependencias[id_ativo_do_qual_depende] = fracao
+
         return ativos
 
     def carregar_catalogo(self):
@@ -224,4 +234,44 @@ class RepositorioSQLite(Repositorio):
                 """DELETE FROM vinculos
                 WHERE id_ativo = ? AND id_vulnerabilidade = ?""",
                 (id_ativo, id_vulnerabilidade),
+            )
+
+    def adicionar_dependencia(self, id_ativo_que_depende, id_ativo_do_qual_depende, fracao):
+        with self.conexao:
+            self.executar(
+                """INSERT INTO dependencias
+                (id_ativo_que_depende,
+                id_ativo_do_qual_depende, fracao)
+                VALUES (?, ?, ?)""",
+                (id_ativo_que_depende, id_ativo_do_qual_depende, fracao),
+            )
+
+    def remover_dependencia(self, id_ativo_que_depende, id_ativo_do_qual_depende):
+        with self.conexao:
+            self.executar(
+                """DELETE FROM dependencias
+                WHERE id_ativo_que_depende = ? AND
+                id_ativo_do_qual_depende = ?""",
+                (id_ativo_que_depende, id_ativo_do_qual_depende),
+            )
+
+    def atualizar_dependencia(
+        self,
+        id_ativo_que_depende,
+        id_ativo_do_qual_depende_antigo,
+        id_ativo_do_qual_depende_novo,
+        fracao_nova,
+    ):
+        with self.conexao:
+            self.executar(
+                """UPDATE dependencias
+                SET id_ativo_do_qual_depende = ?, fracao = ?
+                WHERE id_ativo_que_depende = ?
+                AND id_ativo_do_qual_depende = ?""",
+                (
+                    id_ativo_do_qual_depende_novo,
+                    fracao_nova,
+                    id_ativo_que_depende,
+                    id_ativo_do_qual_depende_antigo,
+                ),
             )

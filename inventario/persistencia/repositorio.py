@@ -46,3 +46,21 @@ class Repositorio(ABC):
     @abstractmethod
     def desvincular(self, id_ativo, id_vulnerabilidade):
         pass
+
+    @abstractmethod
+    def adicionar_dependencia(self, id_ativo_que_depende, id_ativo_do_qual_depende, fracao):
+        pass
+
+    @abstractmethod
+    def remover_dependencia(self, id_ativo_que_depende, id_ativo_do_qual_depende):
+        pass
+
+    @abstractmethod
+    def atualizar_dependencia(
+        self,
+        id_ativo_que_depende,
+        id_ativo_do_qual_depende_antigo,
+        id_ativo_do_qual_depende_novo,
+        fracao_nova,
+    ):
+        pass
