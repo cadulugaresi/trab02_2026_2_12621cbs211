@@ -17,15 +17,18 @@ from inventario.servicos.ativos import (
     registrar_ativo_no_inventario,
     remover_ativo_do_inventario,
 )
+from inventario.servicos.ordenacao import(
+    listar_ativos_ordenados, por_nome,
+)
 
 
 def pedir_id_disponivel(ativos):
 
     while True:
 
-        ID_do_ativo = pedir_int("Digite o ID do ativo: ")
-        if encontrar_ativo_por_id(ID_do_ativo, ativos) is None:
-            return ID_do_ativo
+        id_do_ativo = pedir_int("Digite o ID do ativo: ")
+        if encontrar_ativo_por_id(ativos, id_do_ativo) is None:
+            return id_do_ativo
 
         print("Já existe um ativo cadastrado com este ID. Tente outro.")
 
@@ -63,7 +66,7 @@ def cadastro_impressora():
 def cadastrar_ativo(repositorio, ativos):
 
     tipo = pedir_tipo("Digite o tipo do ativo: ")
-    ID_do_ativo = pedir_id_disponivel(ativos)
+    id_do_ativo = pedir_id_disponivel(ativos)
     nome_ativo = pedir_info("Digite o nome do ativo: ")
     setor = pedir_setor("Digite o setor do ativo: ")
     responsavel = pedir_info("Digite o nome do responsável pelo ativo: ")
@@ -71,19 +74,19 @@ def cadastrar_ativo(repositorio, ativos):
 
     if tipo is Notebook:
         so, tela = cadastro_notebook()
-        ativo = Notebook(ID_do_ativo, nome_ativo, setor, responsavel, status, so, tela)
+        ativo = Notebook(id_do_ativo, nome_ativo, setor, responsavel, status, so, tela)
 
     elif tipo is Roteador:
         portas, velocidade = cadastro_roteador()
-        ativo = Roteador(ID_do_ativo, nome_ativo, setor, responsavel, status, portas, velocidade)
+        ativo = Roteador(id_do_ativo, nome_ativo, setor, responsavel, status, portas, velocidade)
 
     elif tipo is Servidor:
         ram, armazenamento = cadastro_servidor()
-        ativo = Servidor(ID_do_ativo, nome_ativo, setor, responsavel, status, ram, armazenamento)
+        ativo = Servidor(id_do_ativo, nome_ativo, setor, responsavel, status, ram, armazenamento)
 
     elif tipo is Impressora:
         cor, tecnologia = cadastro_impressora()
-        ativo = Impressora(ID_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
+        ativo = Impressora(id_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
 
     registrar_ativo_no_inventario(repositorio, ativos, ativo)
     print("Ativo cadastrado com sucesso!")
@@ -93,7 +96,7 @@ def cadastrar_ativo(repositorio, ativos):
 
 def editar_ativo(repositorio, ativos):
 
-    ativo_encontrado = perguntar_ativo(ativos)
+    ativo_encontrado = perguntar_ativo(ativos, "Digite o ID do ativo: ")
     if ativo_encontrado is None:
         return
 
@@ -233,7 +236,7 @@ def editar_ativo(repositorio, ativos):
 
 
 def excluir_ativo(repositorio, ativos):
-    ativo = perguntar_ativo(ativos)
+    ativo = perguntar_ativo(ativos, "Digite o ID do ativo: ")
     if ativo is None:
         return
 
@@ -256,13 +259,13 @@ def confirmar_exclusao(ativo):
         return False
 
 
-def perguntar_ativo(ativos):
+def perguntar_ativo(ativos, mensagem):
 
     if not ativos:
         print("Nenhum ativo cadastrado.")
         return None
 
-    id_ativo = pedir_int("Digite o ID do ativo: ")
+    id_ativo = pedir_int(mensagem)
 
     try:
         return obter_ativo(ativos, id_ativo)
@@ -272,7 +275,7 @@ def perguntar_ativo(ativos):
 
 
 def escolher_ativo_com_vulnerabilidades(ativos):
-    ativo_encontrado = perguntar_ativo(ativos)
+    ativo_encontrado = perguntar_ativo(ativos, "Digite o ID do ativo: ")
     if ativo_encontrado is None:
         return None
     elif not ativo_encontrado.vulnerabilidades:
@@ -280,3 +283,8 @@ def escolher_ativo_com_vulnerabilidades(ativos):
         return None
     else:
         return ativo_encontrado
+
+
+def mostrar_lista_de_ativos(ativos):
+    for ativo in listar_ativos_ordenados(ativos, por_nome):
+        print(f"    {ativo.id} - {ativo.nome} ({type(ativo).__name__})")
