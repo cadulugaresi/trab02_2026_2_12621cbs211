@@ -425,6 +425,37 @@ def menu_dependencias(repositorio, ativos):
             except DadoInvalidoError as erro:
                 print(erro)
 
+        elif opcao == "4":
+            todos_ou_um = ""
+            while todos_ou_um not in ("todos", "um"):
+                print("Deseja listar as dependências de todos os ativos ou de apenas um?")
+                todos_ou_um = input("(todos/um): ").strip().lower()
+
+                if todos_ou_um == "todos":
+                    print("Listando as dependências de todos os ativos...")
+                    for ativo in listar_ativos_ordenados(ativos, por_nome):
+                        print(f"""
+        {ativo.id} - {ativo.nome} ({type(ativo).__name__})""")
+                        mostrar_dependencias(ativo, ativos)
+
+                elif todos_ou_um == "um":
+                    for ativo in listar_ativos_ordenados(ativos, por_nome):
+                        print(f"""{ativo.id} - {ativo.nome} ({type(ativo).__name__})""")
+
+                    try:
+                        id_ativo = pedir_int("ID do ativo do qual deseja listar as dependências: ")
+                        ativo_escolhido = obter_ativo(ativos, id_ativo)
+
+                        print(f"""
+        {ativo_escolhido.id} - {ativo_escolhido.nome} ({type(ativo_escolhido).__name__})""")
+                        mostrar_dependencias(ativo_escolhido, ativos)
+
+                    except DadoInvalidoError as erro:
+                        print(erro)
+
+                else:
+                    print('Opção inválida. Digite "todos" ou "um".')
+
         elif opcao == "5":
             print("Voltando ao menu principal...")
             break
