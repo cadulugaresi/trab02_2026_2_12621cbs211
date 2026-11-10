@@ -214,6 +214,49 @@ class TesteDoMenuDeDependencias(TesteComTresAtivos):
         return saida.getvalue()
 
 
+class TestMenuAtualizarDependencia(TesteDoMenuDeDependencias):
+
+    def setUp(self):
+        super().setUp()
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
+
+    def test_enter_nos_dois_campos_mantem_a_dependencia(self):
+        saida = self.usar_menu(["2", "1", "2", "", "", "5"])
+
+        self.assertIn("Dependência atualizada com sucesso.", saida)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5})
+
+    def test_troca_o_ativo_e_aceita_fracao_com_virgula(self):
+        saida = self.usar_menu(["2", "1", "2", "3", "0,3", "5"])
+
+        self.assertIn("Dependência atualizada com sucesso.", saida)
+        self.assertEqual(self.notebook.dependencias, {3: 0.3})
+        self.assertEqual(carregar_ativos()[1].dependencias, {3: 0.3})
+
+    def test_id_novo_que_nao_e_numero_mostra_erro(self):
+        saida = self.usar_menu(["2", "1", "2", "abc", "5"])
+
+        self.assertIn("Digite um número válido.", saida)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5})
+
+    def test_fracao_que_nao_e_numero_mostra_erro(self):
+        saida = self.usar_menu(["2", "1", "2", "", "abc", "5"])
+
+        self.assertIn("Digite um número válido.", saida)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5})
+
+    def test_fracao_zero_mostra_erro(self):
+        saida = self.usar_menu(["2", "1", "2", "", "0", "5"])
+
+        self.assertIn("A fração precisa ser maior que zero.", saida)
+        self.assertEqual(self.notebook.dependencias, {2: 0.5})
+
+    def test_ativo_sem_dependencias_avisa(self):
+        saida = self.usar_menu(["2", "3", "5"])
+
+        self.assertIn("Este ativo não possui dependências cadastradas.", saida)
+
+
 class TestMenuRemoverDependencia(TesteDoMenuDeDependencias):
 
     def test_remove_a_dependencia_escolhida(self):

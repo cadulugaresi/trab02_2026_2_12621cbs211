@@ -1,9 +1,7 @@
 from inventario.dominio.excecoes import DadoInvalidoError, PersistenciaError
 from inventario.interface.entradas import (
     pedir_info,
-    pedir_float_ou_manter,
     pedir_int,
-    pedir_int_ou_manter,
     pedir_status,
     pedir_status_vulnerabilidade,
     pedir_tipo,
@@ -40,12 +38,9 @@ from inventario.servicos.vulnerabilidades import (
 
 from inventario.interface.dependencias import (
     mostrar_dependencias,
+    atualizar_dependencia_menu,
     cadastrar_dependencia_menu,
-    deletar_dependencia_menu,
-)
-
-from inventario.servicos.dependencias import (
-    atualizar_dependencia,
+    excluir_dependencia_menu,
 )
 
 from inventario.servicos.ordenacao import (
@@ -333,57 +328,11 @@ def menu_dependencias(repositorio, ativos):
 
         elif opcao == "2":
             mostrar_lista_de_ativos(ativos)
-
-            ativo_que_depende = perguntar_ativo(
-                ativos, "ID do ativo do qual deseja atualizar as dependências: "
-            )
-
-            if ativo_que_depende is None:
-                continue
-
-            if not ativo_que_depende.dependencias:
-                print("Este ativo não possui dependências cadastradas.")
-                continue
-
-            try:
-                mostrar_dependencias(ativo_que_depende, ativos)
-
-                id_ativo_do_qual_depende_antigo = pedir_int(
-                    "Digite o ID do ativo (dependência) que deseja atualizar: "
-                )
-
-                if id_ativo_do_qual_depende_antigo not in ativo_que_depende.dependencias:
-                    print("Este ativo não possui essa dependência.")
-                    continue
-
-                fracao_atual = ativo_que_depende.dependencias[id_ativo_do_qual_depende_antigo]
-
-                id_ativo_do_qual_depende_novo = pedir_int_ou_manter(
-                    "Novo ID do ativo do qual depende (tecle Enter para manter): ",
-                    id_ativo_do_qual_depende_antigo,
-                )
-                fracao_nova = pedir_float_ou_manter(
-                    f"Nova fração do risco herdada (atual: {fracao_atual}; tecle Enter para manter): ",
-                    fracao_atual,
-                )
-
-                atualizar_dependencia(
-                    repositorio,
-                    ativos,
-                    ativo_que_depende.id,
-                    id_ativo_do_qual_depende_antigo,
-                    id_ativo_do_qual_depende_novo,
-                    fracao_nova,
-                )
-
-                print("Dependência atualizada com sucesso.")
-
-            except DadoInvalidoError as erro:
-                print(erro)
+            atualizar_dependencia_menu(repositorio, ativos)
 
         elif opcao == "3":
             mostrar_lista_de_ativos(ativos)
-            deletar_dependencia_menu(repositorio, ativos)
+            excluir_dependencia_menu(repositorio, ativos)
 
         elif opcao == "4":
             todos_ou_um = ""
@@ -401,7 +350,7 @@ def menu_dependencias(repositorio, ativos):
                     mostrar_lista_de_ativos(ativos)
 
                     ativo_escolhido = perguntar_ativo(
-                        ativos, "ID do ativo do qual deseja listar as dependências: "
+                        ativos, "ID do ativo cujas dependências deseja listar: "
                     )
 
                     if ativo_escolhido is not None:

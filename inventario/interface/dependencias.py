@@ -5,6 +5,7 @@ from inventario.servicos.dependencias import (
     cadastrar_dependencia,
     remover_dependencia,
     somar_fracoes,
+    atualizar_dependencia,
 )
 
 
@@ -50,11 +51,9 @@ def cadastrar_dependencia_menu(repositorio, ativos):
         print(erro)
 
 
-def deletar_dependencia_menu(repositorio, ativos):
+def excluir_dependencia_menu(repositorio, ativos):
 
-    ativo_que_depende = perguntar_ativo(
-        ativos, "ID do ativo do qual deseja remover uma dependência: "
-    )
+    ativo_que_depende = perguntar_ativo(ativos, "ID do ativo cuja dependência deseja remover: ")
 
     if ativo_que_depende is None:
         return
@@ -76,3 +75,62 @@ def deletar_dependencia_menu(repositorio, ativos):
 
     except DadoInvalidoError as erro:
         print(erro)
+
+
+def atualizar_dependencia_menu(repositorio, ativos):
+    ativo_que_depende = perguntar_ativo(ativos, "ID do ativo cujas dependências deseja atualizar: ")
+
+    if ativo_que_depende is None:
+        return
+
+    if not ativo_que_depende.dependencias:
+        print("Este ativo não possui dependências cadastradas.")
+        return
+
+    try:
+        mostrar_dependencias(ativo_que_depende, ativos)
+
+        id_ativo_do_qual_depende_antigo = pedir_int(
+            "Digite o ID do ativo (dependência) que deseja atualizar: "
+        )
+
+        if id_ativo_do_qual_depende_antigo not in ativo_que_depende.dependencias:
+            print("Este ativo não possui essa dependência.")
+            return
+
+        fracao_atual = ativo_que_depende.dependencias[id_ativo_do_qual_depende_antigo]
+
+        texto_id_novo = input(
+            "Novo ID do ativo do qual depende (tecle Enter para manter): "
+        ).strip()
+
+        if texto_id_novo == "":
+            id_ativo_do_qual_depende_novo = id_ativo_do_qual_depende_antigo
+        else:
+            id_ativo_do_qual_depende_novo = int(texto_id_novo)
+
+        texto_fracao_nova = (
+            input("Nova fração (tecle Enter para manter): ").strip().replace(",", ".")
+        )
+
+        if texto_fracao_nova == "":
+            fracao_nova = fracao_atual
+        else:
+            fracao_nova = float(texto_fracao_nova)
+
+        atualizar_dependencia(
+            repositorio,
+            ativos,
+            ativo_que_depende.id,
+            id_ativo_do_qual_depende_antigo,
+            id_ativo_do_qual_depende_novo,
+            fracao_nova,
+        )
+
+        print("Dependência atualizada com sucesso.")
+
+    except DadoInvalidoError as erro:
+        print(erro)
+
+    except ValueError:
+        print("Digite um número válido.")
