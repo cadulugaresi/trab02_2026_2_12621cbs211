@@ -322,15 +322,12 @@ def menu_dependencias(repositorio, ativos):
         opcao = input("Escolha uma opção: ").strip()
 
         if opcao == "1":
-            mostrar_lista_de_ativos(ativos)
             cadastrar_dependencia_menu(repositorio, ativos)
 
         elif opcao == "2":
-            mostrar_lista_de_ativos(ativos)
             atualizar_dependencia_menu(repositorio, ativos)
 
         elif opcao == "3":
-            mostrar_lista_de_ativos(ativos)
             excluir_dependencia_menu(repositorio, ativos)
 
         elif opcao == "4":

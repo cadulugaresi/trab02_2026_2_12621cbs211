@@ -1,5 +1,5 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.interface.ativos import perguntar_ativo
+from inventario.interface.ativos import mostrar_lista_de_ativos, perguntar_ativo
 from inventario.interface.entradas import pedir_float, pedir_int
 from inventario.servicos.dependencias import (
     cadastrar_dependencia,
@@ -27,7 +27,22 @@ def mostrar_dependencias(ativo, ativos):
     Soma das frações: {soma}. Ainda cabem {round(1 - soma, 6)}.""")
 
 
+def escolher_ativo_com_dependencias(ativos, mensagem):
+    mostrar_lista_de_ativos(ativos)
+
+    ativo_encontrado = perguntar_ativo(ativos, mensagem)
+
+    if ativo_encontrado is None:
+        return None
+    elif not ativo_encontrado.dependencias:
+        print("Este ativo não possui dependências cadastradas.")
+        return None
+    else:
+        return ativo_encontrado
+
+
 def cadastrar_dependencia_menu(repositorio, ativos):
+    mostrar_lista_de_ativos(ativos)
 
     ativo_que_depende = perguntar_ativo(
         ativos, "ID do ativo ao qual deseja adicionar uma dependência: "
@@ -53,13 +68,11 @@ def cadastrar_dependencia_menu(repositorio, ativos):
 
 def excluir_dependencia_menu(repositorio, ativos):
 
-    ativo_que_depende = perguntar_ativo(ativos, "ID do ativo cuja dependência deseja remover: ")
+    ativo_que_depende = escolher_ativo_com_dependencias(
+        ativos, "ID do ativo cuja dependência deseja remover: "
+    )
 
     if ativo_que_depende is None:
-        return
-
-    if not ativo_que_depende.dependencias:
-        print("Este ativo não possui dependências cadastradas.")
         return
 
     try:
@@ -78,13 +91,11 @@ def excluir_dependencia_menu(repositorio, ativos):
 
 
 def atualizar_dependencia_menu(repositorio, ativos):
-    ativo_que_depende = perguntar_ativo(ativos, "ID do ativo cujas dependências deseja atualizar: ")
+    ativo_que_depende = escolher_ativo_com_dependencias(
+        ativos, "ID do ativo cujas dependências deseja atualizar: "
+    )
 
     if ativo_que_depende is None:
-        return
-
-    if not ativo_que_depende.dependencias:
-        print("Este ativo não possui dependências cadastradas.")
         return
 
     try:
