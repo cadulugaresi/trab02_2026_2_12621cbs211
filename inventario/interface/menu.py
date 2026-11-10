@@ -89,7 +89,6 @@ def menu_principal(repositorio, ativos, catalogo):
                     print(
                         "É preciso ter pelo menos dois ativos cadastrados para acessar o menu de dependências."
                     )
-                    continue
                 else:
                     menu_dependencias(repositorio, ativos)
 
