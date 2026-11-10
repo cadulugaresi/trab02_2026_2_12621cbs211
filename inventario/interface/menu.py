@@ -340,8 +340,16 @@ def menu_dependencias(repositorio, ativos):
                 todos_ou_um = input("(todos/um): ").strip().lower()
 
                 if todos_ou_um == "todos":
-                    print("Listando as dependências de todos os ativos...")
+                    ativos_com_dependencias = []
+
                     for ativo in listar_ativos_ordenados(ativos, por_nome):
+                        if ativo.dependencias:
+                            ativos_com_dependencias.append(ativo)
+
+                    if not ativos_com_dependencias:
+                        print("Nenhum ativo possui dependências cadastradas.")
+
+                    for ativo in ativos_com_dependencias:
                         mostrar_cabecalho_do_ativo(ativo)
                         mostrar_dependencias(ativo, ativos)
 

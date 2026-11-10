@@ -304,6 +304,10 @@ class TestMenuRemoverDependencia(TesteDoMenuDeDependencias):
 class TestMenuListarDependencias(TesteDoMenuDeDependencias):
 
     def test_todos_lista_os_ativos_em_ordem_de_nome(self):
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
+        cadastrar_dependencia(self.repositorio, self.ativos, 2, 3, 0.4)
+        cadastrar_dependencia(self.repositorio, self.ativos, 3, 1, 0.3)
+
         saida = self.usar_menu(["4", "todos", "5"])
 
         posicao_cisco = saida.index("3 - Cisco (Roteador)")
@@ -347,4 +351,20 @@ class TestMenuListarDependencias(TesteDoMenuDeDependencias):
         saida = self.usar_menu(["4", "talvez", "todos", "5"])
 
         self.assertIn('Opção inválida. Digite "todos" ou "um".', saida)
-        self.assertIn("Listando as dependências de todos os ativos...", saida)
+        self.assertIn("Nenhum ativo possui dependências cadastradas.", saida)
+
+    def test_todos_sem_nenhuma_dependencia_avisa(self):
+        saida = self.usar_menu(["4", "todos", "5"])
+
+        self.assertIn("Nenhum ativo possui dependências cadastradas.", saida)
+        self.assertNotIn("1 - Dell (Notebook)", saida)
+
+    def test_todos_mostra_so_os_ativos_com_dependencias(self):
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
+
+        saida = self.usar_menu(["4", "todos", "5"])
+
+        self.assertIn("1 - Dell (Notebook)", saida)
+        self.assertNotIn("2 - PowerEdge (Servidor)", saida)
+        self.assertNotIn("3 - Cisco (Roteador)", saida)
+        self.assertNotIn("Nenhum ativo possui dependências cadastradas.", saida)
