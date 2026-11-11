@@ -91,7 +91,6 @@ class Notebook(Ativo):
             dicionario_do_ativo["sistema_operacional"],
             dicionario_do_ativo["tela"],
             dicionario_do_ativo.get("fator_exposicao"),
-            
         )
 
 
@@ -172,7 +171,7 @@ class Servidor(Ativo):
 
 
 class Impressora(Ativo):
-    FATOR_EXPOSICAO_PADRAO = 0.7
+    FATOR_EXPOSICAO_PADRAO = 0.9
 
     def __init__(self, id, nome, setor, responsavel, status, cor, tecnologia, fator_exposicao=None):
         super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
