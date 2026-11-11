@@ -2,8 +2,9 @@ from inventario.dominio.enums import Cor, Setor, StatusDoAtivo, Tecnologia
 
 
 class Ativo:
+    FATOR_EXPOSICAO_PADRAO = 1.0
 
-    def __init__(self, id, nome, setor, responsavel, status):
+    def __init__(self, id, nome, setor, responsavel, status, fator_exposicao=None):
         self.id = id
         self.nome = nome
         self.setor = setor
@@ -11,6 +12,10 @@ class Ativo:
         self.status = status
         self.vulnerabilidades = {}
         self.dependencias = {}
+        if fator_exposicao is None:
+            self.fator_exposicao = self.FATOR_EXPOSICAO_PADRAO
+        else:
+            self.fator_exposicao = fator_exposicao
 
     def exibir_detalhes(self):
         return f"""
@@ -20,6 +25,7 @@ class Ativo:
             Setor: {self.setor.name}
             Responsável: {self.responsavel}
             Status: {self.status.name}
+            Fator de exposição: {self.fator_exposicao}
             """
 
     def para_dicionario(self):
@@ -46,12 +52,17 @@ class Ativo:
             "status": self.status.value,
             "vulnerabilidades": lista_de_vulns,
             "dependencias": lista_de_dependencias,
+            "fator_exposicao": self.fator_exposicao,
         }
 
 
 class Notebook(Ativo):
-    def __init__(self, id, nome, setor, responsavel, status, sistema_operacional, tela):
-        super().__init__(id, nome, setor, responsavel, status)
+    FATOR_EXPOSICAO_PADRAO = 1.2
+
+    def __init__(
+        self, id, nome, setor, responsavel, status, sistema_operacional, tela, fator_exposicao=None
+    ):
+        super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.sistema_operacional = sistema_operacional
         self.tela = tela
 
@@ -79,12 +90,18 @@ class Notebook(Ativo):
             StatusDoAtivo(dicionario_do_ativo["status"]),
             dicionario_do_ativo["sistema_operacional"],
             dicionario_do_ativo["tela"],
+            dicionario_do_ativo.get("fator_exposicao"),
+            
         )
 
 
 class Roteador(Ativo):
-    def __init__(self, id, nome, setor, responsavel, status, portas, velocidade):
-        super().__init__(id, nome, setor, responsavel, status)
+    FATOR_EXPOSICAO_PADRAO = 1.5
+
+    def __init__(
+        self, id, nome, setor, responsavel, status, portas, velocidade, fator_exposicao=None
+    ):
+        super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.portas = portas
         self.velocidade = velocidade
 
@@ -112,12 +129,17 @@ class Roteador(Ativo):
             StatusDoAtivo(dicionario_do_ativo["status"]),
             dicionario_do_ativo["portas"],
             dicionario_do_ativo["velocidade"],
+            dicionario_do_ativo.get("fator_exposicao"),
         )
 
 
 class Servidor(Ativo):
-    def __init__(self, id, nome, setor, responsavel, status, ram, armazenamento):
-        super().__init__(id, nome, setor, responsavel, status)
+    FATOR_EXPOSICAO_PADRAO = 1.3
+
+    def __init__(
+        self, id, nome, setor, responsavel, status, ram, armazenamento, fator_exposicao=None
+    ):
+        super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.ram = ram
         self.armazenamento = armazenamento
 
@@ -145,12 +167,15 @@ class Servidor(Ativo):
             StatusDoAtivo(dicionario_do_ativo["status"]),
             dicionario_do_ativo["ram"],
             dicionario_do_ativo["armazenamento"],
+            dicionario_do_ativo.get("fator_exposicao"),
         )
 
 
 class Impressora(Ativo):
-    def __init__(self, id, nome, setor, responsavel, status, cor, tecnologia):
-        super().__init__(id, nome, setor, responsavel, status)
+    FATOR_EXPOSICAO_PADRAO = 0.7
+
+    def __init__(self, id, nome, setor, responsavel, status, cor, tecnologia, fator_exposicao=None):
+        super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.cor = cor
         self.tecnologia = tecnologia
 
@@ -178,6 +203,7 @@ class Impressora(Ativo):
             StatusDoAtivo(dicionario_do_ativo["status"]),
             Cor(dicionario_do_ativo["cor"]),
             Tecnologia(dicionario_do_ativo["tecnologia"]),
+            dicionario_do_ativo.get("fator_exposicao"),
         )
 
 
