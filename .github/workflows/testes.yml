@@ -21,7 +21,7 @@ jobs:
 
       - name: Instalar dependências
         run: |
-          pip install pytest flake8 coverage
+          pip install pytest flake8 coverage numpy
 
       - name: Rodar flake8 (linting)
         run: |
@@ -29,7 +29,7 @@ jobs:
 
       - name: Rodar testes com unittest
         run: |
-          python -m unittest tests/testes.py tests/test_vulnerabilidades.py tests/test_persistencia.py tests/test_repositorio.py tests/test_repositorio_sqlite.py tests/test_dependencias.py
+          python -m unittest tests/testes.py tests/test_vulnerabilidades.py tests/test_persistencia.py tests/test_repositorio.py tests/test_repositorio_sqlite.py tests/test_dependencias.py tests/test_risco.py
 
       - name: Rodar testes com pytest
         run: |
