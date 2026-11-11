@@ -20,12 +20,12 @@ A mesma fábrica é usada pelo `RepositorioJSON` e pelo `RepositorioSQLite`, e a
 
 **Problema:** os serviços gravavam e liam dados chamando funções do módulo de arquivos JSON. Trocar o armazenamento exigiria mudar todos eles.
 
-**Solução:** a classe abstrata `Repositorio` (`inventario/persistencia/repositorio.py`) define as operações de dados (carregar, adicionar, atualizar e remover ativos e vulnerabilidades, e as operações de vínculo). Há duas implementações:
+**Solução:** as operações de dados (carregar, adicionar, atualizar e remover ativos e vulnerabilidades, e as operações de vínculo e de dependência) ficam em classes de repositório. Há duas implementações, que oferecem as mesmas operações:
 
 - `RepositorioSQLite` (`banco_sqlite.py`): o armazenamento do programa, em `inventario.db`;
 - `RepositorioJSON` (`arquivos_json.py`): arquivos JSON com escrita atômica.
 
-Os serviços recebem o repositório como parâmetro e não sabem qual implementação estão usando. A mesma suíte de testes de contrato roda nas duas.
+Os serviços recebem o repositório como parâmetro e não sabem qual implementação estão usando. A mesma suíte de testes de contrato roda nas duas e garante que elas continuam oferecendo as mesmas operações.
 
 ## ✨ Strategy
 

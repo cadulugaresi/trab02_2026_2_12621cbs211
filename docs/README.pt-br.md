@@ -39,7 +39,7 @@ Modelo baseado em álgebra linear que estima o risco de cada ativo a partir de s
 
 ### Geral
 - **Persistência de dados**: os ativos, o catálogo e os vínculos são salvos em um banco SQLite (`inventario.db`), com uma tabela por tipo de ativo e a tabela associativa `vinculos` entre ativos e vulnerabilidades, e recarregados a cada execução
-- **Armazenamento substituível**: o programa depende só da interface abstrata `Repositorio`; o `RepositorioSQLite` é o armazenamento em uso, e o `RepositorioJSON` (arquivos JSON) é mantido como segunda implementação, que passa nos mesmos testes
+- **Armazenamento substituível**: os serviços recebem um `repositorio` como parâmetro (injeção de dependência feita no `main.py`) e não importam a persistência; o `RepositorioSQLite` é o armazenamento em uso, e o `RepositorioJSON` (arquivos JSON) é mantido como segunda implementação, que oferece as mesmas operações, o que é garantido pela suíte de testes de contrato
 - **Índice por ID**: ativos e vulnerabilidades do catálogo são armazenados em dicionários indexados por ID, permitindo busca eficiente e em tempo constante (O(1))
 - **Tratamento de erro global**: Ctrl+C e Ctrl+D em qualquer ponto do programa encerram de forma limpa, sem traceback
 
@@ -61,7 +61,6 @@ flowchart TD
     interface["INTERFACE<br/>inventario/interface<br/>menu.py, ativos.py, vulnerabilidades.py,<br/>entradas.py, conversao_das_opcoes_do_menu.py"]
     servicos["SERVIÇOS<br/>inventario/servicos<br/>ativos.py, vulnerabilidades.py"]
     subgraph persistencia["PERSISTÊNCIA · inventario/persistencia"]
-        repositorio["Repositorio<br/>repositorio.py<br/>interface abstrata"]
         repositorioSQLite["RepositorioSQLite<br/>banco_sqlite.py + esquema.sql<br/>armazenamento em uso (inventario.db)"]
         repositorioJSON["RepositorioJSON<br/>arquivos_json.py<br/>segunda implementação"]
     end
@@ -70,9 +69,7 @@ flowchart TD
     main --> interface
     main -->|cria e injeta| repositorioSQLite
     interface --> servicos
-    servicos --> repositorio
-    repositorio -->|implementado por| repositorioSQLite
-    repositorio -->|implementado por| repositorioJSON
+    servicos -->|recebem o repositorio por parâmetro| persistencia
     interface -.-> dominio
     servicos -.-> dominio
     persistencia -.-> dominio
@@ -86,14 +83,14 @@ flowchart TD
     class main corMain
     class interface corInterface
     class servicos corServicos
-    class repositorio,repositorioSQLite,repositorioJSON corPersistencia
+    class repositorioSQLite,repositorioJSON corPersistencia
     class dominio corDominio
     style persistencia fill:#181825,stroke:#fab387,stroke-width:2px,color:#cdd6f4
 
     linkStyle default stroke:#9399b2,stroke-width:2px
 ```
 
-**Regra de dependência:** as setas só apontam para baixo. A interface chama os serviços, e os serviços chamam a persistência pelo `Repositorio` abstrato, nunca por uma implementação concreta. Só o `main.py` sabe qual implementação é usada: ele cria o `RepositorioSQLite` e o injeta no menu, que o repassa para as telas da interface e para os serviços. Todas as camadas podem usar o domínio (setas tracejadas), mas o domínio não importa nenhuma outra camada.
+**Regra de dependência:** as setas só apontam para baixo. A interface chama os serviços, e os serviços usam o `repositorio` que recebem como parâmetro, sem importar a persistência. Só o `main.py` sabe qual implementação é usada: ele cria o `RepositorioSQLite` e o injeta no menu, que o repassa para as telas da interface e para os serviços. As duas implementações (`RepositorioSQLite` e `RepositorioJSON`) oferecem as mesmas operações, e isso é garantido pela suíte de testes de contrato. Todas as camadas podem usar o domínio (setas tracejadas), mas o domínio não importa nenhuma outra camada.
 
 ### Responsabilidade de cada camada
 
@@ -106,8 +103,7 @@ flowchart TD
 - **Serviços** (`inventario/servicos/`): concentram as operações de cadastro, busca, edição, exclusão e associação. Recebem o repositório e os dados prontos por parâmetro, aplicam as regras, salvam pelo repositório (`repositorio.adicionar_ativo`, `repositorio.vincular`...) e lançam `DadoInvalidoError` quando algo está errado. Não usam `input` nem `print`.
   - `ativos.py`: `registrar_ativo_no_inventario`, `atualizar_ativo_no_inventario`, `remover_ativo_do_inventario`, `obter_ativo` e as buscas (`encontrar_ativo_por_id`, `encontrar_ativos_por_nome`, `encontrar_ativos_por_status`, `encontrar_ativos_por_tipo`)
   - `vulnerabilidades.py`: `registrar_vulnerabilidade_no_catalogo`, `atualizar_vulnerabilidade_no_catalogo`, `excluir_vulnerabilidade_do_catalogo`, `vincular_vulnerabilidade`, `desvincular_vulnerabilidade`, `atualizar_status_vulnerabilidade` e `proximo_id`
-- **Persistência** (`inventario/persistencia/`): salva e carrega os dados e traduz as falhas do armazenamento em `PersistenciaError`.
-  - `repositorio.py`: `Repositorio`, a interface abstrata (`ABC`) com as 11 operações que todo armazenamento precisa oferecer: `carregar_ativos`, `carregar_catalogo`, `adicionar_ativo`, `atualizar_ativo`, `remover_ativo`, `adicionar_vulnerabilidade`, `atualizar_vulnerabilidade`, `remover_vulnerabilidade`, `vincular`, `atualizar_status_vinculo` e `desvincular`
+- **Persistência** (`inventario/persistencia/`): salva e carrega os dados e traduz as falhas do armazenamento em `PersistenciaError`. As duas implementações oferecem as mesmas 14 operações, conferidas pela suíte de testes de contrato: `carregar_ativos`, `carregar_catalogo`, `adicionar_ativo`, `atualizar_ativo`, `remover_ativo`, `adicionar_vulnerabilidade`, `atualizar_vulnerabilidade`, `remover_vulnerabilidade`, `vincular`, `atualizar_status_vinculo`, `desvincular`, `adicionar_dependencia`, `remover_dependencia` e `atualizar_dependencia`.
   - `banco_sqlite.py`: `RepositorioSQLite`, o armazenamento usado pelo programa (`inventario.db`); cria as tabelas ao iniciar, liga as chaves estrangeiras e remonta cada ativo com um `JOIN` entre `ativos` e a tabela do tipo dele
   - `esquema.sql`: o esquema do banco: a tabela `ativos`, uma tabela por tipo (`notebooks`, `servidores`, `roteadores`, `impressoras`), `vulnerabilidades` e a tabela associativa `vinculos`, todas com `ON DELETE CASCADE`
   - `arquivos_json.py`: `RepositorioJSON`, a segunda implementação, que salva em `ativos.json` e `vulnerabilidades.json` com escrita atômica
@@ -136,7 +132,7 @@ menu_principal                         (interface)     usuário escolhe a opçã
 - **Erros sobem, a interface mostra:** os serviços e o domínio lançam `DadoInvalidoError` com a mensagem; a interface captura e exibe essa mensagem. O texto de cada erro fica escrito em um lugar só.
 - **Validação em profundidade:** regras como a faixa do CVSS (`validar_cvss`) ficam no domínio e são usadas tanto pela interface (para pedir de novo) quanto pelos serviços (como garantia, venha o dado de onde vier).
 - **Uma lista de tipos só:** a lista de tipos de ativo mora no domínio (`MAPA_DE_TIPOS`); a numeração do menu (`TIPOS_DE_ATIVOS`) é gerada a partir dela pela interface.
-- **Depender da abstração:** os serviços recebem um `Repositorio` por parâmetro, em vez de importar um módulo de armazenamento. Trocar os arquivos JSON pelo banco SQLite mexeu só na camada de persistência e no repositório criado no `main.py`.
+- **Depender da abstração:** os serviços recebem um `repositorio` por parâmetro, em vez de importar um módulo de armazenamento. Trocar os arquivos JSON pelo banco SQLite mexeu só na camada de persistência e no repositório criado no `main.py`.
 - **Cada operação salva só o que mudou:** em vez de regravar tudo, cada serviço chama a operação correspondente do repositório (`adicionar_ativo`, `desvincular`...), que vira um único `INSERT`, `UPDATE` ou `DELETE` no banco.
 - **Preparado para mudanças:** trocar o terminal por um serviço HTTP mexe só na camada de interface.
 
@@ -165,7 +161,6 @@ menu_principal                         (interface)     usuário escolhe a opçã
 │   │   ├── ativos.py
 │   │   └── vulnerabilidades.py
 │   ├── persistencia/
-│   │   ├── repositorio.py
 │   │   ├── banco_sqlite.py
 │   │   ├── esquema.sql
 │   │   └── arquivos_json.py
@@ -259,7 +254,7 @@ python3 -m flake8 main.py inventario
 python3 -m black --check main.py inventario
 ```
 
-**Suíte de contrato do repositório:** `tests/contrato_repositorio.py` define o `ContratoDoRepositorio`, um conjunto de 17 testes que descreve o que todo `Repositorio` precisa fazer: gravar e recarregar ativos, catálogo e vínculos; atualizá-los, inclusive trocando o tipo de um ativo; e removê-los, tirando de todos os ativos uma vulnerabilidade removida. A mesma suíte roda nas duas implementações:
+**Suíte de contrato do repositório:** `tests/contrato_repositorio.py` define o `ContratoDoRepositorio`, um conjunto de 24 testes que descreve o que todo repositório precisa fazer: gravar e recarregar ativos, catálogo, vínculos e dependências entre ativos; atualizá-los, inclusive trocando o tipo de um ativo; e removê-los, tirando de todos os ativos uma vulnerabilidade removida. A mesma suíte roda nas duas implementações:
 - `tests/test_repositorio.py`: `TestRepositorioJSON`, com arquivos JSON temporários
 - `tests/test_repositorio_sqlite.py`: `TestRepositorioSQLite`, com um banco temporário, e mais um teste que confere que um banco corrompido lança `PersistenciaError`
 
