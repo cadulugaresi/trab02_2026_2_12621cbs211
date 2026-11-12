@@ -774,6 +774,15 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
         self.assertEqual(self.ativos[1].vulnerabilidades, {3: StatusDaVuln.ABERTA})
         self.assertIsInstance(carregar_ativos()[1], Servidor)
 
+    def test_trocar_tipo_volta_o_fator_para_o_padrao_do_tipo_novo(self):
+        self.notebook.fator_exposicao = 1.7
+        salvar_ativos(self.ativos)
+        with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "7"]):
+            with patch("builtins.print"):
+                editar_ativo(self.repositorio, self.ativos)
+        self.assertEqual(self.ativos[1].fator_exposicao, Servidor.FATOR_EXPOSICAO_PADRAO)
+        self.assertEqual(carregar_ativos()[1].fator_exposicao, Servidor.FATOR_EXPOSICAO_PADRAO)
+
     def test_id_inexistente_nao_abre_o_menu(self):
         with patch("builtins.input", side_effect=["99"]) as entrada:
             editar_ativo(self.repositorio, self.ativos)
