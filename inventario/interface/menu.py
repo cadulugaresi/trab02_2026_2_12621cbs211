@@ -24,6 +24,7 @@ from inventario.interface.vulnerabilidades import (
     mostrar_vulnerabilidades_do_ativo,
     vincular_a_um_ativo,
 )
+from inventario.interface.riscos import analisar_risco
 from inventario.servicos.ativos import (
     encontrar_ativo_por_id,
     encontrar_ativos_por_nome,
@@ -42,8 +43,6 @@ from inventario.interface.dependencias import (
     cadastrar_dependencia_menu,
     excluir_dependencia_menu,
 )
-
-from inventario.servicos.riscos import AnaliseDeRisco
 
 from inventario.servicos.ordenacao import (
     listar_ativos_ordenados,
@@ -95,31 +94,7 @@ def menu_principal(repositorio, ativos, catalogo):
                     menu_dependencias(repositorio, ativos)
 
             elif opcao == "7":
-                if len(ativos) == 0:
-                    print("Não há ativos cadastrados para analisar.")
-                else:
-                    try:
-                        analise = AnaliseDeRisco(ativos, catalogo)
-                        print("\n=== Análise de risco ===\n")
-                        for posicao, id_ativo in enumerate(analise.ranking(), start=1):
-                            ativo = ativos[id_ativo]
-                            print(
-                                f"{posicao}º {ativo.nome} ({type(ativo).__name__}) "
-                                f"| fator: {ativo.fator_exposicao} "
-                                f"| próprio: {analise.risco_proprio_do_ativo(id_ativo):.2f} "
-                                f"| herdado: {analise.risco_herdado_do_ativo(id_ativo):.2f} "
-                                f"| efetivo: {analise.risco_efetivo_do_ativo(id_ativo):.2f}"
-                            )
-                        print("\n=== Legenda ===\n")
-                        print(
-                            "Fator:   peso do tipo do ativo; quanto maior, mais exposto\n"
-                            "Próprio: fator × soma dos CVSS das vulnerabilidades não corrigidas\n"
-                            "Herdado: fração × risco efetivo de cada ativo do qual ele depende\n"
-                            "Efetivo: próprio + herdado; é o que ordena o ranking"
-                        )
-
-                    except DadoInvalidoError as erro:
-                        print(erro)
+                analisar_risco(ativos, catalogo)
 
             elif opcao == "8":
                 print("Saindo do programa...")
