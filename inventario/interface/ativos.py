@@ -229,6 +229,10 @@ def editar_ativo(repositorio, ativos):
             ativo_encontrado = novo_ativo
             print("Tipo do ativo atualizado com sucesso!")
             print(f"Tipo atual: {type(novo_ativo).__name__}.")
+            print(
+                f"Fator de exposição voltou para o padrão de {type(novo_ativo).__name__}: "
+                f"{novo_ativo.fator_exposicao}."
+            )
 
         elif opcao == "6":
             ativo_encontrado.fator_exposicao = pedir_fator_exposicao(
