@@ -43,6 +43,8 @@ from inventario.interface.dependencias import (
     excluir_dependencia_menu,
 )
 
+from inventario.servicos.riscos import AnaliseDeRisco
+
 from inventario.servicos.ordenacao import (
     listar_ativos_ordenados,
     CRITERIOS_DE_ORDENACAO,
@@ -55,17 +57,17 @@ def menu_principal(repositorio, ativos, catalogo):
 
         try:
 
-            print("""
-            MENU PRINCIPAL
-
-            1 - Cadastrar ativo
-            2 - Listar ativo
-            3 - Excluir ativo
-            4 - Menu de vulnerabilidades
-            5 - Editar ativo
-            6 - Menu de dependências
-            7 - Sair
-            """)
+            print("\n=== Menu principal ===\n")
+            print(
+                "1 - Cadastrar ativo\n"
+                "2 - Listar ativo\n"
+                "3 - Excluir ativo\n"
+                "4 - Menu de vulnerabilidades\n"
+                "5 - Editar ativo\n"
+                "6 - Menu de dependências\n"
+                "7 - Análise de risco\n"
+                "8 - Sair"
+            )
 
             opcao = input("Escolha uma opção: ").strip()
 
@@ -93,6 +95,33 @@ def menu_principal(repositorio, ativos, catalogo):
                     menu_dependencias(repositorio, ativos)
 
             elif opcao == "7":
+                if len(ativos) == 0:
+                    print("Não há ativos cadastrados para analisar.")
+                else:
+                    try:
+                        analise = AnaliseDeRisco(ativos, catalogo)
+                        print("\n=== Análise de risco ===\n")
+                        for posicao, id_ativo in enumerate(analise.ranking(), start=1):
+                            ativo = ativos[id_ativo]
+                            print(
+                                f"{posicao}º {ativo.nome} ({type(ativo).__name__}) "
+                                f"| fator: {ativo.fator_exposicao} "
+                                f"| próprio: {analise.risco_proprio_do_ativo(id_ativo):.2f} "
+                                f"| herdado: {analise.risco_herdado_do_ativo(id_ativo):.2f} "
+                                f"| efetivo: {analise.risco_efetivo_do_ativo(id_ativo):.2f}"
+                            )
+                        print("\n=== Legenda ===\n")
+                        print(
+                            "Fator:   peso do tipo do ativo; quanto maior, mais exposto\n"
+                            "Próprio: fator × soma dos CVSS das vulnerabilidades não corrigidas\n"
+                            "Herdado: fração × risco efetivo de cada ativo do qual ele depende\n"
+                            "Efetivo: próprio + herdado; é o que ordena o ranking"
+                        )
+
+                    except DadoInvalidoError as erro:
+                        print(erro)
+
+            elif opcao == "8":
                 print("Saindo do programa...")
                 break
 
@@ -109,17 +138,18 @@ def menu_principal(repositorio, ativos, catalogo):
 
 def menu_vulnerabilidades(repositorio, ativos, catalogo):
     while True:
-        print("""MENU DE VULNERABILIDADES
-
-                1 - Cadastrar vulnerabilidade
-                2 - Listar catálogo de vulnerabilidades
-                3 - Vincular vulnerabilidade a um ativo
-                4 - Listar vulnerabilidades de um ativo
-                5 - Atualizar status da vulnerabilidade em um ativo
-                6 - Desvincular vulnerabilidade de um ativo
-                7 - Excluir vulnerabilidade do catálogo
-                8 - Editar vulnerabilidade no catálogo
-                9 - Voltar ao menu principal""")
+        print("\n=== Menu de vulnerabilidades ===\n")
+        print(
+            "1 - Cadastrar vulnerabilidade\n"
+            "2 - Listar catálogo de vulnerabilidades\n"
+            "3 - Vincular vulnerabilidade a um ativo\n"
+            "4 - Listar vulnerabilidades de um ativo\n"
+            "5 - Atualizar status da vulnerabilidade em um ativo\n"
+            "6 - Desvincular vulnerabilidade de um ativo\n"
+            "7 - Excluir vulnerabilidade do catálogo\n"
+            "8 - Editar vulnerabilidade no catálogo\n"
+            "9 - Voltar ao menu principal"
+        )
 
         opcao_vulnerabilidade = input("Escolha uma opção: ").strip()
 
@@ -248,10 +278,7 @@ def menu_listagem(ativos):
                 print("Nenhum ativo cadastrado.")
                 continue
 
-            print("""
-            1 - Tipo
-            2 - Status
-            """)
+            print("\n1 - Tipo\n2 - Status")
 
             filtro = input("Deseja filtrar por TIPO ou STATUS do ativo?").strip()
 
@@ -309,15 +336,14 @@ def menu_listagem(ativos):
 
 def menu_dependencias(repositorio, ativos):
     while True:
-        print("""
-        MENU DE DEPENDÊNCIAS
-
-        1 - Adicionar dependência
-        2 - Atualizar dependência
-        3 - Remover dependência
-        4 - Listar dependências
-        5 - Voltar ao menu principal
-        """)
+        print("\n=== Menu de dependências ===\n")
+        print(
+            "1 - Adicionar dependência\n"
+            "2 - Atualizar dependência\n"
+            "3 - Remover dependência\n"
+            "4 - Listar dependências\n"
+            "5 - Voltar ao menu principal"
+        )
 
         opcao = input("Escolha uma opção: ").strip()
 
