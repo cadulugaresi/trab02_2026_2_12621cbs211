@@ -6,6 +6,8 @@ RUN useradd --create-home inventario && mkdir -p /app/dados && chown inventario 
 
 WORKDIR /app
 
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
 COPY main.py .
 COPY inventario/ inventario/
 
