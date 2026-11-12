@@ -195,23 +195,16 @@ def pedir_tecnologia():
     return tecnologia
 
 
-def pedir_fator_exposicao(fator_atual):
-
+def pedir_fator_exposicao(mensagem, fator_sugerido=None):
     while True:
-        novo_fator_exposicao = (
-            input(f"Digite o fator de exposição ou tecle Enter para manter {fator_atual}: ")
-            .strip()
-            .replace(",", ".")
-        )
+        novo_fator_exposicao = input(mensagem).strip().replace(",", ".")
 
-        if novo_fator_exposicao == "":
-            return fator_atual
-
-        try:
-            return validar_fator_exposicao(float(novo_fator_exposicao))
-
-        except ValueError:
-            print("Digite um número válido")
-
-        except DadoInvalidoError as erro:
-            print(erro)
+        if novo_fator_exposicao == "" and fator_sugerido is not None:
+            return fator_sugerido
+        else:
+            try:
+                return validar_fator_exposicao(float(novo_fator_exposicao))
+            except ValueError:
+                print("Digite um número válido")
+            except DadoInvalidoError as erro:
+                print(erro)

@@ -95,8 +95,11 @@ def cadastrar_ativo(repositorio, ativos):
         cor, tecnologia = cadastro_impressora()
         ativo = Impressora(id_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
 
-    print(f"Fator de exposição sugerido para {type(ativo).__name__}: {ativo.fator_exposicao}")
-    ativo.fator_exposicao = pedir_fator_exposicao(ativo.fator_exposicao)
+    ativo.fator_exposicao = pedir_fator_exposicao(
+        f"Fator de exposição sugerido para {type(ativo).__name__}: {ativo.fator_exposicao}. "
+        "Digite outro valor ou tecle Enter para aceitar: ",
+        ativo.fator_exposicao,
+    )
 
     registrar_ativo_no_inventario(repositorio, ativos, ativo)
     print("Ativo cadastrado com sucesso!")
@@ -235,9 +238,7 @@ def editar_ativo(repositorio, ativos):
             )
 
         elif opcao == "6":
-            ativo_encontrado.fator_exposicao = pedir_fator_exposicao(
-                ativo_encontrado.fator_exposicao
-            )
+            ativo_encontrado.fator_exposicao = pedir_fator_exposicao("Novo fator de exposição: ")
             print("Fator de exposição atualizado com sucesso.")
             print(f"Fator de exposição atual: {ativo_encontrado.fator_exposicao}.")
 
