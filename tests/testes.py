@@ -801,12 +801,10 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
         self.assertEqual(self.ativos[1].fator_exposicao, 1.4)
         self.assertEqual(carregar_ativos()[1].fator_exposicao, 1.4)
 
-    def test_enter_na_edicao_mantem_o_fator_atual(self):
-        self.notebook.fator_exposicao = 1.7
-        salvar_ativos(self.ativos)
-        self.editar_fator_do_notebook([""])
-        self.assertEqual(self.ativos[1].fator_exposicao, 1.7)
-        self.assertEqual(carregar_ativos()[1].fator_exposicao, 1.7)
+    def test_enter_na_edicao_pergunta_de_novo(self):
+        self.editar_fator_do_notebook(["", "1.4"])
+        self.assertEqual(self.ativos[1].fator_exposicao, 1.4)
+        self.assertEqual(carregar_ativos()[1].fator_exposicao, 1.4)
 
     def test_fator_invalido_na_edicao_pergunta_de_novo(self):
         self.editar_fator_do_notebook(["abc", "3", "1.4"])
@@ -815,22 +813,28 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
 
 class TestPedirFatorExposicao(unittest.TestCase):
 
-    def pedir_com_respostas(self, respostas, fator_atual):
+    def pedir_com_respostas(self, respostas, fator_sugerido=None):
         with patch("builtins.input", side_effect=respostas):
             with patch("builtins.print"):
-                return pedir_fator_exposicao(fator_atual)
+                return pedir_fator_exposicao("Fator de exposição: ", fator_sugerido)
 
-    def test_enter_devolve_o_fator_atual(self):
+    def test_enter_com_sugerido_devolve_o_sugerido(self):
         self.assertEqual(self.pedir_com_respostas([""], 1.3), 1.3)
+
+    def test_enter_sem_sugerido_pergunta_de_novo(self):
+        self.assertEqual(self.pedir_com_respostas(["", "1.4"]), 1.4)
+
+    def test_espaco_com_sugerido_conta_como_enter(self):
+        self.assertEqual(self.pedir_com_respostas(["   "], 1.3), 1.3)
 
     def test_devolve_o_numero_digitado(self):
         self.assertEqual(self.pedir_com_respostas(["1.4"], 1.3), 1.4)
 
     def test_aceita_virgula(self):
-        self.assertEqual(self.pedir_com_respostas(["0,8"], 1.3), 0.8)
+        self.assertEqual(self.pedir_com_respostas(["0,8"]), 0.8)
 
     def test_pergunta_de_novo_ate_receber_valor_valido(self):
-        self.assertEqual(self.pedir_com_respostas(["abc", "0", "2.5", "2"], 1.3), 2)
+        self.assertEqual(self.pedir_com_respostas(["abc", "0", "2.5", "2"]), 2)
 
 
 if __name__ == "__main__":
