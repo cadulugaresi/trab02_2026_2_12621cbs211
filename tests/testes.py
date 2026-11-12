@@ -9,6 +9,7 @@ from inventario.dominio.enums import (
 )
 from inventario.interface.entradas import (
     pedir_cor,
+    pedir_fator_exposicao,
     pedir_float,
     pedir_info,
     pedir_int,
@@ -762,12 +763,12 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
         salvar_ativos(self.ativos)
 
     def test_editar_responsavel_salva_ao_voltar(self):
-        with patch("builtins.input", side_effect=["1", "1", "Ana Souza", "6"]):
+        with patch("builtins.input", side_effect=["1", "1", "Ana Souza", "7"]):
             editar_ativo(self.repositorio, self.ativos)
         self.assertEqual(carregar_ativos()[1].responsavel, "Ana Souza")
 
     def test_trocar_tipo_mantem_as_vulnerabilidades(self):
-        with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "6"]):
+        with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "7"]):
             editar_ativo(self.repositorio, self.ativos)
         self.assertIsInstance(self.ativos[1], Servidor)
         self.assertEqual(self.ativos[1].vulnerabilidades, {3: StatusDaVuln.ABERTA})
@@ -777,6 +778,50 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
         with patch("builtins.input", side_effect=["99"]) as entrada:
             editar_ativo(self.repositorio, self.ativos)
         self.assertEqual(entrada.call_count, 1)
+
+    def editar_fator_do_notebook(self, respostas_do_fator):
+        respostas = ["1", "6"]
+        respostas.extend(respostas_do_fator)
+        respostas.append("7")
+        with patch("builtins.input", side_effect=respostas):
+            with patch("builtins.print"):
+                editar_ativo(self.repositorio, self.ativos)
+
+    def test_editar_fator_salva_ao_voltar(self):
+        self.editar_fator_do_notebook(["1.4"])
+        self.assertEqual(self.ativos[1].fator_exposicao, 1.4)
+        self.assertEqual(carregar_ativos()[1].fator_exposicao, 1.4)
+
+    def test_enter_na_edicao_mantem_o_fator_atual(self):
+        self.notebook.fator_exposicao = 1.7
+        salvar_ativos(self.ativos)
+        self.editar_fator_do_notebook([""])
+        self.assertEqual(self.ativos[1].fator_exposicao, 1.7)
+        self.assertEqual(carregar_ativos()[1].fator_exposicao, 1.7)
+
+    def test_fator_invalido_na_edicao_pergunta_de_novo(self):
+        self.editar_fator_do_notebook(["abc", "3", "1.4"])
+        self.assertEqual(self.ativos[1].fator_exposicao, 1.4)
+
+
+class TestPedirFatorExposicao(unittest.TestCase):
+
+    def pedir_com_respostas(self, respostas, fator_atual):
+        with patch("builtins.input", side_effect=respostas):
+            with patch("builtins.print"):
+                return pedir_fator_exposicao(fator_atual)
+
+    def test_enter_devolve_o_fator_atual(self):
+        self.assertEqual(self.pedir_com_respostas([""], 1.3), 1.3)
+
+    def test_devolve_o_numero_digitado(self):
+        self.assertEqual(self.pedir_com_respostas(["1.4"], 1.3), 1.4)
+
+    def test_aceita_virgula(self):
+        self.assertEqual(self.pedir_com_respostas(["0,8"], 1.3), 0.8)
+
+    def test_pergunta_de_novo_ate_receber_valor_valido(self):
+        self.assertEqual(self.pedir_com_respostas(["abc", "0", "2.5", "2"], 1.3), 2)
 
 
 if __name__ == "__main__":
