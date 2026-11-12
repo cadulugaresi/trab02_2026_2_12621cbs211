@@ -129,7 +129,7 @@ flowchart TD
 ### Example flow: deleting an asset
 
 ```
-menu_principal                         (interface)     user picks option 3
+menu_principal                         (interface)     user picks option 4
 └── excluir_ativo                      (interface)
     ├── perguntar_ativo                (interface)     asks for the ID
     │   └── obter_ativo                (service)       searches; raises an error if missing
@@ -233,32 +233,32 @@ The program opens an interactive menu in the terminal. Follow the numbered optio
 
 ```
 1 - Cadastrar ativo
-2 - Listar ativo
-3 - Excluir ativo
-4 - Menu de vulnerabilidades
-5 - Editar ativo
+2 - Listar ativos
+3 - Editar ativo
+4 - Excluir ativo
+5 - Menu de vulnerabilidades
 6 - Menu de dependências
 7 - Análise de risco
 8 - Sair
 ```
 
-Inside option 2 (Listar ativo), you can list **all** assets, **filter** by type or status, or show **one** asset by name or ID.
+Inside option 2 (Listar ativos), you can list **all** assets, **filter** by type or status, or show **one** asset by name or ID.
 
-Inside option 4 (Menu de vulnerabilidades), a submenu manages the catalog and the links between vulnerabilities and assets:
+Inside option 3 (Editar ativo), a submenu lets you update the owner, status, department, type-specific attributes, or the type of an asset. Changes are saved when you choose "Voltar".
+
+Inside option 5 (Menu de vulnerabilidades), a submenu manages the catalog and the links between vulnerabilities and assets:
 
 ```
 1 - Cadastrar vulnerabilidade
 2 - Listar catálogo de vulnerabilidades
-3 - Vincular vulnerabilidade a um ativo
-4 - Listar vulnerabilidades de um ativo
-5 - Atualizar status da vulnerabilidade em um ativo
-6 - Desvincular vulnerabilidade de um ativo
-7 - Excluir vulnerabilidade do catálogo
-8 - Editar vulnerabilidade no catálogo
+3 - Editar vulnerabilidade no catálogo
+4 - Excluir vulnerabilidade do catálogo
+5 - Vincular vulnerabilidade a um ativo
+6 - Listar vulnerabilidades de um ativo
+7 - Atualizar status da vulnerabilidade em um ativo
+8 - Desvincular vulnerabilidade de um ativo
 9 - Voltar ao menu principal
 ```
-
-Inside option 5 (Editar ativo), a submenu lets you update the owner, status, department, type-specific attributes, or the type of an asset. Changes are saved when you choose "Voltar".
 
 ### Running the tests
 

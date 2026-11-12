@@ -129,7 +129,7 @@ flowchart TD
 ### Exemplo de fluxo: excluir um ativo
 
 ```
-menu_principal                         (interface)     usuário escolhe a opção 3
+menu_principal                         (interface)     usuário escolhe a opção 4
 └── excluir_ativo                      (interface)
     ├── perguntar_ativo                (interface)     pede o ID
     │   └── obter_ativo                (serviço)       busca; lança erro se não existir
@@ -233,32 +233,32 @@ O programa abre um menu interativo no terminal. Basta seguir as opções numerad
 
 ```
 1 - Cadastrar ativo
-2 - Listar ativo
-3 - Excluir ativo
-4 - Menu de vulnerabilidades
-5 - Editar ativo
+2 - Listar ativos
+3 - Editar ativo
+4 - Excluir ativo
+5 - Menu de vulnerabilidades
 6 - Menu de dependências
 7 - Análise de risco
 8 - Sair
 ```
 
-Dentro da opção 2 (Listar ativo), é possível listar **todos**, **filtrar** por tipo ou status, ou mostrar **um** ativo buscando por nome ou ID.
+Dentro da opção 2 (Listar ativos), é possível listar **todos**, **filtrar** por tipo ou status, ou mostrar **um** ativo buscando por nome ou ID.
 
-Dentro da opção 4 (Menu de vulnerabilidades), um submenu gerencia o catálogo e os vínculos entre vulnerabilidades e ativos:
+Dentro da opção 3 (Editar ativo), um submenu permite atualizar responsável, status, setor, atributos específicos ou o tipo de um ativo. As alterações são salvas ao escolher "Voltar".
+
+Dentro da opção 5 (Menu de vulnerabilidades), um submenu gerencia o catálogo e os vínculos entre vulnerabilidades e ativos:
 
 ```
 1 - Cadastrar vulnerabilidade
 2 - Listar catálogo de vulnerabilidades
-3 - Vincular vulnerabilidade a um ativo
-4 - Listar vulnerabilidades de um ativo
-5 - Atualizar status da vulnerabilidade em um ativo
-6 - Desvincular vulnerabilidade de um ativo
-7 - Excluir vulnerabilidade do catálogo
-8 - Editar vulnerabilidade no catálogo
+3 - Editar vulnerabilidade no catálogo
+4 - Excluir vulnerabilidade do catálogo
+5 - Vincular vulnerabilidade a um ativo
+6 - Listar vulnerabilidades de um ativo
+7 - Atualizar status da vulnerabilidade em um ativo
+8 - Desvincular vulnerabilidade de um ativo
 9 - Voltar ao menu principal
 ```
-
-Dentro da opção 5 (Editar ativo), um submenu permite atualizar responsável, status, setor, atributos específicos ou o tipo de um ativo. As alterações são salvas ao escolher "Voltar".
 
 ### Rodando os testes
 

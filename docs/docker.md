@@ -134,10 +134,10 @@ docker run -it --name inventario inventario:1.0
 === Menu principal ===
 
 1 - Cadastrar ativo
-2 - Listar ativo
-3 - Excluir ativo
-4 - Menu de vulnerabilidades
-5 - Editar ativo
+2 - Listar ativos
+3 - Editar ativo
+4 - Excluir ativo
+5 - Menu de vulnerabilidades
 6 - Menu de dependências
 7 - Análise de risco
 8 - Sair
@@ -181,7 +181,7 @@ Listando todos os ativos...
             Qtde de portas: 5
             Velocidade: 1000MB
 
-Escolha uma opção: 6
+Escolha uma opção: 8
 Saindo do programa...
 ```
 
@@ -363,7 +363,7 @@ Listando todos os ativos...
 Encerramento do processo principal pela opção "Sair" do menu:
 
 ```
-Escolha uma opção: 6
+Escolha uma opção: 8
 Saindo do programa...
 ```
 

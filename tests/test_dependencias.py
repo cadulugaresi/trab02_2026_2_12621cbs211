@@ -226,38 +226,38 @@ class TestMenuAtualizarDependencia(TesteDoMenuDeDependencias):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
 
     def test_enter_nos_dois_campos_mantem_a_dependencia(self):
-        saida = self.usar_menu(["2", "1", "2", "", "", "5"])
+        saida = self.usar_menu(["3", "1", "2", "", "", "5"])
 
         self.assertIn("Dependência atualizada com sucesso.", saida)
         self.assertEqual(self.notebook.dependencias, {2: 0.5})
 
     def test_troca_o_ativo_e_aceita_fracao_com_virgula(self):
-        saida = self.usar_menu(["2", "1", "2", "3", "0,3", "5"])
+        saida = self.usar_menu(["3", "1", "2", "3", "0,3", "5"])
 
         self.assertIn("Dependência atualizada com sucesso.", saida)
         self.assertEqual(self.notebook.dependencias, {3: 0.3})
         self.assertEqual(carregar_ativos()[1].dependencias, {3: 0.3})
 
     def test_id_novo_que_nao_e_numero_mostra_erro(self):
-        saida = self.usar_menu(["2", "1", "2", "abc", "5"])
+        saida = self.usar_menu(["3", "1", "2", "abc", "5"])
 
         self.assertIn("Digite um número válido.", saida)
         self.assertEqual(self.notebook.dependencias, {2: 0.5})
 
     def test_fracao_que_nao_e_numero_mostra_erro(self):
-        saida = self.usar_menu(["2", "1", "2", "", "abc", "5"])
+        saida = self.usar_menu(["3", "1", "2", "", "abc", "5"])
 
         self.assertIn("Digite um número válido.", saida)
         self.assertEqual(self.notebook.dependencias, {2: 0.5})
 
     def test_fracao_zero_mostra_erro(self):
-        saida = self.usar_menu(["2", "1", "2", "", "0", "5"])
+        saida = self.usar_menu(["3", "1", "2", "", "0", "5"])
 
         self.assertIn("A fração precisa ser maior que zero.", saida)
         self.assertEqual(self.notebook.dependencias, {2: 0.5})
 
     def test_ativo_sem_dependencias_avisa(self):
-        saida = self.usar_menu(["2", "3", "5"])
+        saida = self.usar_menu(["3", "3", "5"])
 
         self.assertIn("Este ativo não possui dependências cadastradas.", saida)
 
@@ -267,7 +267,7 @@ class TestMenuRemoverDependencia(TesteDoMenuDeDependencias):
     def test_remove_a_dependencia_escolhida(self):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
 
-        saida = self.usar_menu(["3", "1", "2", "5"])
+        saida = self.usar_menu(["4", "1", "2", "5"])
 
         self.assertIn("Dependência removida com sucesso.", saida)
         self.assertEqual(self.notebook.dependencias, {})
@@ -275,7 +275,7 @@ class TestMenuRemoverDependencia(TesteDoMenuDeDependencias):
     def test_remocao_fica_salva_no_arquivo(self):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
 
-        self.usar_menu(["3", "1", "2", "5"])
+        self.usar_menu(["4", "1", "2", "5"])
 
         self.assertEqual(carregar_ativos()[1].dependencias, {})
 
@@ -283,25 +283,25 @@ class TestMenuRemoverDependencia(TesteDoMenuDeDependencias):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 3, 0.2)
 
-        self.usar_menu(["3", "1", "2", "5"])
+        self.usar_menu(["4", "1", "2", "5"])
 
         self.assertEqual(self.notebook.dependencias, {3: 0.2})
 
     def test_ativo_sem_dependencias_avisa_e_volta_ao_menu(self):
-        saida = self.usar_menu(["3", "1", "5"])
+        saida = self.usar_menu(["4", "1", "5"])
 
         self.assertIn("Este ativo não possui dependências cadastradas.", saida)
 
     def test_dependencia_que_nao_existe_mostra_erro(self):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
 
-        saida = self.usar_menu(["3", "1", "3", "5"])
+        saida = self.usar_menu(["4", "1", "3", "5"])
 
         self.assertIn("Este ativo não possui essa dependência.", saida)
         self.assertEqual(self.notebook.dependencias, {2: 0.5})
 
     def test_ativo_que_nao_existe_mostra_erro(self):
-        saida = self.usar_menu(["3", "99", "5"])
+        saida = self.usar_menu(["4", "99", "5"])
 
         self.assertIn("Ativo não encontrado.", saida)
 
@@ -313,7 +313,7 @@ class TestMenuListarDependencias(TesteDoMenuDeDependencias):
         cadastrar_dependencia(self.repositorio, self.ativos, 2, 3, 0.4)
         cadastrar_dependencia(self.repositorio, self.ativos, 3, 1, 0.3)
 
-        saida = self.usar_menu(["4", "todos", "5"])
+        saida = self.usar_menu(["2", "todos", "5"])
 
         posicao_cisco = saida.index("3 - Cisco (Roteador)")
         posicao_dell = saida.index("1 - Dell (Notebook)")
@@ -326,7 +326,7 @@ class TestMenuListarDependencias(TesteDoMenuDeDependencias):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
         cadastrar_dependencia(self.repositorio, self.ativos, 3, 1, 0.3)
 
-        saida = self.usar_menu(["4", "todos", "5"])
+        saida = self.usar_menu(["2", "todos", "5"])
 
         self.assertIn("Fração herdada: 0.5", saida)
         self.assertIn("Fração herdada: 0.3", saida)
@@ -334,7 +334,7 @@ class TestMenuListarDependencias(TesteDoMenuDeDependencias):
     def test_um_mostra_as_dependencias_do_ativo_escolhido(self):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
 
-        saida = self.usar_menu(["4", "um", "1", "5"])
+        saida = self.usar_menu(["2", "um", "1", "5"])
 
         self.assertIn("Ativo: PowerEdge", saida)
         self.assertIn("Fração herdada: 0.5", saida)
@@ -342,24 +342,24 @@ class TestMenuListarDependencias(TesteDoMenuDeDependencias):
     def test_um_nao_mostra_dependencias_de_outro_ativo(self):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
 
-        saida = self.usar_menu(["4", "um", "3", "5"])
+        saida = self.usar_menu(["2", "um", "3", "5"])
 
         self.assertIn("Este ativo não depende de nenhum outro ativo.", saida)
         self.assertNotIn("Fração herdada: 0.5", saida)
 
     def test_um_com_ativo_que_nao_existe_mostra_erro(self):
-        saida = self.usar_menu(["4", "um", "99", "5"])
+        saida = self.usar_menu(["2", "um", "99", "5"])
 
         self.assertIn("Ativo não encontrado.", saida)
 
     def test_resposta_invalida_pergunta_de_novo(self):
-        saida = self.usar_menu(["4", "talvez", "todos", "5"])
+        saida = self.usar_menu(["2", "talvez", "todos", "5"])
 
         self.assertIn('Opção inválida. Digite "todos" ou "um".', saida)
         self.assertIn("Nenhum ativo possui dependências cadastradas.", saida)
 
     def test_todos_sem_nenhuma_dependencia_avisa(self):
-        saida = self.usar_menu(["4", "todos", "5"])
+        saida = self.usar_menu(["2", "todos", "5"])
 
         self.assertIn("Nenhum ativo possui dependências cadastradas.", saida)
         self.assertNotIn("1 - Dell (Notebook)", saida)
@@ -367,7 +367,7 @@ class TestMenuListarDependencias(TesteDoMenuDeDependencias):
     def test_todos_mostra_so_os_ativos_com_dependencias(self):
         cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.5)
 
-        saida = self.usar_menu(["4", "todos", "5"])
+        saida = self.usar_menu(["2", "todos", "5"])
 
         self.assertIn("1 - Dell (Notebook)", saida)
         self.assertNotIn("2 - PowerEdge (Servidor)", saida)
