@@ -1,6 +1,7 @@
 import numpy as np
 
 from inventario.dominio.enums import StatusDaVuln
+from inventario.dominio.excecoes import DadoInvalidoError
 
 
 def mapear_ids_para_posicoes(dicionario_por_id):
@@ -50,3 +51,33 @@ def calcular_risco_proprio(ativos, catalogo):
     vetor_f = montar_vetor_fator(ativos, linha_do_ativo)
 
     return vetor_f * (matriz_m @ vetor_cvss)
+
+
+def montar_matriz_a(ativos, linha_do_ativo):
+    matriz_a = np.zeros((len(ativos), len(ativos)))
+
+    for id_ativo, ativo in ativos.items():
+        for id_ativo_do_qual_depende, fracao in ativo.dependencias.items():
+            matriz_a[linha_do_ativo[id_ativo], linha_do_ativo[id_ativo_do_qual_depende]] = fracao
+
+    return matriz_a
+
+
+def calcular_risco_efetivo(ativos, catalogo):
+    risco_proprio = calcular_risco_proprio(ativos, catalogo)
+
+    linha_do_ativo = mapear_ids_para_posicoes(ativos)
+
+    matriz_a = montar_matriz_a(ativos, linha_do_ativo)
+    matriz_identidade = np.eye(len(ativos))
+
+    sistema = matriz_identidade - matriz_a
+    det = np.linalg.det(sistema)
+
+    if abs(det) < 1e-10:
+        raise DadoInvalidoError(
+            "Não foi possível calcular o risco efetivo. Revise as frações das dependências."
+        )
+
+    resolucao = np.linalg.solve(sistema, risco_proprio)
+    return resolucao
