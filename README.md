@@ -2,7 +2,7 @@
 
 *[Ler em português](./docs/README.pt-br.md)*
 
-A command-line (CLI) application in Python for registering and managing IT assets and their associated security vulnerabilities, with risk analysis based on linear algebra (in development). Built as a study project for a Cybersecurity course at UFU, applying clean code practices: expressive naming, single-responsibility functions, layered architecture, object-oriented programming, and error handling that doesn't leak internal details.
+A command-line (CLI) application in Python for registering and managing IT assets and their associated security vulnerabilities, with risk analysis based on linear algebra. Built as a study project for a Cybersecurity course at UFU, applying clean code practices: expressive naming, single-responsibility functions, layered architecture, object-oriented programming, and error handling that doesn't leak internal details.
 
 ## ✨ Features
 
@@ -34,8 +34,19 @@ Vulnerabilities live in a single **catalog**, independent of the assets. Each as
 
 > **In development:** integration with CVE for identifying known vulnerabilities.
 
-### Risk Analysis (in development)
-Model based on linear algebra that estimates the risk of each asset from its vulnerabilities and dependencies between assets. The catalog and the links are the basis of the incidence matrix `M` and of the severity vector `v` used to compute each asset's own risk (`b = Mv`).
+### Risk Analysis
+Model based on linear algebra that estimates the risk of each asset from its vulnerabilities and from the dependencies between assets. The calculation lives in `inventario/servicos/riscos.py` and uses `numpy`:
+
+- **Matrix `M`** (assets × vulnerabilities): `1` when the vulnerability is linked to the asset with status Open, In treatment, or Accepted; `0` when it is Fixed or not linked
+- **Vector `v`**: the CVSS score of each catalog vulnerability
+- **Exposure factor `f`**: a weight per asset. Each subclass has its default in `FATOR_EXPOSICAO_PADRAO` (Notebook 1.2, Server 1.3, Router 1.5, Printer 0.9), and the value can be changed per asset at registration and editing, greater than 0 and at most 2
+- **Own risk**: `b = f × (M @ v)`
+- **Matrix `A`** (assets × assets): `A[i][j]` is the fraction of risk that asset `i` inherits from asset `j`, taken from the dependencies
+- **Effective risk**: the solution of `(I − A)x = b` with `np.linalg.solve`. Before solving, the program checks that the determinant of `I − A` is not almost zero (tolerance `1e-10`); if it is, it shows an error asking to review the dependency fractions
+- **Inherited risk**: effective risk − own risk
+- **Ranking**: assets sorted by effective risk, from highest to lowest (`AnaliseDeRisco.ranking()`)
+
+Option 7 of the main menu shows one line per asset, in ranking order, with the exposure factor and the own, inherited, and effective risks, followed by a legend.
 
 ### General
 - **Data persistence**: assets, the catalog, and the links are saved to a SQLite database (`inventario.db`), with one table per asset type and an associative `vinculos` table between assets and vulnerabilities, and reloaded on every run
@@ -48,8 +59,9 @@ Model based on linear algebra that estimates the risk of each asset from its vul
 - Python 3.8+
 - Standard library modules: `sqlite3`, `abc`, `json`, `enum`
 - Database: SQLite (no server to install; schema in `inventario/persistencia/esquema.sql`)
+- Linear algebra: `numpy` (listed in `requirements.txt`)
 - Tests: `unittest` and `pytest`; linting: `flake8` and `black`; CI with GitHub Actions
-- **In development**: linear algebra library (TBD), Docker
+- **In development**: Docker
 
 ## ✨ Architecture
 
@@ -204,11 +216,12 @@ menu_principal                         (interface)     user picks option 3
 
 ## ✨ Getting Started
 
-Requirement: Python 3.8 or higher installed.
+Requirement: Python 3.8 or higher installed. The only external dependency is `numpy`, listed in `requirements.txt`.
 
 ```bash
 git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
 cd it-asset-vulnerability-manager
+python3 -m pip install -r requirements.txt
 python3 main.py
 ```
 
@@ -224,7 +237,9 @@ The program opens an interactive menu in the terminal. Follow the numbered optio
 3 - Excluir ativo
 4 - Menu de vulnerabilidades
 5 - Editar ativo
-6 - Sair
+6 - Menu de dependências
+7 - Análise de risco
+8 - Sair
 ```
 
 Inside option 2 (Listar ativo), you can list **all** assets, **filter** by type or status, or show **one** asset by name or ID.
@@ -293,7 +308,7 @@ The system uses **physical deletion**:
 | 2   | Persistence in a SQL database (SQLite)     | ✅     |
 | 3   | Layered architecture (S4_01)               | ✅     |
 | 4   | Docker container execution                 | ⏳     |
-| 5   | Risk calculation (linear algebra)          | ⏳     |
+| 5   | Risk calculation (linear algebra)          | ✅     |
 
 > Requirement 2 was originally JSON persistence; persisting to a SQLite database was confirmed by the professor as valid.
 

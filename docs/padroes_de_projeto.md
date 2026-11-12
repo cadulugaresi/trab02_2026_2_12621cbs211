@@ -38,7 +38,7 @@ def listar_ativos_ordenados(ativos, criterio):
     return sorted(ativos.values(), key=criterio)
 ```
 
-O mapa `CRITERIOS_DE_ORDENACAO` reúne as estratégias disponíveis, e o menu monta as opções a partir dele. As estratégias são funções de primeira classe, e não classes: em Python, uma função já pode ser passada como valor, então uma classe por critério só acrescentaria código. Um critério novo, como a ordenação por risco, será uma função nova e uma linha no mapa, sem mudar a operação nem o menu.
+O mapa `CRITERIOS_DE_ORDENACAO` reúne as estratégias disponíveis, e o menu monta as opções a partir dele. As estratégias são funções de primeira classe, e não classes: em Python, uma função já pode ser passada como valor, então uma classe por critério só acrescentaria código. Um critério novo que use dados do próprio ativo entra como uma função nova e uma linha no mapa, sem mudar a operação nem o menu. A ordenação por risco não seguiu esse caminho: o risco efetivo não fica guardado no ativo, só existe dentro da análise, por isso ela é o método `ranking()` da classe `AnaliseDeRisco` (`inventario/servicos/riscos.py`).
 
 ## 🫧 Singleton: considerado e descartado
 

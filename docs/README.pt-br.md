@@ -2,7 +2,7 @@
 
 *[Read in English](../README.md)*
 
-Aplicação CLI em Python para cadastro e gestão de ativos de TI e suas vulnerabilidades, com análise de risco baseada em álgebra linear (em desenvolvimento). Projeto de estudo do curso de Cibersegurança da UFU, com foco em boas práticas de código: nomenclatura clara, funções com responsabilidade única, arquitetura em camadas, programação orientada a objetos e tratamento de erros sem exposição de dados internos.
+Aplicação CLI em Python para cadastro e gestão de ativos de TI e suas vulnerabilidades, com análise de risco baseada em álgebra linear. Projeto de estudo do curso de Cibersegurança da UFU, com foco em boas práticas de código: nomenclatura clara, funções com responsabilidade única, arquitetura em camadas, programação orientada a objetos e tratamento de erros sem exposição de dados internos.
 
 ## ✨ Funcionalidades
 
@@ -34,8 +34,19 @@ As vulnerabilidades ficam em um **catálogo** único, independente dos ativos. C
 
 > **Em desenvolvimento:** integração com o CVE para identificação de vulnerabilidades conhecidas.
 
-### Análise de Risco (em desenvolvimento)
-Modelo baseado em álgebra linear que estima o risco de cada ativo a partir de suas vulnerabilidades e das dependências entre ativos. O catálogo e os vínculos são a base da matriz de incidência `M` e do vetor de severidade `v`, usados para calcular o risco próprio de cada ativo (`b = Mv`).
+### Análise de Risco
+Modelo baseado em álgebra linear que estima o risco de cada ativo a partir de suas vulnerabilidades e das dependências entre ativos. O cálculo fica em `inventario/servicos/riscos.py` e usa o `numpy`:
+
+- **Matriz `M`** (ativos × vulnerabilidades): `1` quando a vulnerabilidade está vinculada ao ativo com status Aberta, Em tratamento ou Aceita; `0` quando está Corrigida ou não está vinculada
+- **Vetor `v`**: a nota CVSS de cada vulnerabilidade do catálogo
+- **Fator de exposição `f`**: um peso por ativo. Cada subclasse tem o seu padrão em `FATOR_EXPOSICAO_PADRAO` (Notebook 1.2, Servidor 1.3, Roteador 1.5, Impressora 0.9), e o valor pode ser alterado em cada ativo no cadastro e na edição, maior que 0 e no máximo 2
+- **Risco próprio**: `b = f × (M @ v)`
+- **Matriz `A`** (ativos × ativos): `A[i][j]` é a fração do risco que o ativo `i` herda do ativo `j`, tirada das dependências
+- **Risco efetivo**: a solução de `(I − A)x = b` com `np.linalg.solve`. Antes de resolver, o programa confere se o determinante de `I − A` não é quase zero (tolerância `1e-10`); se for, mostra um erro pedindo para revisar as frações das dependências
+- **Risco herdado**: risco efetivo − risco próprio
+- **Ranking**: os ativos ordenados pelo risco efetivo, do maior para o menor (`AnaliseDeRisco.ranking()`)
+
+A opção 7 do menu principal mostra uma linha por ativo, na ordem do ranking, com o fator de exposição e os riscos próprio, herdado e efetivo, seguida de uma legenda.
 
 ### Geral
 - **Persistência de dados**: os ativos, o catálogo e os vínculos são salvos em um banco SQLite (`inventario.db`), com uma tabela por tipo de ativo e a tabela associativa `vinculos` entre ativos e vulnerabilidades, e recarregados a cada execução
@@ -48,8 +59,9 @@ Modelo baseado em álgebra linear que estima o risco de cada ativo a partir de s
 - Python 3.8+
 - Módulos da biblioteca padrão: `sqlite3`, `abc`, `json`, `enum`
 - Banco de dados: SQLite (sem servidor para instalar; esquema em `inventario/persistencia/esquema.sql`)
+- Álgebra linear: `numpy` (listado no `requirements.txt`)
 - Testes: `unittest` e `pytest`; padronização: `flake8` e `black`; integração contínua com GitHub Actions
-- **Em desenvolvimento**: biblioteca de álgebra linear (a definir), Docker
+- **Em desenvolvimento**: Docker
 
 ## ✨ Arquitetura
 
@@ -204,11 +216,12 @@ menu_principal                         (interface)     usuário escolhe a opçã
 
 ## ✨ Como executar
 
-Pré-requisito: Python 3.8 ou superior instalado.
+Pré-requisito: Python 3.8 ou superior instalado. A única dependência externa é o `numpy`, listado no `requirements.txt`.
 
 ```bash
 git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
 cd it-asset-vulnerability-manager
+python3 -m pip install -r requirements.txt
 python3 main.py
 ```
 
@@ -224,7 +237,9 @@ O programa abre um menu interativo no terminal. Basta seguir as opções numerad
 3 - Excluir ativo
 4 - Menu de vulnerabilidades
 5 - Editar ativo
-6 - Sair
+6 - Menu de dependências
+7 - Análise de risco
+8 - Sair
 ```
 
 Dentro da opção 2 (Listar ativo), é possível listar **todos**, **filtrar** por tipo ou status, ou mostrar **um** ativo buscando por nome ou ID.
@@ -293,7 +308,7 @@ O `RepositorioJSON` segue a mesma política, removendo os vínculos manualmente.
 | 2   | Persistência em banco SQL (SQLite)           | ✅     |
 | 3   | Arquitetura em camadas (S4_01)               | ✅     |
 | 4   | Execução em container Docker                 | ⏳     |
-| 5   | Cálculo de risco (álgebra linear)            | ⏳     |
+| 5   | Cálculo de risco (álgebra linear)            | ✅     |
 
 > O requisito 2 era originalmente persistência em JSON; a persistência em banco SQLite foi confirmada pelo professor como válida.
 
