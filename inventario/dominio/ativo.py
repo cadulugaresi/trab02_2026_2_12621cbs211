@@ -18,15 +18,15 @@ class Ativo:
             self.fator_exposicao = fator_exposicao
 
     def exibir_detalhes(self):
-        return f"""
-            ID: {self.id}
-            Nome: {self.nome}
-            Tipo: {type(self).__name__}
-            Setor: {self.setor.name}
-            Responsável: {self.responsavel}
-            Status: {self.status.name}
-            Fator de exposição: {self.fator_exposicao}
-            """
+        return (
+            f"\nID: {self.id}\n"
+            f"Nome: {self.nome}\n"
+            f"Tipo: {type(self).__name__}\n"
+            f"Setor: {self.setor.name}\n"
+            f"Responsável: {self.responsavel}\n"
+            f"Status: {self.status.name}\n"
+            f"Fator de exposição: {self.fator_exposicao}"
+        )
 
     def para_dicionario(self):
         lista_de_vulns = []
@@ -68,11 +68,11 @@ class Notebook(Ativo):
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
-        return f"""
-            {detalhes_base}
-            Sistema operacional: {self.sistema_operacional}
-            Tamanho da tela: {self.tela} polegadas
-            """
+        return (
+            f"{detalhes_base}\n"
+            f"Sistema operacional: {self.sistema_operacional}\n"
+            f"Tamanho da tela: {self.tela} polegadas"
+        )
 
     def para_dicionario(self):
         dicionario_base = super().para_dicionario()
@@ -106,11 +106,11 @@ class Roteador(Ativo):
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
-        return f"""
-            {detalhes_base}
-            Qtde de portas: {self.portas}
-            Velocidade: {self.velocidade}MB
-            """
+        return (
+            f"{detalhes_base}\n"
+            f"Qtde de portas: {self.portas}\n"
+            f"Velocidade: {self.velocidade}MB"
+        )
 
     def para_dicionario(self):
         dicionario_base = super().para_dicionario()
@@ -144,11 +144,11 @@ class Servidor(Ativo):
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
-        return f"""
-            {detalhes_base}
-            Memória RAM: {self.ram}GB
-            Qtde armazenamento: {self.armazenamento}T
-            """
+        return (
+            f"{detalhes_base}\n"
+            f"Memória RAM: {self.ram}GB\n"
+            f"Qtde armazenamento: {self.armazenamento}T"
+        )
 
     def para_dicionario(self):
         dicionario_base = super().para_dicionario()
@@ -180,11 +180,7 @@ class Impressora(Ativo):
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
-        return f"""
-            {detalhes_base}
-            Cor: {self.cor.name}
-            Tecnologia: {self.tecnologia.name}
-            """
+        return f"{detalhes_base}\n" f"Cor: {self.cor.name}\n" f"Tecnologia: {self.tecnologia.name}"
 
     def para_dicionario(self):
         dicionario_base = super().para_dicionario()

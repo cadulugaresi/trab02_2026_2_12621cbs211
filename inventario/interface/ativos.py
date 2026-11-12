@@ -101,50 +101,46 @@ def editar_ativo(repositorio, ativos):
     if ativo_encontrado is None:
         return
 
-    print(f"""Dados atuais do ativo:
-    ID: {ativo_encontrado.id}
-    Nome: {ativo_encontrado.nome}
-    Responsável: {ativo_encontrado.responsavel}
-    Tipo: {type(ativo_encontrado).__name__}
-    Setor: {ativo_encontrado.setor.name}
-    Status: {ativo_encontrado.status.name}
-    """)
+    print("\n=== Dados atuais do ativo ===\n")
+    print(
+        f"ID: {ativo_encontrado.id}\n"
+        f"Nome: {ativo_encontrado.nome}\n"
+        f"Responsável: {ativo_encontrado.responsavel}\n"
+        f"Tipo: {type(ativo_encontrado).__name__}\n"
+        f"Setor: {ativo_encontrado.setor.name}\n"
+        f"Status: {ativo_encontrado.status.name}"
+    )
 
     while True:
-        print("""
-        MENU DE EDIÇÃO
-        1 - Editar responsável
-        2 - Editar status
-        3 - Editar setor
-        4 - Editar detalhes específicos
-        5 - Editar tipo
-        6 - Voltar""")
+        print("\n=== Menu de edição ===\n")
+        print(
+            "1 - Editar responsável\n"
+            "2 - Editar status\n"
+            "3 - Editar setor\n"
+            "4 - Editar detalhes específicos\n"
+            "5 - Editar tipo\n"
+            "6 - Voltar"
+        )
 
         opcao = input("Escolha uma opção: ").strip()
 
         if opcao == "1":
             novo_responsavel = pedir_info("Digite o novo nome do responsável pelo ativo: ")
             ativo_encontrado.responsavel = novo_responsavel
-            print(f"""
-                Responsável atualizado com sucesso.
-                Novo responsável: {novo_responsavel}.
-                """)
+            print("Responsável atualizado com sucesso.")
+            print(f"Novo responsável: {novo_responsavel}.")
 
         elif opcao == "2":
             novo_status = pedir_status("Digite o novo status do ativo: ")
             ativo_encontrado.status = novo_status
-            print(f"""
-                Status do ativo atualizado com sucesso.
-                Status atual: {novo_status.name}.
-                """)
+            print("Status do ativo atualizado com sucesso.")
+            print(f"Status atual: {novo_status.name}.")
 
         elif opcao == "3":
             novo_setor = pedir_setor("Digite o novo setor do ativo: ")
             ativo_encontrado.setor = novo_setor
-            print(f"""
-                Setor do ativo atualizado com sucesso.
-                Setor atual: {novo_setor.name}.
-                """)
+            print("Setor do ativo atualizado com sucesso.")
+            print(f"Setor atual: {novo_setor.name}.")
 
         elif opcao == "4":
 
@@ -166,11 +162,9 @@ def editar_ativo(repositorio, ativos):
                 ativo_encontrado.cor = pedir_cor()
                 ativo_encontrado.tecnologia = pedir_tecnologia()
 
-            print(f"""
-            Detalhes específicos atualizados com sucesso!
-            Ativo atualizado:
-            {ativo_encontrado.exibir_detalhes()}
-            """)
+            print("Detalhes específicos atualizados com sucesso!")
+            print("Ativo atualizado:")
+            print(ativo_encontrado.exibir_detalhes())
 
         elif opcao == "5":
 
@@ -222,10 +216,8 @@ def editar_ativo(repositorio, ativos):
                 )
 
             ativo_encontrado = novo_ativo
-            print(f"""
-                Tipo do ativo atualizado com sucesso!
-                Tipo atual: {type(novo_ativo).__name__}.
-                """)
+            print("Tipo do ativo atualizado com sucesso!")
+            print(f"Tipo atual: {type(novo_ativo).__name__}.")
 
         elif opcao == "6":
             atualizar_ativo_no_inventario(repositorio, ativos, ativo_encontrado)

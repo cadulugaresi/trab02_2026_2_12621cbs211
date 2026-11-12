@@ -16,15 +16,15 @@ def mostrar_dependencias(ativo, ativos):
 
     for id_ativo_do_qual_depende, fracao in ativo.dependencias.items():
         ativo_do_qual_depende = ativos[id_ativo_do_qual_depende]
-        print(f"""
-    ID: {id_ativo_do_qual_depende}
-    Ativo: {ativo_do_qual_depende.nome}
-    Tipo: {type(ativo_do_qual_depende).__name__}
-    Fração herdada: {fracao}""")
+        print(
+            f"\nID: {id_ativo_do_qual_depende}\n"
+            f"Ativo: {ativo_do_qual_depende.nome}\n"
+            f"Tipo: {type(ativo_do_qual_depende).__name__}\n"
+            f"Fração herdada: {fracao}"
+        )
 
     soma = somar_fracoes(ativo.dependencias)
-    print(f"""
-    Soma das frações: {soma}. Ainda cabem {round(1 - soma, 6)}.""")
+    print(f"\nSoma das frações: {soma}. Ainda cabem {round(1 - soma, 6)}.")
 
 
 def escolher_ativo_com_dependencias(ativos, mensagem):
