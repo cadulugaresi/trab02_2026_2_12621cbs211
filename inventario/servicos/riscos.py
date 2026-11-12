@@ -63,13 +63,8 @@ def montar_matriz_a(ativos, linha_do_ativo):
     return matriz_a
 
 
-def calcular_risco_efetivo(ativos, catalogo):
-    risco_proprio = calcular_risco_proprio(ativos, catalogo)
-
-    linha_do_ativo = mapear_ids_para_posicoes(ativos)
-
-    matriz_a = montar_matriz_a(ativos, linha_do_ativo)
-    matriz_identidade = np.eye(len(ativos))
+def resolver_sistema(matriz_a, risco_proprio):
+    matriz_identidade = np.eye(len(risco_proprio))
 
     sistema = matriz_identidade - matriz_a
     det = np.linalg.det(sistema)
@@ -79,5 +74,12 @@ def calcular_risco_efetivo(ativos, catalogo):
             "Não foi possível calcular o risco efetivo. Revise as frações das dependências."
         )
 
-    resolucao = np.linalg.solve(sistema, risco_proprio)
-    return resolucao
+    return np.linalg.solve(sistema, risco_proprio)
+
+
+def calcular_risco_efetivo(ativos, catalogo):
+    risco_proprio = calcular_risco_proprio(ativos, catalogo)
+    linha_do_ativo = mapear_ids_para_posicoes(ativos)
+    matriz_a = montar_matriz_a(ativos, linha_do_ativo)
+
+    return resolver_sistema(matriz_a, risco_proprio)
