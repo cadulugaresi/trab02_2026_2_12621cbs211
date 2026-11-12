@@ -7,6 +7,7 @@ from inventario.dominio.enums import Setor, StatusDaVuln, StatusDoAtivo
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.servicos.riscos import (
+    AnaliseDeRisco,
     calcular_risco_efetivo,
     calcular_risco_proprio,
     mapear_ids_para_posicoes,
@@ -14,6 +15,7 @@ from inventario.servicos.riscos import (
     montar_matriz_m,
     montar_vetor_cvss,
     montar_vetor_fator,
+    resolver_sistema,
 )
 
 
@@ -225,6 +227,100 @@ class TestCalcularRiscoEfetivo(TesteComCenarioDeRisco):
 
         with self.assertRaises(DadoInvalidoError):
             calcular_risco_efetivo(ativos_em_ciclo, self.catalogo)
+
+
+class TestResolverSistema(unittest.TestCase):
+
+    def test_matriz_com_dependencias_gera_o_risco_efetivo_esperado(self):
+        matriz_a = np.array([[0, 0.5, 0], [0, 0, 0.2], [0, 0, 0]])
+        risco_proprio = np.array([23.0, 15.8, 17.0])
+
+        risco_efetivo = resolver_sistema(matriz_a, risco_proprio)
+
+        np.testing.assert_allclose(risco_efetivo, [32.6, 19.2, 17.0])
+
+    def test_matriz_so_de_zeros_devolve_o_proprio_risco_proprio(self):
+        matriz_a = np.zeros((3, 3))
+        risco_proprio = np.array([23.0, 15.8, 17.0])
+
+        risco_efetivo = resolver_sistema(matriz_a, risco_proprio)
+
+        np.testing.assert_allclose(risco_efetivo, risco_proprio)
+
+    def test_dependencia_circular_com_fracao_total_levanta_erro(self):
+        matriz_a = np.array([[0, 1.0], [1.0, 0]])
+        risco_proprio = np.array([23.0, 15.8])
+
+        with self.assertRaises(DadoInvalidoError):
+            resolver_sistema(matriz_a, risco_proprio)
+
+
+class TestAnaliseDeRisco(TesteComCenarioDeRisco):
+
+    def criar_analise_com_dependencias_do_cenario(self):
+        vincular_dependencias_do_cenario(self.notebook, self.servidor)
+        return AnaliseDeRisco(self.ativos, self.catalogo)
+
+    def test_risco_proprio_do_ativo_devolve_o_valor_de_cada_id(self):
+        analise = self.criar_analise_com_dependencias_do_cenario()
+        risco_proprio_esperado_por_id = {1: 9.0, 2: 6.89, 3: 14.7}
+
+        for id_ativo, risco_esperado in risco_proprio_esperado_por_id.items():
+            self.assertAlmostEqual(analise.risco_proprio_do_ativo(id_ativo), risco_esperado)
+
+    def test_risco_efetivo_do_ativo_devolve_o_valor_de_cada_id(self):
+        analise = self.criar_analise_com_dependencias_do_cenario()
+        risco_efetivo_esperado_por_id = {1: 13.915, 2: 9.83, 3: 14.7}
+
+        for id_ativo, risco_esperado in risco_efetivo_esperado_por_id.items():
+            self.assertAlmostEqual(analise.risco_efetivo_do_ativo(id_ativo), risco_esperado)
+
+    def test_risco_herdado_do_ativo_devolve_o_valor_de_cada_id(self):
+        analise = self.criar_analise_com_dependencias_do_cenario()
+        risco_herdado_esperado_por_id = {1: 4.915, 2: 2.94, 3: 0}
+
+        for id_ativo, risco_esperado in risco_herdado_esperado_por_id.items():
+            self.assertAlmostEqual(analise.risco_herdado_do_ativo(id_ativo), risco_esperado)
+
+    def test_ranking_ordena_do_maior_para_o_menor_risco_efetivo(self):
+        analise = self.criar_analise_com_dependencias_do_cenario()
+
+        self.assertEqual(analise.ranking(), [3, 1, 2])
+
+    def test_ranking_usa_o_risco_efetivo_e_nao_o_risco_proprio(self):
+        self.servidor.dependencias[3] = 0.9
+
+        analise = AnaliseDeRisco(self.ativos, self.catalogo)
+
+        np.testing.assert_allclose(analise.risco_efetivo, [9.0, 20.12, 14.7])
+        self.assertEqual(analise.ranking(), [2, 3, 1])
+
+    def test_funciona_com_buracos_nos_ids_dos_ativos(self):
+        notebook = criar_notebook(5)
+        servidor = criar_servidor(12)
+        roteador = criar_roteador(300)
+        vincular_vulnerabilidades_do_cenario(notebook, servidor, roteador)
+        notebook.dependencias[12] = 0.5
+        servidor.dependencias[300] = 0.2
+        ativos_com_buracos = {300: roteador, 5: notebook, 12: servidor}
+
+        analise = AnaliseDeRisco(ativos_com_buracos, self.catalogo)
+
+        risco_proprio_esperado_por_id = {5: 9.0, 12: 6.89, 300: 14.7}
+        risco_efetivo_esperado_por_id = {5: 13.915, 12: 9.83, 300: 14.7}
+        for id_ativo, risco_esperado in risco_proprio_esperado_por_id.items():
+            self.assertAlmostEqual(analise.risco_proprio_do_ativo(id_ativo), risco_esperado)
+        for id_ativo, risco_esperado in risco_efetivo_esperado_por_id.items():
+            self.assertAlmostEqual(analise.risco_efetivo_do_ativo(id_ativo), risco_esperado)
+        self.assertEqual(analise.ranking(), [300, 5, 12])
+
+    def test_dependencia_circular_com_fracao_total_levanta_erro_ao_criar(self):
+        self.notebook.dependencias[2] = 1.0
+        self.servidor.dependencias[1] = 1.0
+        ativos_em_ciclo = {1: self.notebook, 2: self.servidor}
+
+        with self.assertRaises(DadoInvalidoError):
+            AnaliseDeRisco(ativos_em_ciclo, self.catalogo)
 
 
 if __name__ == "__main__":
