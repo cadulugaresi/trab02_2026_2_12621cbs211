@@ -1,5 +1,9 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.dominio.validacoes import validar_cvss, validar_nome_responsavel
+from inventario.dominio.validacoes import (
+    validar_cvss,
+    validar_nome_responsavel,
+    validar_fator_exposicao,
+)
 from inventario.interface.conversao_das_opcoes_do_menu import (
     TIPOS_DE_ATIVOS,
     validar_cor,
@@ -189,3 +193,25 @@ def pedir_tecnologia():
             print(erro)
 
     return tecnologia
+
+
+def pedir_fator_exposicao(fator_atual):
+
+    while True:
+        novo_fator_exposicao = (
+            input(f"Digite o fator de exposição ou tecle Enter para manter {fator_atual}: ")
+            .strip()
+            .replace(",", ".")
+        )
+
+        if novo_fator_exposicao == "":
+            return fator_atual
+
+        try:
+            return validar_fator_exposicao(float(novo_fator_exposicao))
+
+        except ValueError:
+            print("Digite um número válido")
+
+        except DadoInvalidoError as erro:
+            print(erro)

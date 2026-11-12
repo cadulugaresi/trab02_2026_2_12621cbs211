@@ -14,9 +14,8 @@ from inventario.interface.entradas import (
     pedir_status,
     pedir_tecnologia,
     pedir_tipo,
+    pedir_fator_exposicao,
 )
-
-from inventario.dominio.validacoes import validar_fator_exposicao
 from inventario.servicos.ativos import (
     atualizar_ativo_no_inventario,
     encontrar_ativo_por_id,
@@ -97,24 +96,7 @@ def cadastrar_ativo(repositorio, ativos):
         ativo = Impressora(id_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
 
     print(f"Fator de exposição sugerido para {type(ativo).__name__}: {ativo.fator_exposicao}")
-
-    while True:
-        novo_fator_exposicao = (
-            input("Pressione Enter para aceitar ou digite outro valor: ").strip().replace(",", ".")
-        )
-
-        if novo_fator_exposicao == "":
-            break
-
-        try:
-            ativo.fator_exposicao = validar_fator_exposicao(float(novo_fator_exposicao))
-            break
-
-        except ValueError:
-            print("Digite um número válido")
-
-        except DadoInvalidoError as erro:
-            print(erro)
+    ativo.fator_exposicao = pedir_fator_exposicao(ativo.fator_exposicao)
 
     registrar_ativo_no_inventario(repositorio, ativos, ativo)
     print("Ativo cadastrado com sucesso!")
@@ -135,7 +117,8 @@ def editar_ativo(repositorio, ativos):
         f"Responsável: {ativo_encontrado.responsavel}\n"
         f"Tipo: {type(ativo_encontrado).__name__}\n"
         f"Setor: {ativo_encontrado.setor.name}\n"
-        f"Status: {ativo_encontrado.status.name}"
+        f"Status: {ativo_encontrado.status.name}\n"
+        f"Fator de exposição: {ativo_encontrado.fator_exposicao}"
     )
 
     while True:
@@ -146,7 +129,8 @@ def editar_ativo(repositorio, ativos):
             "3 - Editar setor\n"
             "4 - Editar detalhes específicos\n"
             "5 - Editar tipo\n"
-            "6 - Voltar"
+            "6 - Editar fator de exposição\n"
+            "7 - Voltar"
         )
 
         opcao = input("Escolha uma opção: ").strip()
@@ -247,6 +231,13 @@ def editar_ativo(repositorio, ativos):
             print(f"Tipo atual: {type(novo_ativo).__name__}.")
 
         elif opcao == "6":
+            ativo_encontrado.fator_exposicao = pedir_fator_exposicao(
+                ativo_encontrado.fator_exposicao
+            )
+            print("Fator de exposição atualizado com sucesso.")
+            print(f"Fator de exposição atual: {ativo_encontrado.fator_exposicao}.")
+
+        elif opcao == "7":
             atualizar_ativo_no_inventario(repositorio, ativos, ativo_encontrado)
             print("Voltando...")
             break
