@@ -6,7 +6,8 @@ CREATE TABLE IF NOT EXISTS ativos (
     tipo TEXT NOT NULL CHECK (tipo IN ('Notebook', 'Impressora', 'Roteador', 'Servidor')),
     setor INTEGER NOT NULL CHECK (setor IN (1, 2, 3, 4, 5)),
     responsavel TEXT NOT NULL,
-    status INTEGER NOT NULL CHECK (status IN (1, 2, 3))
+    status INTEGER NOT NULL CHECK (status IN (1, 2, 3)),
+    fator_exposicao REAL NOT NULL CHECK (fator_exposicao > 0)
 );
 
 CREATE TABLE IF NOT EXISTS notebooks (

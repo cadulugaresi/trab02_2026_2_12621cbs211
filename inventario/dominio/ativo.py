@@ -2,8 +2,9 @@ from inventario.dominio.enums import Cor, Setor, StatusDoAtivo, Tecnologia
 
 
 class Ativo:
+    FATOR_EXPOSICAO_PADRAO = 1.0
 
-    def __init__(self, id, nome, setor, responsavel, status):
+    def __init__(self, id, nome, setor, responsavel, status, fator_exposicao=None):
         self.id = id
         self.nome = nome
         self.setor = setor
@@ -11,16 +12,21 @@ class Ativo:
         self.status = status
         self.vulnerabilidades = {}
         self.dependencias = {}
+        if fator_exposicao is None:
+            self.fator_exposicao = self.FATOR_EXPOSICAO_PADRAO
+        else:
+            self.fator_exposicao = fator_exposicao
 
     def exibir_detalhes(self):
-        return f"""
-            ID: {self.id}
-            Nome: {self.nome}
-            Tipo: {type(self).__name__}
-            Setor: {self.setor.name}
-            Responsável: {self.responsavel}
-            Status: {self.status.name}
-            """
+        return (
+            f"\nID: {self.id}\n"
+            f"Nome: {self.nome}\n"
+            f"Tipo: {type(self).__name__}\n"
+            f"Setor: {self.setor.name}\n"
+            f"Responsável: {self.responsavel}\n"
+            f"Status: {self.status.name}\n"
+            f"Fator de exposição: {self.fator_exposicao}"
+        )
 
     def para_dicionario(self):
         lista_de_vulns = []
@@ -46,22 +52,27 @@ class Ativo:
             "status": self.status.value,
             "vulnerabilidades": lista_de_vulns,
             "dependencias": lista_de_dependencias,
+            "fator_exposicao": self.fator_exposicao,
         }
 
 
 class Notebook(Ativo):
-    def __init__(self, id, nome, setor, responsavel, status, sistema_operacional, tela):
-        super().__init__(id, nome, setor, responsavel, status)
+    FATOR_EXPOSICAO_PADRAO = 1.2
+
+    def __init__(
+        self, id, nome, setor, responsavel, status, sistema_operacional, tela, fator_exposicao=None
+    ):
+        super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.sistema_operacional = sistema_operacional
         self.tela = tela
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
-        return f"""
-            {detalhes_base}
-            Sistema operacional: {self.sistema_operacional}
-            Tamanho da tela: {self.tela} polegadas
-            """
+        return (
+            f"{detalhes_base}\n"
+            f"Sistema operacional: {self.sistema_operacional}\n"
+            f"Tamanho da tela: {self.tela} polegadas"
+        )
 
     def para_dicionario(self):
         dicionario_base = super().para_dicionario()
@@ -79,22 +90,27 @@ class Notebook(Ativo):
             StatusDoAtivo(dicionario_do_ativo["status"]),
             dicionario_do_ativo["sistema_operacional"],
             dicionario_do_ativo["tela"],
+            dicionario_do_ativo.get("fator_exposicao"),
         )
 
 
 class Roteador(Ativo):
-    def __init__(self, id, nome, setor, responsavel, status, portas, velocidade):
-        super().__init__(id, nome, setor, responsavel, status)
+    FATOR_EXPOSICAO_PADRAO = 1.5
+
+    def __init__(
+        self, id, nome, setor, responsavel, status, portas, velocidade, fator_exposicao=None
+    ):
+        super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.portas = portas
         self.velocidade = velocidade
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
-        return f"""
-            {detalhes_base}
-            Qtde de portas: {self.portas}
-            Velocidade: {self.velocidade}MB
-            """
+        return (
+            f"{detalhes_base}\n"
+            f"Qtde de portas: {self.portas}\n"
+            f"Velocidade: {self.velocidade}MB"
+        )
 
     def para_dicionario(self):
         dicionario_base = super().para_dicionario()
@@ -112,22 +128,27 @@ class Roteador(Ativo):
             StatusDoAtivo(dicionario_do_ativo["status"]),
             dicionario_do_ativo["portas"],
             dicionario_do_ativo["velocidade"],
+            dicionario_do_ativo.get("fator_exposicao"),
         )
 
 
 class Servidor(Ativo):
-    def __init__(self, id, nome, setor, responsavel, status, ram, armazenamento):
-        super().__init__(id, nome, setor, responsavel, status)
+    FATOR_EXPOSICAO_PADRAO = 1.3
+
+    def __init__(
+        self, id, nome, setor, responsavel, status, ram, armazenamento, fator_exposicao=None
+    ):
+        super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.ram = ram
         self.armazenamento = armazenamento
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
-        return f"""
-            {detalhes_base}
-            Memória RAM: {self.ram}GB
-            Qtde armazenamento: {self.armazenamento}T
-            """
+        return (
+            f"{detalhes_base}\n"
+            f"Memória RAM: {self.ram}GB\n"
+            f"Qtde armazenamento: {self.armazenamento}T"
+        )
 
     def para_dicionario(self):
         dicionario_base = super().para_dicionario()
@@ -145,22 +166,21 @@ class Servidor(Ativo):
             StatusDoAtivo(dicionario_do_ativo["status"]),
             dicionario_do_ativo["ram"],
             dicionario_do_ativo["armazenamento"],
+            dicionario_do_ativo.get("fator_exposicao"),
         )
 
 
 class Impressora(Ativo):
-    def __init__(self, id, nome, setor, responsavel, status, cor, tecnologia):
-        super().__init__(id, nome, setor, responsavel, status)
+    FATOR_EXPOSICAO_PADRAO = 0.9
+
+    def __init__(self, id, nome, setor, responsavel, status, cor, tecnologia, fator_exposicao=None):
+        super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.cor = cor
         self.tecnologia = tecnologia
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
-        return f"""
-            {detalhes_base}
-            Cor: {self.cor.name}
-            Tecnologia: {self.tecnologia.name}
-            """
+        return f"{detalhes_base}\n" f"Cor: {self.cor.name}\n" f"Tecnologia: {self.tecnologia.name}"
 
     def para_dicionario(self):
         dicionario_base = super().para_dicionario()
@@ -178,6 +198,7 @@ class Impressora(Ativo):
             StatusDoAtivo(dicionario_do_ativo["status"]),
             Cor(dicionario_do_ativo["cor"]),
             Tecnologia(dicionario_do_ativo["tecnologia"]),
+            dicionario_do_ativo.get("fator_exposicao"),
         )
 
 

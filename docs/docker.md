@@ -131,15 +131,16 @@ docker run -it --name inventario inventario:1.0
 ```
 
 ```
-            MENU
+=== Menu principal ===
 
-            1 - Cadastrar ativo
-            2 - Listar ativo
-            3 - Excluir ativo
-            4 - Menu de vulnerabilidades
-            5 - Editar ativo
-            6 - Sair
-
+1 - Cadastrar ativo
+2 - Listar ativo
+3 - Excluir ativo
+4 - Menu de vulnerabilidades
+5 - Editar ativo
+6 - Menu de dependências
+7 - Análise de risco
+8 - Sair
 Escolha uma opção: 1
 Tipos de ativo:
 1 - Notebook

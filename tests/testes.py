@@ -9,6 +9,7 @@ from inventario.dominio.enums import (
 )
 from inventario.interface.entradas import (
     pedir_cor,
+    pedir_fator_exposicao,
     pedir_float,
     pedir_info,
     pedir_int,
@@ -41,7 +42,7 @@ from inventario.servicos.ativos import (
     registrar_ativo_no_inventario,
     remover_ativo_do_inventario,
 )
-from inventario.dominio.validacoes import validar_nome_responsavel
+from inventario.dominio.validacoes import validar_fator_exposicao, validar_nome_responsavel
 from inventario.interface.conversao_das_opcoes_do_menu import (
     validar_cor,
     validar_setor,
@@ -191,6 +192,27 @@ class TestValidarNomeResponsavel(unittest.TestCase):
     def test_nome_vazio_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
             validar_nome_responsavel("")
+
+
+class TestValidarFatorExposicao(unittest.TestCase):
+
+    def test_fator_dentro_da_faixa_e_devolvido(self):
+        self.assertEqual(validar_fator_exposicao(1.4), 1.4)
+
+    def test_fator_igual_a_dois_e_aceito(self):
+        self.assertEqual(validar_fator_exposicao(2), 2)
+
+    def test_fator_zero_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            validar_fator_exposicao(0)
+
+    def test_fator_negativo_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            validar_fator_exposicao(-1)
+
+    def test_fator_acima_de_dois_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            validar_fator_exposicao(2.1)
 
 
 # Funções encontrar ativo ------------------------
@@ -597,7 +619,7 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
 
     def test_guarda_no_inventario(self):
         ativos = {}
-        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6"]
+        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6", ""]
         with patch("builtins.input", side_effect=respostas):
             ativo = cadastrar_ativo(self.repositorio, ativos)
         self.assertIs(ativos[5], ativo)
@@ -610,8 +632,8 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
             registrar_ativo_no_inventario(self.repositorio, ativos, ativo)
 
     def test_cadastra_notebook(self):
-        # Ordem: tipo, id, nome, setor, responsável, status, so, tela
-        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6"]
+        # Ordem: tipo, id, nome, setor, responsável, status, so, tela, fator de exposição
+        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6", ""]
         with patch("builtins.input", side_effect=respostas):
             ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Notebook)
@@ -621,25 +643,59 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
         self.assertEqual(ativo.tela, 15.6)
 
     def test_cadastra_servidor(self):
-        respostas = ["2", "6", "PowerEdge", "1", "Cadu", "1", "32", "4"]
+        respostas = ["2", "6", "PowerEdge", "1", "Cadu", "1", "32", "4", ""]
         with patch("builtins.input", side_effect=respostas):
             ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Servidor)
         self.assertEqual(ativo.ram, 32)
 
     def test_cadastra_roteador(self):
-        respostas = ["3", "7", "TP-Link", "1", "Cadu", "1", "4", "1000"]
+        respostas = ["3", "7", "TP-Link", "1", "Cadu", "1", "4", "1000", ""]
         with patch("builtins.input", side_effect=respostas):
             ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Roteador)
         self.assertEqual(ativo.portas, 4)
 
     def test_cadastra_impressora(self):
-        respostas = ["4", "8", "HP", "1", "Cadu", "1", "1", "2"]
+        respostas = ["4", "8", "HP", "1", "Cadu", "1", "1", "2", ""]
         with patch("builtins.input", side_effect=respostas):
             ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Impressora)
         self.assertEqual(ativo.cor, Cor.COLORIDA)
+
+
+class TestCadastrarAtivoComFatorDeExposicao(TesteComArquivosTemporarios):
+
+    def cadastrar_notebook_com_fator(self, respostas_do_fator):
+        respostas = ["1", "5", "Dell", "1", "Rafael Torres", "1", "Linux", "15.6"]
+        respostas.extend(respostas_do_fator)
+        with patch("builtins.input", side_effect=respostas):
+            with patch("builtins.print"):
+                return cadastrar_ativo(self.repositorio, {})
+
+    def test_enter_mantem_o_fator_padrao_do_tipo(self):
+        ativo = self.cadastrar_notebook_com_fator([""])
+        self.assertEqual(ativo.fator_exposicao, Notebook.FATOR_EXPOSICAO_PADRAO)
+
+    def test_guarda_o_fator_digitado(self):
+        ativo = self.cadastrar_notebook_com_fator(["1.4"])
+        self.assertEqual(ativo.fator_exposicao, 1.4)
+
+    def test_aceita_virgula_como_separador_decimal(self):
+        ativo = self.cadastrar_notebook_com_fator(["1,4"])
+        self.assertEqual(ativo.fator_exposicao, 1.4)
+
+    def test_texto_invalido_pergunta_de_novo(self):
+        ativo = self.cadastrar_notebook_com_fator(["abc", "1.4"])
+        self.assertEqual(ativo.fator_exposicao, 1.4)
+
+    def test_fator_fora_da_faixa_pergunta_de_novo(self):
+        ativo = self.cadastrar_notebook_com_fator(["5", "0", "1.4"])
+        self.assertEqual(ativo.fator_exposicao, 1.4)
+
+    def test_fator_digitado_e_salvo_no_repositorio(self):
+        self.cadastrar_notebook_com_fator(["1.4"])
+        self.assertEqual(carregar_ativos()[5].fator_exposicao, 1.4)
 
 
 # Confirmar Exclusão -----------------------------
@@ -707,21 +763,78 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
         salvar_ativos(self.ativos)
 
     def test_editar_responsavel_salva_ao_voltar(self):
-        with patch("builtins.input", side_effect=["1", "1", "Ana Souza", "6"]):
+        with patch("builtins.input", side_effect=["1", "1", "Ana Souza", "7"]):
             editar_ativo(self.repositorio, self.ativos)
         self.assertEqual(carregar_ativos()[1].responsavel, "Ana Souza")
 
     def test_trocar_tipo_mantem_as_vulnerabilidades(self):
-        with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "6"]):
+        with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "7"]):
             editar_ativo(self.repositorio, self.ativos)
         self.assertIsInstance(self.ativos[1], Servidor)
         self.assertEqual(self.ativos[1].vulnerabilidades, {3: StatusDaVuln.ABERTA})
         self.assertIsInstance(carregar_ativos()[1], Servidor)
 
+    def test_trocar_tipo_volta_o_fator_para_o_padrao_do_tipo_novo(self):
+        self.notebook.fator_exposicao = 1.7
+        salvar_ativos(self.ativos)
+        with patch("builtins.input", side_effect=["1", "5", "2", "32", "4", "7"]):
+            with patch("builtins.print"):
+                editar_ativo(self.repositorio, self.ativos)
+        self.assertEqual(self.ativos[1].fator_exposicao, Servidor.FATOR_EXPOSICAO_PADRAO)
+        self.assertEqual(carregar_ativos()[1].fator_exposicao, Servidor.FATOR_EXPOSICAO_PADRAO)
+
     def test_id_inexistente_nao_abre_o_menu(self):
         with patch("builtins.input", side_effect=["99"]) as entrada:
             editar_ativo(self.repositorio, self.ativos)
         self.assertEqual(entrada.call_count, 1)
+
+    def editar_fator_do_notebook(self, respostas_do_fator):
+        respostas = ["1", "6"]
+        respostas.extend(respostas_do_fator)
+        respostas.append("7")
+        with patch("builtins.input", side_effect=respostas):
+            with patch("builtins.print"):
+                editar_ativo(self.repositorio, self.ativos)
+
+    def test_editar_fator_salva_ao_voltar(self):
+        self.editar_fator_do_notebook(["1.4"])
+        self.assertEqual(self.ativos[1].fator_exposicao, 1.4)
+        self.assertEqual(carregar_ativos()[1].fator_exposicao, 1.4)
+
+    def test_enter_na_edicao_pergunta_de_novo(self):
+        self.editar_fator_do_notebook(["", "1.4"])
+        self.assertEqual(self.ativos[1].fator_exposicao, 1.4)
+        self.assertEqual(carregar_ativos()[1].fator_exposicao, 1.4)
+
+    def test_fator_invalido_na_edicao_pergunta_de_novo(self):
+        self.editar_fator_do_notebook(["abc", "3", "1.4"])
+        self.assertEqual(self.ativos[1].fator_exposicao, 1.4)
+
+
+class TestPedirFatorExposicao(unittest.TestCase):
+
+    def pedir_com_respostas(self, respostas, fator_sugerido=None):
+        with patch("builtins.input", side_effect=respostas):
+            with patch("builtins.print"):
+                return pedir_fator_exposicao("Fator de exposição: ", fator_sugerido)
+
+    def test_enter_com_sugerido_devolve_o_sugerido(self):
+        self.assertEqual(self.pedir_com_respostas([""], 1.3), 1.3)
+
+    def test_enter_sem_sugerido_pergunta_de_novo(self):
+        self.assertEqual(self.pedir_com_respostas(["", "1.4"]), 1.4)
+
+    def test_espaco_com_sugerido_conta_como_enter(self):
+        self.assertEqual(self.pedir_com_respostas(["   "], 1.3), 1.3)
+
+    def test_devolve_o_numero_digitado(self):
+        self.assertEqual(self.pedir_com_respostas(["1.4"], 1.3), 1.4)
+
+    def test_aceita_virgula(self):
+        self.assertEqual(self.pedir_com_respostas(["0,8"]), 0.8)
+
+    def test_pergunta_de_novo_ate_receber_valor_valido(self):
+        self.assertEqual(self.pedir_com_respostas(["abc", "0", "2.5", "2"]), 2)
 
 
 if __name__ == "__main__":

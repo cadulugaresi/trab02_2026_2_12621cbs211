@@ -38,3 +38,9 @@ def validar_dependencia_de_si_mesmo(id_ativo_que_depende, id_ativo_do_qual_depen
 def validar_fracao_da_dependencia(soma_atual, fracao):
     validar_fracao(fracao)
     validar_soma_fracao(soma_atual, fracao)
+
+
+def validar_fator_exposicao(fator):
+    if fator <= 0 or fator > 2:
+        raise DadoInvalidoError("O fator de exposição deve ser maior que 0 e no máximo 2.")
+    return fator

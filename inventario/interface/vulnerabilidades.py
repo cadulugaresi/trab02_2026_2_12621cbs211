@@ -28,14 +28,15 @@ def cadastrar_vulnerabilidade(repositorio, catalogo):
 
 def mostrar_vulnerabilidade(vulnerabilidade, status_tratamento=None):
 
-    print(f"""
-    ID: {vulnerabilidade.id_vulnerabilidade}
-    Vulnerabilidade: {vulnerabilidade.nome_vulnerabilidade}
-    CVSS: {vulnerabilidade.cvss}
-    Nível: {vulnerabilidade.nivel().name.lower()}""")
+    print(
+        f"\nID: {vulnerabilidade.id_vulnerabilidade}\n"
+        f"Vulnerabilidade: {vulnerabilidade.nome_vulnerabilidade}\n"
+        f"CVSS: {vulnerabilidade.cvss}\n"
+        f"Nível: {vulnerabilidade.nivel().name.lower()}"
+    )
 
     if status_tratamento is not None:
-        print(f"    Status neste ativo: {status_tratamento.name.lower()}")
+        print(f"Status neste ativo: {status_tratamento.name.lower()}")
 
 
 def mostrar_vulnerabilidades_do_ativo(ativo, catalogo):
@@ -77,10 +78,7 @@ def confirmar_exclusao_vuln(vulnerabilidade):
 
 
 def editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo):
-    print("""
-    1 - Editar nome
-    2 - Editar CVSS
-    3 - Voltar""")
+    print("\n1 - Editar nome\n2 - Editar CVSS\n3 - Voltar")
 
     opcao_edicao = input("Escolha uma opção: ").strip()
 

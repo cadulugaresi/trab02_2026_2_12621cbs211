@@ -1,5 +1,9 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.dominio.validacoes import validar_cvss, validar_nome_responsavel
+from inventario.dominio.validacoes import (
+    validar_cvss,
+    validar_nome_responsavel,
+    validar_fator_exposicao,
+)
 from inventario.interface.conversao_das_opcoes_do_menu import (
     TIPOS_DE_ATIVOS,
     validar_cor,
@@ -33,13 +37,8 @@ def pedir_status(mensagem):
     while status is None:
 
         try:
-            print("""
-            Status:
-
-            ATIVO - 1
-            INATIVO - 2
-            EM_MANUTENCAO - 3
-            """)
+            print("\nStatus:\n")
+            print("ATIVO - 1\nINATIVO - 2\nEM_MANUTENCAO - 3")
 
             status_digitado = input(mensagem).strip()
             status = validar_status(status_digitado)
@@ -57,14 +56,8 @@ def pedir_status_vulnerabilidade(mensagem):
     while status_tratamento is None:
 
         try:
-            print("""
-            Status da vulnerabilidade:
-
-            ABERTA - 1
-            EM TRATAMENTO - 2
-            CORRIGIDA - 3
-            ACEITA - 4
-            """)
+            print("\nStatus da vulnerabilidade:\n")
+            print("ABERTA - 1\nEM TRATAMENTO - 2\nCORRIGIDA - 3\nACEITA - 4")
 
             status_digitado = input(mensagem).strip()
             status_tratamento = validar_status_vulnerabilidade(status_digitado)
@@ -82,15 +75,8 @@ def pedir_setor(mensagem):
     while setor is None:
 
         try:
-            print("""
-            Setor:
-
-            TI - 1
-            FINANCEIRO - 2
-            MARKETING - 3
-            RH - 4
-            JURIDICO - 5
-            """)
+            print("\nSetor:\n")
+            print("TI - 1\nFINANCEIRO - 2\nMARKETING - 3\nRH - 4\nJURIDICO - 5")
 
             setor_digitado = input(mensagem).strip()
             setor = validar_setor(setor_digitado)
@@ -162,7 +148,7 @@ def pedir_tipo(mensagem):
     while tipo is None:
 
         try:
-            print("Tipos de ativo:")
+            print("\nTipos de ativo:\n")
             for numero, classe in TIPOS_DE_ATIVOS.items():
                 print(f"{numero} - {classe.__name__}")
 
@@ -181,12 +167,8 @@ def pedir_cor():
     while cor is None:
 
         try:
-            print("""
-            Qual é a cor do cartucho da impressora?
-
-            1 - Colorido
-            2 - Preto e branco
-            """)
+            print("\nQual é a cor do cartucho da impressora?\n")
+            print("1 - Colorido\n2 - Preto e branco")
             opcao_cor = input("Escolha: ").strip()
             cor = validar_cor(opcao_cor)
 
@@ -202,12 +184,8 @@ def pedir_tecnologia():
     while tecnologia is None:
 
         try:
-            print("""
-            Tecnologias de impressão:
-
-            1 - Tinta
-            2 - Laser
-            """)
+            print("\nTecnologias de impressão:\n")
+            print("1 - Tinta\n2 - Laser")
             opcao_tec = input("Qual é a tecnologia da impressão? ")
             tecnologia = validar_tecnologia(opcao_tec)
 
@@ -215,3 +193,18 @@ def pedir_tecnologia():
             print(erro)
 
     return tecnologia
+
+
+def pedir_fator_exposicao(mensagem, fator_sugerido=None):
+    while True:
+        novo_fator_exposicao = input(mensagem).strip().replace(",", ".")
+
+        if novo_fator_exposicao == "" and fator_sugerido is not None:
+            return fator_sugerido
+        else:
+            try:
+                return validar_fator_exposicao(float(novo_fator_exposicao))
+            except ValueError:
+                print("Digite um número válido")
+            except DadoInvalidoError as erro:
+                print(erro)

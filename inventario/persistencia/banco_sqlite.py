@@ -42,7 +42,7 @@ class RepositorioSQLite:
             registros = self.executar(
                 """SELECT ativos.id, ativos.nome,
                 ativos.setor, ativos.responsavel,
-                ativos.status, """
+                ativos.status, ativos.fator_exposicao,"""
                 f"""{', '.join(colunas_do_tipo)}
                 FROM ativos JOIN {tabela} ON
                 {tabela}.id_ativo = ativos.id"""
@@ -55,9 +55,10 @@ class RepositorioSQLite:
                     "setor": registro[2],
                     "responsavel": registro[3],
                     "status": registro[4],
+                    "fator_exposicao": registro[5],
                 }
 
-                posicao = 5
+                posicao = 6
                 for coluna in colunas_do_tipo:
                     dados_do_ativo[coluna] = registro[posicao]
                     posicao = posicao + 1
@@ -124,8 +125,8 @@ class RepositorioSQLite:
         with self.conexao:
             self.executar(
                 """INSERT INTO ativos
-                (id, nome, tipo, setor, responsavel, status)
-                VALUES (?, ?, ?, ?, ?, ?)""",
+                (id, nome, tipo, setor, responsavel, status, fator_exposicao)
+                VALUES (?, ?, ?, ?, ?, ?, ?)""",
                 (
                     dados_do_ativo["id"],
                     dados_do_ativo["nome"],
@@ -133,6 +134,7 @@ class RepositorioSQLite:
                     dados_do_ativo["setor"],
                     dados_do_ativo["responsavel"],
                     dados_do_ativo["status"],
+                    dados_do_ativo["fator_exposicao"],
                 ),
             )
 
@@ -146,7 +148,7 @@ class RepositorioSQLite:
             self.executar(
                 """UPDATE ativos
                 SET nome = ?, tipo = ?, setor = ?,
-                responsavel = ?, status = ?
+                responsavel = ?, status = ?, fator_exposicao = ?
                 WHERE id = ?""",
                 (
                     dados_do_ativo["nome"],
@@ -154,6 +156,7 @@ class RepositorioSQLite:
                     dados_do_ativo["setor"],
                     dados_do_ativo["responsavel"],
                     dados_do_ativo["status"],
+                    dados_do_ativo["fator_exposicao"],
                     dados_do_ativo["id"],
                 ),
             )
