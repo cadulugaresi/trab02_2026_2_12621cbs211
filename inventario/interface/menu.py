@@ -59,10 +59,10 @@ def menu_principal(repositorio, ativos, catalogo):
             print("\n=== Menu principal ===\n")
             print(
                 "1 - Cadastrar ativo\n"
-                "2 - Listar ativo\n"
-                "3 - Excluir ativo\n"
-                "4 - Menu de vulnerabilidades\n"
-                "5 - Editar ativo\n"
+                "2 - Listar ativos\n"
+                "3 - Editar ativo\n"
+                "4 - Excluir ativo\n"
+                "5 - Menu de vulnerabilidades\n"
                 "6 - Menu de dependências\n"
                 "7 - Análise de risco\n"
                 "8 - Sair"
@@ -77,13 +77,13 @@ def menu_principal(repositorio, ativos, catalogo):
                 menu_listagem(ativos)
 
             elif opcao == "3":
-                excluir_ativo(repositorio, ativos)
+                editar_ativo(repositorio, ativos)
 
             elif opcao == "4":
-                menu_vulnerabilidades(repositorio, ativos, catalogo)
+                excluir_ativo(repositorio, ativos)
 
             elif opcao == "5":
-                editar_ativo(repositorio, ativos)
+                menu_vulnerabilidades(repositorio, ativos, catalogo)
 
             elif opcao == "6":
                 if len(ativos) < 2:
@@ -117,12 +117,12 @@ def menu_vulnerabilidades(repositorio, ativos, catalogo):
         print(
             "1 - Cadastrar vulnerabilidade\n"
             "2 - Listar catálogo de vulnerabilidades\n"
-            "3 - Vincular vulnerabilidade a um ativo\n"
-            "4 - Listar vulnerabilidades de um ativo\n"
-            "5 - Atualizar status da vulnerabilidade em um ativo\n"
-            "6 - Desvincular vulnerabilidade de um ativo\n"
-            "7 - Excluir vulnerabilidade do catálogo\n"
-            "8 - Editar vulnerabilidade no catálogo\n"
+            "3 - Editar vulnerabilidade no catálogo\n"
+            "4 - Excluir vulnerabilidade do catálogo\n"
+            "5 - Vincular vulnerabilidade a um ativo\n"
+            "6 - Listar vulnerabilidades de um ativo\n"
+            "7 - Atualizar status da vulnerabilidade em um ativo\n"
+            "8 - Desvincular vulnerabilidade de um ativo\n"
             "9 - Voltar ao menu principal"
         )
 
@@ -151,17 +151,40 @@ def menu_vulnerabilidades(repositorio, ativos, catalogo):
                     mostrar_vulnerabilidade(vulnerabilidade)
 
         elif opcao_vulnerabilidade == "3":
+            vulnerabilidade = encontrar_vulnerabilidade(catalogo)
+
+            if vulnerabilidade:
+                editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo)
+
+        elif opcao_vulnerabilidade == "4":
+            print("Excluindo vulnerabilidade...")
+            vulnerabilidade_a_excluir = encontrar_vulnerabilidade(catalogo)
+
+            if vulnerabilidade_a_excluir:
+                confirmou = confirmar_exclusao_vuln(vulnerabilidade_a_excluir)
+
+                if confirmou:
+                    excluir_vulnerabilidade_do_catalogo(
+                        repositorio, catalogo, ativos, vulnerabilidade_a_excluir.id_vulnerabilidade
+                    )
+                    print(
+                        f'Vulnerabilidade "{vulnerabilidade_a_excluir.nome_vulnerabilidade}" excluída com sucesso!'
+                    )
+                else:
+                    print("Exclusão cancelada.")
+
+        elif opcao_vulnerabilidade == "5":
             vulnerabilidade_encontrada = encontrar_vulnerabilidade(catalogo)
 
             if vulnerabilidade_encontrada:
                 vincular_a_um_ativo(repositorio, vulnerabilidade_encontrada, ativos, catalogo)
 
-        elif opcao_vulnerabilidade == "4":
+        elif opcao_vulnerabilidade == "6":
             ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
             if ativo_encontrado:
                 mostrar_vulnerabilidades_do_ativo(ativo_encontrado, catalogo)
 
-        elif opcao_vulnerabilidade == "5":
+        elif opcao_vulnerabilidade == "7":
             ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
 
             if ativo_encontrado:
@@ -179,7 +202,7 @@ def menu_vulnerabilidades(repositorio, ativos, catalogo):
                 except DadoInvalidoError as erro:
                     print(erro)
 
-        elif opcao_vulnerabilidade == "6":
+        elif opcao_vulnerabilidade == "8":
             ativo_encontrado = escolher_ativo_com_vulnerabilidades(ativos)
 
             if ativo_encontrado:
@@ -196,29 +219,6 @@ def menu_vulnerabilidades(repositorio, ativos, catalogo):
                 except DadoInvalidoError as erro:
                     print(erro)
 
-        elif opcao_vulnerabilidade == "7":
-            print("Excluindo vulnerabilidade...")
-            vulnerabilidade_a_excluir = encontrar_vulnerabilidade(catalogo)
-
-            if vulnerabilidade_a_excluir:
-                confirmou = confirmar_exclusao_vuln(vulnerabilidade_a_excluir)
-
-                if confirmou:
-                    excluir_vulnerabilidade_do_catalogo(
-                        repositorio, catalogo, ativos, vulnerabilidade_a_excluir.id_vulnerabilidade
-                    )
-                    print(
-                        f'Vulnerabilidade "{vulnerabilidade_a_excluir.nome_vulnerabilidade}" excluída com sucesso!'
-                    )
-                else:
-                    print("Exclusão cancelada.")
-
-        elif opcao_vulnerabilidade == "8":
-            vulnerabilidade = encontrar_vulnerabilidade(catalogo)
-
-            if vulnerabilidade:
-                editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo)
-
         elif opcao_vulnerabilidade == "9":
             print("Voltando ao menu principal...")
             break
@@ -231,7 +231,7 @@ def menu_listagem(ativos):
     todos_ou_um = ""
     while todos_ou_um not in ("todos", "um", "filtrar"):
         print("Deseja listar todos os ativos, filtrar ou mostrar apenas um?")
-        todos_ou_um = input("todos/filtrar/um): ").strip().lower()
+        todos_ou_um = input("(todos/filtrar/um): ").strip().lower()
 
         if todos_ou_um == "todos":
             if ativos:
@@ -306,7 +306,7 @@ def menu_listagem(ativos):
                     print('Opção inválida. Digite "nome" ou "id".')
 
         else:
-            print('Opção inválida. Digite "todos" ou "um".')
+            print('Opção inválida. Digite "todos", "filtrar" ou "um".')
 
 
 def menu_dependencias(repositorio, ativos):
@@ -314,9 +314,9 @@ def menu_dependencias(repositorio, ativos):
         print("\n=== Menu de dependências ===\n")
         print(
             "1 - Adicionar dependência\n"
-            "2 - Atualizar dependência\n"
-            "3 - Remover dependência\n"
-            "4 - Listar dependências\n"
+            "2 - Listar dependências\n"
+            "3 - Atualizar dependência\n"
+            "4 - Remover dependência\n"
             "5 - Voltar ao menu principal"
         )
 
@@ -326,12 +326,6 @@ def menu_dependencias(repositorio, ativos):
             cadastrar_dependencia_menu(repositorio, ativos)
 
         elif opcao == "2":
-            atualizar_dependencia_menu(repositorio, ativos)
-
-        elif opcao == "3":
-            excluir_dependencia_menu(repositorio, ativos)
-
-        elif opcao == "4":
             todos_ou_um = ""
             while todos_ou_um not in ("todos", "um"):
                 print("Deseja listar as dependências de todos os ativos ou de apenas um?")
@@ -364,6 +358,12 @@ def menu_dependencias(repositorio, ativos):
 
                 else:
                     print('Opção inválida. Digite "todos" ou "um".')
+
+        elif opcao == "3":
+            atualizar_dependencia_menu(repositorio, ativos)
+
+        elif opcao == "4":
+            excluir_dependencia_menu(repositorio, ativos)
 
         elif opcao == "5":
             print("Voltando ao menu principal...")
