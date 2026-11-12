@@ -4,6 +4,30 @@ from inventario.dominio.enums import StatusDaVuln
 from inventario.dominio.excecoes import DadoInvalidoError
 
 
+class AnaliseDeRisco:
+    def __init__(self, ativos, catalogo):
+        self.ativos = ativos
+        self.linha_dos_ativos = mapear_ids_para_posicoes(ativos)
+        self.risco_proprio = calcular_risco_proprio(ativos, catalogo)
+
+        matriz_a = montar_matriz_a(ativos, self.linha_dos_ativos)
+        self.risco_efetivo = resolver_sistema(matriz_a, self.risco_proprio)
+
+    def risco_proprio_do_ativo(self, id_ativo):
+        posicao = self.linha_dos_ativos[id_ativo]
+        return self.risco_proprio[posicao]
+
+    def risco_efetivo_do_ativo(self, id_ativo):
+        posicao = self.linha_dos_ativos[id_ativo]
+        return self.risco_efetivo[posicao]
+
+    def risco_herdado_do_ativo(self, id_ativo):
+        return self.risco_efetivo_do_ativo(id_ativo) - self.risco_proprio_do_ativo(id_ativo)
+
+    def ranking(self):
+        return sorted(self.ativos, key=self.risco_efetivo_do_ativo, reverse=True)
+
+
 def mapear_ids_para_posicoes(dicionario_por_id):
     posicoes = {}
 
@@ -83,27 +107,3 @@ def calcular_risco_efetivo(ativos, catalogo):
     matriz_a = montar_matriz_a(ativos, linha_do_ativo)
 
     return resolver_sistema(matriz_a, risco_proprio)
-
-
-class AnaliseDeRisco:
-    def __init__(self, ativos, catalogo):
-        self.ativos = ativos
-        self.linha_dos_ativos = mapear_ids_para_posicoes(ativos)
-        self.risco_proprio = calcular_risco_proprio(ativos, catalogo)
-
-        matriz_a = montar_matriz_a(ativos, self.linha_dos_ativos)
-        self.risco_efetivo = resolver_sistema(matriz_a, self.risco_proprio)
-
-    def risco_proprio_do_ativo(self, id_ativo):
-        posicao = self.linha_dos_ativos[id_ativo]
-        return self.risco_proprio[posicao]
-
-    def risco_efetivo_do_ativo(self, id_ativo):
-        posicao = self.linha_dos_ativos[id_ativo]
-        return self.risco_efetivo[posicao]
-
-    def risco_herdado_do_ativo(self, id_ativo):
-        return self.risco_efetivo_do_ativo(id_ativo) - self.risco_proprio_do_ativo(id_ativo)
-
-    def ranking(self):
-        return sorted(self.ativos, key=self.risco_efetivo_do_ativo, reverse=True)
