@@ -1,4 +1,9 @@
-from inventario.dominio.ativo import Impressora, Notebook, Roteador, Servidor
+from inventario.dominio.ativo import (
+    Impressora,
+    Notebook,
+    Roteador,
+    Servidor,
+)
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.interface.entradas import (
     pedir_cor,
@@ -10,6 +15,8 @@ from inventario.interface.entradas import (
     pedir_tecnologia,
     pedir_tipo,
 )
+
+from inventario.dominio.validacoes import validar_fator_exposicao
 from inventario.servicos.ativos import (
     atualizar_ativo_no_inventario,
     encontrar_ativo_por_id,
@@ -88,6 +95,26 @@ def cadastrar_ativo(repositorio, ativos):
     elif tipo is Impressora:
         cor, tecnologia = cadastro_impressora()
         ativo = Impressora(id_do_ativo, nome_ativo, setor, responsavel, status, cor, tecnologia)
+
+    print(f"Fator de exposição sugerido para {type(ativo).__name__}: {ativo.fator_exposicao}")
+
+    while True:
+        novo_fator_exposicao = (
+            input("Pressione Enter para aceitar ou digite outro valor: ").strip().replace(",", ".")
+        )
+
+        if novo_fator_exposicao == "":
+            break
+
+        try:
+            ativo.fator_exposicao = validar_fator_exposicao(float(novo_fator_exposicao))
+            break
+
+        except ValueError:
+            print("Digite um número válido")
+
+        except DadoInvalidoError as erro:
+            print(erro)
 
     registrar_ativo_no_inventario(repositorio, ativos, ativo)
     print("Ativo cadastrado com sucesso!")
