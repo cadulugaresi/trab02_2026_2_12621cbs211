@@ -4,10 +4,13 @@ import numpy as np
 
 from inventario.dominio.ativo import Notebook, Roteador, Servidor
 from inventario.dominio.enums import Setor, StatusDaVuln, StatusDoAtivo
+from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.servicos.riscos import (
+    calcular_risco_efetivo,
     calcular_risco_proprio,
     mapear_ids_para_posicoes,
+    montar_matriz_a,
     montar_matriz_m,
     montar_vetor_cvss,
     montar_vetor_fator,
@@ -48,6 +51,11 @@ def vincular_vulnerabilidades_do_cenario(notebook, servidor, roteador):
     servidor.vulnerabilidades[3] = StatusDaVuln.ABERTA
     servidor.vulnerabilidades[2] = StatusDaVuln.CORRIGIDA
     roteador.vulnerabilidades[1] = StatusDaVuln.ABERTA
+
+
+def vincular_dependencias_do_cenario(notebook, servidor):
+    notebook.dependencias[2] = 0.5
+    servidor.dependencias[3] = 0.2
 
 
 class TesteComCenarioDeRisco(unittest.TestCase):
@@ -153,6 +161,70 @@ class TestCalcularRiscoProprio(TesteComCenarioDeRisco):
         risco_proprio = calcular_risco_proprio(ativos_com_buracos, self.catalogo)
 
         np.testing.assert_allclose(risco_proprio, [9.0, 6.89, 14.7])
+
+
+class TestMontarMatrizA(TesteComCenarioDeRisco):
+
+    def test_cenario_com_dependencias_gera_a_matriz_esperada(self):
+        vincular_dependencias_do_cenario(self.notebook, self.servidor)
+
+        matriz_a = montar_matriz_a(self.ativos, self.posicoes_dos_ativos)
+
+        matriz_esperada = np.array([[0, 0.5, 0], [0, 0, 0.2], [0, 0, 0]])
+        np.testing.assert_allclose(matriz_a, matriz_esperada)
+
+    def test_ativos_sem_dependencias_geram_matriz_so_de_zeros(self):
+        matriz_a = montar_matriz_a(self.ativos, self.posicoes_dos_ativos)
+
+        np.testing.assert_array_equal(matriz_a, np.zeros((3, 3)))
+
+    def test_respeita_a_traducao_de_ids_com_buracos(self):
+        notebook = criar_notebook(5)
+        servidor = criar_servidor(12)
+        roteador = criar_roteador(300)
+        roteador.dependencias[5] = 0.4
+        ativos_com_buracos = {300: roteador, 5: notebook, 12: servidor}
+        posicoes_com_buracos = mapear_ids_para_posicoes(ativos_com_buracos)
+
+        matriz_a = montar_matriz_a(ativos_com_buracos, posicoes_com_buracos)
+
+        matriz_esperada = np.array([[0, 0, 0], [0, 0, 0], [0.4, 0, 0]])
+        np.testing.assert_allclose(matriz_a, matriz_esperada)
+
+
+class TestCalcularRiscoEfetivo(TesteComCenarioDeRisco):
+
+    def test_cenario_com_dependencias_gera_o_risco_esperado(self):
+        vincular_dependencias_do_cenario(self.notebook, self.servidor)
+
+        risco_efetivo = calcular_risco_efetivo(self.ativos, self.catalogo)
+
+        np.testing.assert_allclose(risco_efetivo, [13.915, 9.83, 14.7])
+
+    def test_sem_dependencias_o_risco_efetivo_e_igual_ao_risco_proprio(self):
+        risco_efetivo = calcular_risco_efetivo(self.ativos, self.catalogo)
+        risco_proprio = calcular_risco_proprio(self.ativos, self.catalogo)
+
+        np.testing.assert_allclose(risco_efetivo, risco_proprio)
+
+    def test_roteador_sem_dependencias_tem_risco_efetivo_igual_ao_proprio(self):
+        vincular_dependencias_do_cenario(self.notebook, self.servidor)
+        linha_do_roteador = self.posicoes_dos_ativos[3]
+
+        risco_efetivo = calcular_risco_efetivo(self.ativos, self.catalogo)
+        risco_proprio = calcular_risco_proprio(self.ativos, self.catalogo)
+
+        np.testing.assert_allclose(
+            risco_efetivo[linha_do_roteador], risco_proprio[linha_do_roteador]
+        )
+
+    def test_dependencia_circular_com_fracao_total_levanta_erro(self):
+        self.notebook.dependencias[2] = 1.0
+        self.servidor.dependencias[1] = 1.0
+        ativos_em_ciclo = {1: self.notebook, 2: self.servidor}
+
+        with self.assertRaises(DadoInvalidoError):
+            calcular_risco_efetivo(ativos_em_ciclo, self.catalogo)
 
 
 if __name__ == "__main__":
