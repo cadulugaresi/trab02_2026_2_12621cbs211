@@ -1,6 +1,7 @@
 from flask import Flask
 from inventario.persistencia.banco_sqlite import RepositorioSQLite
 from inventario.dominio.excecoes import PersistenciaError
+from inventario.servicos.ordenacao import listar_ativos_ordenados, por_id
 
 app = Flask(__name__)
 
@@ -19,6 +20,14 @@ except PersistenciaError as erro:
 @app.get("/saude")
 def verificar_saude():
     return {"status": "ok"}
+
+
+@app.get("/ativos")
+def listar_ativos():
+    ativos_em_dicionario = []
+    for ativo in listar_ativos_ordenados(ativos, por_id):
+        ativos_em_dicionario.append(ativo.para_dicionario())
+    return ativos_em_dicionario
 
 
 if __name__ == "__main__":
