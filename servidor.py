@@ -2,10 +2,14 @@ from flask import Flask, request
 from inventario.persistencia.banco_sqlite import RepositorioSQLite
 from inventario.dominio.excecoes import DadoInvalidoError, PersistenciaError
 from inventario.dominio.ativo import MAPA_DE_TIPOS
+from inventario.dominio.enums import StatusDaVuln
 from inventario.servicos.ordenacao import listar_ativos_ordenados, por_id
 from inventario.servicos.riscos import AnaliseDeRisco
 from inventario.servicos.ativos import encontrar_ativo_por_id, registrar_ativo_no_inventario
-from inventario.servicos.vulnerabilidades import registrar_vulnerabilidade_no_catalogo
+from inventario.servicos.vulnerabilidades import (
+    registrar_vulnerabilidade_no_catalogo,
+    vincular_vulnerabilidade,
+)
 
 app = Flask(__name__)
 
@@ -47,7 +51,7 @@ def cadastrar_vulnerabilidade():
     corpo = request.get_json()
     try:
         vulnerabilidade = registrar_vulnerabilidade_no_catalogo(
-            repositorio, catalogo, corpo["nome"], corpo["cvss"]
+            repositorio, catalogo, corpo["nome_vulnerabilidade"], corpo["cvss"]
         )
     except DadoInvalidoError as erro:
         return {"erro": str(erro)}, 400
@@ -104,6 +108,26 @@ def cadastrar_ativo():
     except (KeyError, ValueError, TypeError):
         return {"erro": "Dados do ativo incompletos ou inválidos."}, 400
     return ativo.para_dicionario(), 201
+
+
+@app.post("/ativos/<int:id_ativo>/vulnerabilidades")
+def vincular_vulnerabilidade_ao_ativo(id_ativo):
+    corpo = request.get_json()
+    try:
+        status_da_vuln = StatusDaVuln(corpo["status_tratamento"])
+        vincular_vulnerabilidade(
+            repositorio,
+            ativos,
+            catalogo,
+            id_ativo,
+            corpo["id_vulnerabilidade"],
+            status_da_vuln,
+        )
+    except DadoInvalidoError as erro:
+        return {"erro": str(erro)}, 400
+    except (KeyError, ValueError, TypeError):
+        return {"erro": "Dados incompletos ou inválidos."}, 400
+    return ativos[id_ativo].para_dicionario(), 201
 
 
 if __name__ == "__main__":
