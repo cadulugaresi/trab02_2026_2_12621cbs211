@@ -1,9 +1,10 @@
-from flask import Flask
+from flask import Flask, request
 from inventario.persistencia.banco_sqlite import RepositorioSQLite
 from inventario.dominio.excecoes import DadoInvalidoError, PersistenciaError
+from inventario.dominio.ativo import MAPA_DE_TIPOS
 from inventario.servicos.ordenacao import listar_ativos_ordenados, por_id
 from inventario.servicos.riscos import AnaliseDeRisco
-from inventario.servicos.ativos import encontrar_ativo_por_id
+from inventario.servicos.ativos import encontrar_ativo_por_id, registrar_ativo_no_inventario
 
 app = Flask(__name__)
 
@@ -69,20 +70,25 @@ def listar_riscos():
     return ranking_de_risco
 
 
-# @app.get("/ativos/<int:id-ativo>")
-# def buscar_ativo():
-#     ativo = encontrar_ativo_por_id(ativos, id_ativo)
-#     if ativo is None:
-#         raise DadoInvalidoError("Ativo não encontrado.")
-#     else:
-#         para_dicionario(ativo)
-
 @app.get("/ativos/<int:id_ativo>")
 def buscar_ativo(id_ativo):
     ativo = encontrar_ativo_por_id(ativos, id_ativo)
     if ativo is None:
         return {"erro": "Ativo não encontrado."}, 404
     return ativo.para_dicionario()
+
+
+@app.post("/ativos")
+def cadastrar_ativo():
+    corpo = request.get_json()
+    try:
+        ativo = MAPA_DE_TIPOS[corpo["tipo"]].de_dicionario(corpo)
+        registrar_ativo_no_inventario(repositorio, ativos, ativo)
+    except DadoInvalidoError as erro:
+        return {"erro": str(erro)}, 400
+    except (KeyError, ValueError, TypeError):
+        return {"erro": "Dados do ativo incompletos ou inválidos."}, 400
+    return ativo.para_dicionario(), 201
 
 
 if __name__ == "__main__":
