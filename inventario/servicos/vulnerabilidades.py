@@ -1,7 +1,7 @@
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.servicos.ativos import obter_ativo
-from inventario.dominio.validacoes import validar_cvss
+from inventario.dominio.validacoes import validar_cvss, validar_nome_responsavel
 
 
 def proximo_id(dicionario):
@@ -17,6 +17,7 @@ def proximo_id(dicionario):
 
 def registrar_vulnerabilidade_no_catalogo(repositorio, catalogo, nome_vulnerabilidade, cvss):
     cvss = validar_cvss(cvss)
+    validar_nome_responsavel(nome_vulnerabilidade)
     id_vulnerabilidade = proximo_id(catalogo)
 
     vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)

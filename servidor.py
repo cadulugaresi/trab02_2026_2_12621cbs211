@@ -5,6 +5,7 @@ from inventario.dominio.ativo import MAPA_DE_TIPOS
 from inventario.servicos.ordenacao import listar_ativos_ordenados, por_id
 from inventario.servicos.riscos import AnaliseDeRisco
 from inventario.servicos.ativos import encontrar_ativo_por_id, registrar_ativo_no_inventario
+from inventario.servicos.vulnerabilidades import registrar_vulnerabilidade_no_catalogo
 
 app = Flask(__name__)
 
@@ -39,6 +40,20 @@ def listar_vulnerabilidades():
     for vulnerabilidade in catalogo.values():
         vulnerabilidades_em_dicionario.append(vulnerabilidade.para_dicionario())
     return vulnerabilidades_em_dicionario
+
+
+@app.post("/vulnerabilidades")
+def cadastrar_vulnerabilidade():
+    corpo = request.get_json()
+    try:
+        vulnerabilidade = registrar_vulnerabilidade_no_catalogo(
+            repositorio, catalogo, corpo["nome"], corpo["cvss"]
+        )
+    except DadoInvalidoError as erro:
+        return {"erro": str(erro)}, 400
+    except (KeyError, TypeError):
+        return {"erro": "Dados da vulnerabilidade incompletos ou inválidos."}, 400
+    return vulnerabilidade.para_dicionario(), 201
 
 
 @app.get("/riscos")
