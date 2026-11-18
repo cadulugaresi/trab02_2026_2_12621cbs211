@@ -3,6 +3,7 @@ from inventario.persistencia.banco_sqlite import RepositorioSQLite
 from inventario.dominio.excecoes import DadoInvalidoError, PersistenciaError
 from inventario.servicos.ordenacao import listar_ativos_ordenados, por_id
 from inventario.servicos.riscos import AnaliseDeRisco
+from inventario.servicos.ativos import encontrar_ativo_por_id
 
 app = Flask(__name__)
 
@@ -50,6 +51,7 @@ def listar_riscos():
         return {"erro": str(erro)}, 409
 
     ranking_de_risco = []
+
     for posicao, id_ativo in enumerate(analise.ranking(), start=1):
         ativo = ativos[id_ativo]
         ranking_de_risco.append(
@@ -65,6 +67,22 @@ def listar_riscos():
             }
         )
     return ranking_de_risco
+
+
+# @app.get("/ativos/<int:id-ativo>")
+# def buscar_ativo():
+#     ativo = encontrar_ativo_por_id(ativos, id_ativo)
+#     if ativo is None:
+#         raise DadoInvalidoError("Ativo não encontrado.")
+#     else:
+#         para_dicionario(ativo)
+
+@app.get("/ativos/<int:id_ativo>")
+def buscar_ativo(id_ativo):
+    ativo = encontrar_ativo_por_id(ativos, id_ativo)
+    if ativo is None:
+        return {"erro": "Ativo não encontrado."}, 404
+    return ativo.para_dicionario()
 
 
 if __name__ == "__main__":
