@@ -532,8 +532,8 @@ class TestEditarVulnerabilidade(TesteComArquivosTemporarios):
 
     def test_edita_o_nome(self):
         self.editar(["1", "TLS 1.0 habilitado"])
-        self.assertEqual(self.vulnerabilidade.nome_vulnerabilidade, "TLS 1.0 habilitado")
-        self.assertEqual(self.vulnerabilidade.cvss, 5.3)
+        self.assertEqual(self.catalogo[3].nome_vulnerabilidade, "TLS 1.0 habilitado")
+        self.assertEqual(self.catalogo[3].cvss, 5.3)
 
     def test_salva_a_edicao_no_arquivo(self):
         self.editar(["1", "TLS 1.0 habilitado"])
@@ -541,29 +541,29 @@ class TestEditarVulnerabilidade(TesteComArquivosTemporarios):
 
     def test_edita_o_cvss_com_virgula(self):
         self.editar(["2", "7,4"])
-        self.assertEqual(self.vulnerabilidade.cvss, 7.4)
+        self.assertEqual(self.catalogo[3].cvss, 7.4)
 
     def test_cvss_editado_muda_o_nivel(self):
         self.editar(["2", "9.1"])
-        self.assertEqual(self.vulnerabilidade.nivel(), NivelDaVulnerabilidade.CRITICO)
+        self.assertEqual(self.catalogo[3].nivel(), NivelDaVulnerabilidade.CRITICO)
 
     def test_recusa_cvss_maior_que_10(self):
         self.editar(["2", "15", "8"])  # o 15 é recusado e a nota é pedida de novo
-        self.assertEqual(self.vulnerabilidade.cvss, 8.0)
+        self.assertEqual(self.catalogo[3].cvss, 8.0)
 
     def test_arredonda_cvss_editado(self):
         self.editar(["2", "3.94"])
-        self.assertEqual(self.vulnerabilidade.cvss, 3.9)
+        self.assertEqual(self.catalogo[3].cvss, 3.9)
 
     def test_voltar_nao_muda_nada(self):
         self.editar(["3"])
-        self.assertEqual(self.vulnerabilidade.nome_vulnerabilidade, "TLS 1.0 ativo")
-        self.assertEqual(self.vulnerabilidade.cvss, 5.3)
+        self.assertEqual(self.catalogo[3].nome_vulnerabilidade, "TLS 1.0 ativo")
+        self.assertEqual(self.catalogo[3].cvss, 5.3)
         self.assertEqual(carregar_catalogo(), {})
 
     def test_opcao_invalida_nao_muda_nada(self):
         self.editar(["x"])
-        self.assertEqual(self.vulnerabilidade.cvss, 5.3)
+        self.assertEqual(self.catalogo[3].cvss, 5.3)
         self.assertEqual(carregar_catalogo(), {})
 
     def test_edita_o_mesmo_objeto_do_catalogo(self):

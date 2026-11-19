@@ -1,3 +1,5 @@
+import copy
+
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.interface.ativos import perguntar_ativo
 from inventario.interface.entradas import (
@@ -78,17 +80,18 @@ def confirmar_exclusao_vuln(vulnerabilidade):
 
 
 def editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo):
+    vulnerabilidade_em_edicao = copy.copy(vulnerabilidade)
     print("\n1 - Editar nome\n2 - Editar CVSS\n3 - Voltar")
 
     opcao_edicao = input("Escolha uma opção: ").strip()
 
     if opcao_edicao == "1":
         novo_nome = pedir_info("Digite o novo nome da vulnerabilidade: ")
-        vulnerabilidade.nome_vulnerabilidade = novo_nome
+        vulnerabilidade_em_edicao.nome_vulnerabilidade = novo_nome
 
     elif opcao_edicao == "2":
         novo_cvss = pedir_cvss("Digite a nova nota CVSS (0.1 a 10): ")
-        vulnerabilidade.cvss = novo_cvss
+        vulnerabilidade_em_edicao.cvss = novo_cvss
 
     elif opcao_edicao == "3":
         print("Voltando ao menu de vulnerabilidades...")
@@ -98,9 +101,9 @@ def editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo):
         print("Opção inválida. Tente novamente.")
         return
 
-    atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade)
+    atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade_em_edicao)
     print("Vulnerabilidade atualizada com sucesso!")
-    mostrar_vulnerabilidade(vulnerabilidade)
+    mostrar_vulnerabilidade(vulnerabilidade_em_edicao)
 
 
 def vincular_a_um_ativo(repositorio, vulnerabilidade, ativos, catalogo):
