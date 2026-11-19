@@ -41,7 +41,7 @@ def criar_app(repositorio, ativos, catalogo):
 
     app.register_blueprint(criar_rotas_de_saude())
     app.register_blueprint(criar_rotas_de_ativos(repositorio, ativos))
-    app.register_blueprint(criar_rotas_de_vulnerabilidades(repositorio, catalogo))
+    app.register_blueprint(criar_rotas_de_vulnerabilidades(repositorio, ativos, catalogo))
     app.register_blueprint(criar_rotas_de_vinculos(repositorio, ativos, catalogo))
     app.register_blueprint(criar_rotas_de_riscos(ativos, catalogo))
 

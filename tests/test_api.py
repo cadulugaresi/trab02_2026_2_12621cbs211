@@ -60,8 +60,14 @@ def criar_corpo_de_impressora():
     }
 
 
-def criar_log4shell_esperada():
+def criar_log4shell_gravada():
     return {"id_vulnerabilidade": 1, "nome_vulnerabilidade": "Log4Shell", "cvss": 10}
+
+
+def criar_log4shell_na_resposta():
+    log4shell = criar_log4shell_gravada()
+    log4shell["nivel"] = "CRITICO"
+    return log4shell
 
 
 class TesteDaApi(unittest.TestCase):
@@ -372,7 +378,7 @@ class TesteDeEdicaoDeAtivo(TesteDaApi):
         self.conferir_memoria_e_banco(
             {
                 "ativos": {2: ativo_esperado, 3: criar_notebook_esperado(3)},
-                "catalogo": {1: criar_log4shell_esperada()},
+                "catalogo": {1: criar_log4shell_gravada()},
             }
         )
 
@@ -501,7 +507,7 @@ class TesteDeExclusaoDeAtivo(TesteDaApi):
         self.assertEqual(resposta.status_code, 204)
         self.assertEqual(resposta.get_data(as_text=True), "")
         self.conferir_memoria_e_banco(
-            {"ativos": {3: criar_notebook_esperado(3)}, "catalogo": {1: criar_log4shell_esperada()}}
+            {"ativos": {3: criar_notebook_esperado(3)}, "catalogo": {1: criar_log4shell_gravada()}}
         )
 
     def test_excluir_ativo_inexistente_devolve_404_sem_alterar_nada(self):
@@ -529,12 +535,12 @@ class TesteDeVulnerabilidades(TesteDaApi):
         resposta = self.cadastrar_vulnerabilidade()
 
         self.assertEqual(resposta.status_code, 201)
-        self.assertEqual(resposta.get_json(), criar_log4shell_esperada())
+        self.assertEqual(resposta.get_json(), criar_log4shell_na_resposta())
 
     def test_cadastrar_vulnerabilidade_grava_na_memoria_e_no_banco(self):
         self.cadastrar_vulnerabilidade()
 
-        self.conferir_memoria_e_banco({"ativos": {}, "catalogo": {1: criar_log4shell_esperada()}})
+        self.conferir_memoria_e_banco({"ativos": {}, "catalogo": {1: criar_log4shell_gravada()}})
 
     def test_listar_vulnerabilidades_devolve_o_catalogo_completo(self):
         self.cadastrar_vulnerabilidade()
@@ -542,7 +548,35 @@ class TesteDeVulnerabilidades(TesteDaApi):
         resposta = self.cliente.get("/vulnerabilidades")
 
         self.assertEqual(resposta.status_code, 200)
-        self.assertEqual(resposta.get_json(), [criar_log4shell_esperada()])
+        self.assertEqual(resposta.get_json(), [criar_log4shell_na_resposta()])
+
+    def test_o_nivel_acompanha_a_faixa_do_cvss(self):
+        notas_e_niveis = [(3.9, "BAIXO"), (4.0, "MEDIO"), (7.0, "ALTO"), (9.0, "CRITICO")]
+        for cvss, _ in notas_e_niveis:
+            self.cadastrar_vulnerabilidade(nome=f"Vulnerabilidade com CVSS {cvss}", cvss=cvss)
+
+        resposta = self.cliente.get("/vulnerabilidades")
+
+        niveis_na_resposta = []
+        for vulnerabilidade in resposta.get_json():
+            niveis_na_resposta.append((vulnerabilidade["cvss"], vulnerabilidade["nivel"]))
+        self.assertEqual(niveis_na_resposta, notas_e_niveis)
+
+    def test_buscar_vulnerabilidade_existente_devolve_200_com_o_nivel(self):
+        self.cadastrar_vulnerabilidade()
+
+        resposta = self.cliente.get("/vulnerabilidades/1")
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.get_json(), criar_log4shell_na_resposta())
+
+    def test_buscar_vulnerabilidade_inexistente_devolve_404(self):
+        resposta = self.cliente.get("/vulnerabilidades/99")
+
+        self.assertEqual(resposta.status_code, 404)
+        self.assertEqual(
+            resposta.get_json(), {"erro": "Vulnerabilidade não encontrada no catálogo."}
+        )
 
     def test_cadastrar_vulnerabilidade_com_cvss_fora_do_limite_devolve_400_sem_alterar_nada(self):
         estado_antes = self.estado_da_memoria()
@@ -589,6 +623,145 @@ class TesteDeVulnerabilidades(TesteDaApi):
 
         self.conferir_erro_sem_alteracao(
             resposta, 400, MENSAGEM_DE_DADOS_DA_VULNERABILIDADE_INVALIDOS, estado_antes
+        )
+
+
+class TesteDeEdicaoDeVulnerabilidade(TesteDaApi):
+
+    def setUp(self):
+        super().setUp()
+        self.cadastrar_notebook(2)
+        self.cadastrar_vulnerabilidade()
+        self.vincular(2, 1)
+
+    def editar(self, corpo):
+        return self.cliente.put("/vulnerabilidades/1", json=corpo)
+
+    def conferir_log4shell_editada(self, resposta, nome_esperado, cvss_esperado, nivel_esperado):
+        log4shell_gravada = {
+            "id_vulnerabilidade": 1,
+            "nome_vulnerabilidade": nome_esperado,
+            "cvss": cvss_esperado,
+        }
+        log4shell_na_resposta = dict(log4shell_gravada)
+        log4shell_na_resposta["nivel"] = nivel_esperado
+        notebook_com_vinculo = criar_notebook_esperado(
+            2, vulnerabilidades=[{"id_vulnerabilidade": 1, "status_tratamento": 1}]
+        )
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.get_json(), log4shell_na_resposta)
+        self.conferir_memoria_e_banco(
+            {"ativos": {2: notebook_com_vinculo}, "catalogo": {1: log4shell_gravada}}
+        )
+
+    def test_editar_nome_e_cvss_devolve_200_e_recalcula_o_nivel(self):
+        resposta = self.editar({"nome_vulnerabilidade": "Log4Shell (Rafael)", "cvss": 5.0})
+
+        self.conferir_log4shell_editada(resposta, "Log4Shell (Rafael)", 5.0, "MEDIO")
+
+    def test_cvss_que_nao_veio_continua_o_atual(self):
+        resposta = self.editar({"nome_vulnerabilidade": "Log4Shell (Rafael)"})
+
+        self.conferir_log4shell_editada(resposta, "Log4Shell (Rafael)", 10, "CRITICO")
+
+    def test_nome_que_nao_veio_continua_o_atual(self):
+        resposta = self.editar({"cvss": 7.5})
+
+        self.conferir_log4shell_editada(resposta, "Log4Shell", 7.5, "ALTO")
+
+    def test_campos_nulos_ou_ausentes_continuam_os_atuais(self):
+        for corpo in [{}, {"nome_vulnerabilidade": None, "cvss": None}]:
+            with self.subTest(corpo=corpo):
+                resposta = self.editar(corpo)
+
+                self.conferir_log4shell_editada(resposta, "Log4Shell", 10, "CRITICO")
+
+    def test_editar_com_cvss_fora_do_limite_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.editar({"cvss": 15})
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "O CVSS deve estar entre 0.1 e 10.", estado_antes
+        )
+
+    def test_editar_com_nome_vazio_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.editar({"nome_vulnerabilidade": ""})
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo não pode ser vazio.", estado_antes
+        )
+
+    def test_editar_vulnerabilidade_inexistente_devolve_404_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.put("/vulnerabilidades/99", json={"cvss": 5.0})
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 404, "Vulnerabilidade não encontrada no catálogo.", estado_antes
+        )
+
+    def test_editar_com_corpo_que_nao_e_json_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.put(
+            "/vulnerabilidades/1", data="Rafael Torres", content_type="text/plain"
+        )
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DA_VULNERABILIDADE_INVALIDOS, estado_antes
+        )
+
+    def test_falha_do_banco_ao_editar_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(
+            self.repositorio, "atualizar_vulnerabilidade", side_effect=falha_do_banco
+        ):
+            resposta = self.editar({"cvss": 5.0})
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
+        )
+
+
+class TesteDeExclusaoDeVulnerabilidade(TesteDaApi):
+
+    def setUp(self):
+        super().setUp()
+        self.cadastrar_notebook(2)
+        self.cadastrar_vulnerabilidade()
+        self.vincular(2, 1)
+
+    def test_excluir_devolve_204_e_desvincula_de_todos_os_ativos(self):
+        resposta = self.cliente.delete("/vulnerabilidades/1")
+
+        self.assertEqual(resposta.status_code, 204)
+        self.assertEqual(resposta.get_data(as_text=True), "")
+        self.conferir_memoria_e_banco({"ativos": {2: criar_notebook_esperado(2)}, "catalogo": {}})
+
+    def test_excluir_vulnerabilidade_inexistente_devolve_404_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.delete("/vulnerabilidades/99")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 404, "Vulnerabilidade não encontrada no catálogo.", estado_antes
+        )
+
+    def test_falha_do_banco_ao_excluir_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "remover_vulnerabilidade", side_effect=falha_do_banco):
+            resposta = self.cliente.delete("/vulnerabilidades/1")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
         )
 
 
@@ -816,7 +989,7 @@ class TesteDeVinculos(TesteDaApi):
             vulnerabilidades=[{"id_vulnerabilidade": 1, "status_tratamento": 1}]
         )
         self.conferir_memoria_e_banco(
-            {"ativos": {2: ativo_esperado}, "catalogo": {1: criar_log4shell_esperada()}}
+            {"ativos": {2: ativo_esperado}, "catalogo": {1: criar_log4shell_gravada()}}
         )
 
     def test_vincular_duas_vezes_devolve_400_sem_alterar_nada(self):
