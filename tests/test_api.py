@@ -125,6 +125,121 @@ class TesteDaSaude(TesteDaApi):
         self.assertEqual(resposta.get_json(), {"status": "ok"})
 
 
+class TesteDasOpcoes(TesteDaApi):
+
+    def test_opcoes_devolve_as_listas_dos_formularios(self):
+        resposta = self.cliente.get("/opcoes")
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.get_json(),
+            {
+                "tipos": [
+                    {"nome": "Notebook", "fator_exposicao_padrao": 1.2},
+                    {"nome": "Servidor", "fator_exposicao_padrao": 1.3},
+                    {"nome": "Roteador", "fator_exposicao_padrao": 1.5},
+                    {"nome": "Impressora", "fator_exposicao_padrao": 0.9},
+                ],
+                "setores": [
+                    {"valor": 1, "nome": "TI"},
+                    {"valor": 2, "nome": "FINANCEIRO"},
+                    {"valor": 3, "nome": "MARKETING"},
+                    {"valor": 4, "nome": "RH"},
+                    {"valor": 5, "nome": "JURIDICO"},
+                ],
+                "status_do_ativo": [
+                    {"valor": 1, "nome": "ATIVO"},
+                    {"valor": 2, "nome": "INATIVO"},
+                    {"valor": 3, "nome": "EM_MANUTENCAO"},
+                ],
+                "status_de_tratamento": [
+                    {"valor": 1, "nome": "ABERTA"},
+                    {"valor": 2, "nome": "EM_TRATAMENTO"},
+                    {"valor": 3, "nome": "CORRIGIDA"},
+                    {"valor": 4, "nome": "ACEITA"},
+                ],
+                "cores": [
+                    {"valor": 1, "nome": "COLORIDA"},
+                    {"valor": 2, "nome": "PRETA_E_BRANCA"},
+                ],
+                "tecnologias": [
+                    {"valor": 1, "nome": "TINTA"},
+                    {"valor": 2, "nome": "LASER"},
+                ],
+            },
+        )
+
+
+class TesteDosFiltrosDeAtivos(TesteDaApi):
+
+    def setUp(self):
+        super().setUp()
+        self.cadastrar_notebook(1)
+        corpo_do_notebook_inativo = criar_corpo_de_notebook(2)
+        corpo_do_notebook_inativo["nome"] = "Notebook de backup"
+        corpo_do_notebook_inativo["status"] = 2
+        self.cliente.post("/ativos", json=corpo_do_notebook_inativo)
+        corpo_da_impressora = criar_corpo_de_impressora()
+        corpo_da_impressora["id"] = 3
+        self.cliente.post("/ativos", json=corpo_da_impressora)
+        self.cadastrar_vulnerabilidade()
+        self.cadastrar_vulnerabilidade(nome="Heartbleed", cvss=7.5)
+        self.vincular(1, 1)
+        self.vincular(1, 2)
+        self.vincular(3, 1)
+
+    def listar_ids(self, query_string):
+        resposta = self.cliente.get(f"/ativos{query_string}")
+        self.assertEqual(resposta.status_code, 200)
+        ids_na_resposta = []
+        for ativo in resposta.get_json():
+            ids_na_resposta.append(ativo["id"])
+        return ids_na_resposta
+
+    def test_sem_filtros_devolve_todos_ordenados_por_id(self):
+        self.assertEqual(self.listar_ids(""), [1, 2, 3])
+
+    def test_filtrar_por_tipo(self):
+        self.assertEqual(self.listar_ids("?tipo=Notebook"), [1, 2])
+
+    def test_filtrar_por_status(self):
+        self.assertEqual(self.listar_ids("?status=1"), [1, 3])
+
+    def test_filtrar_por_parte_do_nome_sem_diferenciar_maiusculas(self):
+        self.assertEqual(self.listar_ids("?nome=rafael"), [1, 3])
+        self.assertEqual(self.listar_ids("?nome=RAFAEL"), [1, 3])
+
+    def test_filtros_combinados_restringem_um_ao_outro(self):
+        self.assertEqual(self.listar_ids("?tipo=Notebook&status=1"), [1])
+        self.assertEqual(self.listar_ids("?tipo=Notebook&nome=backup"), [2])
+        self.assertEqual(self.listar_ids("?tipo=Impressora&status=2"), [])
+
+    def test_ordenar_por_nome(self):
+        self.assertEqual(self.listar_ids("?ordenar=nome"), [3, 2, 1])
+
+    def test_ordenar_pela_quantidade_de_vulnerabilidades(self):
+        self.assertEqual(self.listar_ids("?ordenar=vulnerabilidades"), [1, 3, 2])
+
+    def test_filtrar_e_ordenar_juntos(self):
+        self.assertEqual(self.listar_ids("?status=1&ordenar=nome"), [3, 1])
+
+    def test_filtro_invalido_devolve_400(self):
+        filtros_invalidos = [
+            "?tipo=Tablet",
+            "?status=9",
+            "?status=abc",
+            "?status=1.0",
+            "?ordenar=xyz",
+        ]
+
+        for query_string in filtros_invalidos:
+            with self.subTest(query_string=query_string):
+                resposta = self.cliente.get(f"/ativos{query_string}")
+
+                self.assertEqual(resposta.status_code, 400)
+                self.assertEqual(resposta.get_json(), {"erro": "Filtro inválido."})
+
+
 class TesteDeAtivos(TesteDaApi):
 
     def test_listar_sem_ativos_devolve_lista_vazia(self):
