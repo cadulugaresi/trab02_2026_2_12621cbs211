@@ -485,6 +485,64 @@ class TesteDeNumerosNaoFinitos(TesteDaApi):
         )
 
 
+class TesteDeInteirosAcimaDoLimite(TesteDaApi):
+
+    mensagem_esperada = "Este número é grande demais. O máximo aceito é 9223372036854775807."
+
+    def test_maior_inteiro_aceito_como_id_e_gravado_na_memoria_e_no_banco(self):
+        maior_inteiro_aceito = 2**63 - 1
+
+        resposta = self.cadastrar_notebook(maior_inteiro_aceito)
+
+        self.assertEqual(resposta.status_code, 201)
+        self.conferir_memoria_e_banco(
+            {
+                "ativos": {maior_inteiro_aceito: criar_notebook_esperado(maior_inteiro_aceito)},
+                "catalogo": {},
+            }
+        )
+
+    def test_id_acima_do_limite_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook(2**63)
+
+        self.conferir_erro_sem_alteracao(resposta, 400, self.mensagem_esperada, estado_antes)
+
+    def test_tela_inteira_acima_do_limite_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook_com_campo_alterado("tela", 10**30)
+
+        self.conferir_erro_sem_alteracao(resposta, 400, self.mensagem_esperada, estado_antes)
+
+    def test_ram_do_servidor_acima_do_limite_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        corpo = {
+            "tipo": "Servidor",
+            "id": 2,
+            "nome": "Servidor do Rafael",
+            "setor": 1,
+            "responsavel": "Rafael Torres",
+            "status": 1,
+            "ram": 2**63,
+            "armazenamento": 4.0,
+        }
+
+        resposta = self.cliente.post("/ativos", json=corpo)
+
+        self.conferir_erro_sem_alteracao(resposta, 400, self.mensagem_esperada, estado_antes)
+
+    def test_id_da_vulnerabilidade_acima_do_limite_no_vinculo_devolve_400_sem_alterar_nada(self):
+        self.cadastrar_notebook()
+        self.cadastrar_vulnerabilidade()
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.vincular(2, 2**63)
+
+        self.conferir_erro_sem_alteracao(resposta, 400, self.mensagem_esperada, estado_antes)
+
+
 class TesteDeFalhaDePersistencia(TesteDaApi):
 
     mensagem_da_falha = "Não foi possível gravar no banco de dados."
