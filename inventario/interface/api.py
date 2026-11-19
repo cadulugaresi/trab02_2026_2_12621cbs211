@@ -1,5 +1,5 @@
 from flask import Flask, request
-from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.excecoes import DadoInvalidoError, PersistenciaError
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 from inventario.dominio.enums import StatusDaVuln
 from inventario.servicos.ordenacao import listar_ativos_ordenados, por_id
@@ -13,6 +13,10 @@ from inventario.servicos.vulnerabilidades import (
 
 def criar_app(repositorio, ativos, catalogo):
     app = Flask(__name__)
+
+    @app.errorhandler(PersistenciaError)
+    def responder_erro_de_persistencia(erro):
+        return {"erro": str(erro)}, 500
 
     @app.get("/saude")
     def verificar_saude():
@@ -34,7 +38,7 @@ def criar_app(repositorio, ativos, catalogo):
 
     @app.post("/vulnerabilidades")
     def cadastrar_vulnerabilidade():
-        corpo = request.get_json()
+        corpo = request.get_json(silent=True)
         try:
             vulnerabilidade = registrar_vulnerabilidade_no_catalogo(
                 repositorio, catalogo, corpo["nome_vulnerabilidade"], corpo["cvss"]
@@ -82,7 +86,7 @@ def criar_app(repositorio, ativos, catalogo):
 
     @app.post("/ativos")
     def cadastrar_ativo():
-        corpo = request.get_json()
+        corpo = request.get_json(silent=True)
         try:
             ativo = MAPA_DE_TIPOS[corpo["tipo"]].de_dicionario(corpo)
             registrar_ativo_no_inventario(repositorio, ativos, ativo)
@@ -94,7 +98,7 @@ def criar_app(repositorio, ativos, catalogo):
 
     @app.post("/ativos/<int:id_ativo>/vulnerabilidades")
     def vincular_vulnerabilidade_ao_ativo(id_ativo):
-        corpo = request.get_json()
+        corpo = request.get_json(silent=True)
         try:
             status_da_vuln = StatusDaVuln(corpo["status_tratamento"])
             vincular_vulnerabilidade(
