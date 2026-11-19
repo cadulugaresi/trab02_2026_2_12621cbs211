@@ -1,9 +1,13 @@
+import math
+
 from inventario.dominio.excecoes import DadoInvalidoError
 
 
 def validar_numero(valor):
     if type(valor) is not int and type(valor) is not float:
         raise DadoInvalidoError("Este campo precisa ser um número.")
+    if type(valor) is float and not math.isfinite(valor):
+        raise DadoInvalidoError("Este campo precisa ser um número finito.")
     return valor
 
 
@@ -47,6 +51,7 @@ def validar_soma_fracao(soma_atual, fracao_nova):
 
 
 def validar_fracao(fracao):
+    validar_numero(fracao)
     if fracao <= 0:
         raise DadoInvalidoError("A fração precisa ser maior que zero.")
 
