@@ -1050,6 +1050,175 @@ class TesteDeVinculos(TesteDaApi):
                 )
 
 
+class TesteDosVinculosDeUmAtivo(TesteDaApi):
+
+    def setUp(self):
+        super().setUp()
+        self.cadastrar_notebook(2)
+        self.cadastrar_notebook(3)
+        self.cadastrar_vulnerabilidade()
+        self.cadastrar_vulnerabilidade(nome="Heartbleed", cvss=7.5)
+        self.vincular(2, 1, status_tratamento=1)
+        self.vincular(2, 2, status_tratamento=2)
+
+    def criar_estado_esperado(self, vinculos_do_ativo_2):
+        heartbleed_gravada = {
+            "id_vulnerabilidade": 2,
+            "nome_vulnerabilidade": "Heartbleed",
+            "cvss": 7.5,
+        }
+        return {
+            "ativos": {
+                2: criar_notebook_esperado(2, vulnerabilidades=vinculos_do_ativo_2),
+                3: criar_notebook_esperado(3),
+            },
+            "catalogo": {1: criar_log4shell_gravada(), 2: heartbleed_gravada},
+        }
+
+    def atualizar_status(self, id_ativo, id_vulnerabilidade, corpo):
+        return self.cliente.put(
+            f"/ativos/{id_ativo}/vulnerabilidades/{id_vulnerabilidade}", json=corpo
+        )
+
+    def test_listar_devolve_os_dados_completos_e_o_status_de_cada_vulnerabilidade(self):
+        resposta = self.cliente.get("/ativos/2/vulnerabilidades")
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.get_json(),
+            [
+                {
+                    "id_vulnerabilidade": 1,
+                    "nome_vulnerabilidade": "Log4Shell",
+                    "cvss": 10,
+                    "nivel": "CRITICO",
+                    "status_tratamento": 1,
+                },
+                {
+                    "id_vulnerabilidade": 2,
+                    "nome_vulnerabilidade": "Heartbleed",
+                    "cvss": 7.5,
+                    "nivel": "ALTO",
+                    "status_tratamento": 2,
+                },
+            ],
+        )
+
+    def test_listar_de_ativo_sem_vinculos_devolve_lista_vazia(self):
+        resposta = self.cliente.get("/ativos/3/vulnerabilidades")
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.get_json(), [])
+
+    def test_listar_de_ativo_inexistente_devolve_404(self):
+        resposta = self.cliente.get("/ativos/99/vulnerabilidades")
+
+        self.assertEqual(resposta.status_code, 404)
+        self.assertEqual(resposta.get_json(), {"erro": "Ativo não encontrado."})
+
+    def test_atualizar_status_devolve_200_e_muda_so_aquele_vinculo(self):
+        resposta = self.atualizar_status(2, 1, {"status_tratamento": 3})
+
+        vinculos_esperados = [
+            {"id_vulnerabilidade": 1, "status_tratamento": 3},
+            {"id_vulnerabilidade": 2, "status_tratamento": 2},
+        ]
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.get_json(), criar_notebook_esperado(2, vulnerabilidades=vinculos_esperados)
+        )
+        self.conferir_memoria_e_banco(self.criar_estado_esperado(vinculos_esperados))
+
+    def test_atualizar_com_status_invalido_devolve_400_sem_alterar_nada(self):
+        casos = [
+            ({"status_tratamento": 9}, MENSAGEM_DE_DADOS_DO_VINCULO_INVALIDOS),
+            ({"status_tratamento": True}, "Este campo precisa ser um número inteiro."),
+            ({}, MENSAGEM_DE_DADOS_DO_VINCULO_INVALIDOS),
+        ]
+
+        for corpo, mensagem_esperada in casos:
+            with self.subTest(corpo=corpo):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.atualizar_status(2, 1, corpo)
+
+                self.conferir_erro_sem_alteracao(resposta, 400, mensagem_esperada, estado_antes)
+
+    def test_atualizar_com_corpo_que_nao_e_json_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.put(
+            "/ativos/2/vulnerabilidades/1", data="Rafael Torres", content_type="text/plain"
+        )
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DO_VINCULO_INVALIDOS, estado_antes
+        )
+
+    def test_atualizar_vinculo_ou_ativo_inexistente_devolve_404_sem_alterar_nada(self):
+        casos = [
+            (3, 1, "Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele."),
+            (99, 1, "Ativo não encontrado."),
+        ]
+
+        for id_ativo, id_vulnerabilidade, mensagem_esperada in casos:
+            with self.subTest(id_ativo=id_ativo):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.atualizar_status(
+                    id_ativo, id_vulnerabilidade, {"status_tratamento": 3}
+                )
+
+                self.conferir_erro_sem_alteracao(resposta, 404, mensagem_esperada, estado_antes)
+
+    def test_falha_do_banco_ao_atualizar_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "atualizar_status_vinculo", side_effect=falha_do_banco):
+            resposta = self.atualizar_status(2, 1, {"status_tratamento": 3})
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
+        )
+
+    def test_desvincular_devolve_204_e_mantem_a_vulnerabilidade_no_catalogo(self):
+        resposta = self.cliente.delete("/ativos/2/vulnerabilidades/1")
+
+        self.assertEqual(resposta.status_code, 204)
+        self.assertEqual(resposta.get_data(as_text=True), "")
+        self.conferir_memoria_e_banco(
+            self.criar_estado_esperado([{"id_vulnerabilidade": 2, "status_tratamento": 2}])
+        )
+
+    def test_desvincular_vinculo_ou_ativo_inexistente_devolve_404_sem_alterar_nada(self):
+        casos = [
+            (3, 1, "Esta vulnerabilidade não está vinculada a este ativo."),
+            (99, 1, "Ativo não encontrado."),
+        ]
+
+        for id_ativo, id_vulnerabilidade, mensagem_esperada in casos:
+            with self.subTest(id_ativo=id_ativo):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.cliente.delete(
+                    f"/ativos/{id_ativo}/vulnerabilidades/{id_vulnerabilidade}"
+                )
+
+                self.conferir_erro_sem_alteracao(resposta, 404, mensagem_esperada, estado_antes)
+
+    def test_falha_do_banco_ao_desvincular_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "desvincular", side_effect=falha_do_banco):
+            resposta = self.cliente.delete("/ativos/2/vulnerabilidades/1")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
+        )
+
+
 class TesteDeRiscos(TesteDaApi):
 
     def test_riscos_sem_ativos_devolve_lista_vazia(self):
