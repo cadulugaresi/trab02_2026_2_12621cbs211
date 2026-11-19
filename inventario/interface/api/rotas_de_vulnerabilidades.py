@@ -1,6 +1,7 @@
 from flask import Blueprint, request
 
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
+from inventario.interface.api.requisicoes import valor_enviado_ou_atual
 from inventario.interface.api.respostas import vulnerabilidade_para_resposta
 from inventario.servicos.vulnerabilidades import (
     atualizar_vulnerabilidade_no_catalogo,
@@ -10,12 +11,6 @@ from inventario.servicos.vulnerabilidades import (
 )
 
 MENSAGEM_DE_DADOS_INVALIDOS = "Dados da vulnerabilidade incompletos ou inválidos."
-
-
-def valor_enviado_ou_atual(corpo, campo, valor_atual):
-    if corpo.get(campo) is None:
-        return valor_atual
-    return corpo[campo]
 
 
 def criar_rotas_de_vulnerabilidades(repositorio, ativos, catalogo):
