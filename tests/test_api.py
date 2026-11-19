@@ -5,6 +5,7 @@ from unittest.mock import patch
 from inventario.dominio.excecoes import PersistenciaError
 from inventario.interface.api import criar_app
 from inventario.persistencia.banco_sqlite import RepositorioSQLite
+from inventario.servicos.dependencias import cadastrar_dependencia
 from tests.apoio import estado_em_dicionarios
 
 MENSAGEM_DE_DADOS_DO_ATIVO_INVALIDOS = "Dados do ativo incompletos ou inválidos."
@@ -339,6 +340,187 @@ class TesteDeAtivos(TesteDaApi):
 
         self.assertEqual(resposta.status_code, 404)
         self.assertEqual(resposta.get_json(), {"erro": "Ativo não encontrado."})
+
+
+class TesteDeEdicaoDeAtivo(TesteDaApi):
+
+    def setUp(self):
+        super().setUp()
+        corpo_do_notebook = criar_corpo_de_notebook(2)
+        corpo_do_notebook["fator_exposicao"] = 1.7
+        self.cliente.post("/ativos", json=corpo_do_notebook)
+        self.cadastrar_notebook(3)
+        self.cadastrar_vulnerabilidade()
+        self.vincular(2, 1)
+        cadastrar_dependencia(self.repositorio, self.ativos, 2, 3, 0.4)
+
+    def editar(self, id_ativo, corpo):
+        return self.cliente.put(f"/ativos/{id_ativo}", json=corpo)
+
+    def criar_ativo_2_esperado(self, **campos_alterados):
+        ativo_esperado = criar_notebook_esperado(
+            2, vulnerabilidades=[{"id_vulnerabilidade": 1, "status_tratamento": 1}]
+        )
+        ativo_esperado["fator_exposicao"] = 1.7
+        ativo_esperado["dependencias"] = [{"id_ativo_do_qual_depende": 3, "fracao": 0.4}]
+        ativo_esperado.update(campos_alterados)
+        return ativo_esperado
+
+    def conferir_ativo_2_editado(self, resposta, ativo_esperado):
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.get_json(), ativo_esperado)
+        self.conferir_memoria_e_banco(
+            {
+                "ativos": {2: ativo_esperado, 3: criar_notebook_esperado(3)},
+                "catalogo": {1: criar_log4shell_esperada()},
+            }
+        )
+
+    def test_editar_devolve_200_e_grava_mantendo_vinculos_e_dependencias(self):
+        corpo = criar_corpo_de_notebook(2)
+        corpo["status"] = 3
+        corpo["tela"] = 15.6
+        corpo["fator_exposicao"] = 1.7
+
+        resposta = self.editar(2, corpo)
+
+        self.conferir_ativo_2_editado(resposta, self.criar_ativo_2_esperado(status=3, tela=15.6))
+
+    def test_fator_que_nao_veio_continua_o_atual_quando_o_tipo_nao_muda(self):
+        for fator_enviado in ["campo ausente", None]:
+            with self.subTest(fator_enviado=fator_enviado):
+                corpo = criar_corpo_de_notebook(2)
+                if fator_enviado is None:
+                    corpo["fator_exposicao"] = None
+
+                resposta = self.editar(2, corpo)
+
+                self.conferir_ativo_2_editado(resposta, self.criar_ativo_2_esperado())
+
+    def test_fator_que_nao_veio_volta_ao_padrao_quando_o_tipo_muda(self):
+        corpo = {
+            "tipo": "Servidor",
+            "id": 2,
+            "nome": "Servidor do Rafael",
+            "setor": 1,
+            "responsavel": "Rafael Torres",
+            "status": 1,
+            "ram": 32,
+            "armazenamento": 4.0,
+        }
+
+        resposta = self.editar(2, corpo)
+
+        servidor_esperado = self.criar_ativo_2_esperado(
+            nome="Servidor do Rafael", tipo="Servidor", fator_exposicao=1.3, ram=32
+        )
+        del servidor_esperado["sistema_operacional"]
+        del servidor_esperado["tela"]
+        servidor_esperado["armazenamento"] = 4.0
+        self.conferir_ativo_2_editado(resposta, servidor_esperado)
+
+    def test_fator_enviado_e_o_que_vale(self):
+        corpo = criar_corpo_de_notebook(2)
+        corpo["fator_exposicao"] = 0.5
+
+        resposta = self.editar(2, corpo)
+
+        self.conferir_ativo_2_editado(resposta, self.criar_ativo_2_esperado(fator_exposicao=0.5))
+
+    def test_o_id_da_url_vale_mais_que_o_id_do_corpo(self):
+        corpo = criar_corpo_de_notebook(50)
+        corpo["fator_exposicao"] = 1.7
+
+        resposta = self.editar(2, corpo)
+
+        self.conferir_ativo_2_editado(resposta, self.criar_ativo_2_esperado())
+
+    def test_editar_ativo_inexistente_devolve_404_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.editar(99, criar_corpo_de_notebook(99))
+
+        self.conferir_erro_sem_alteracao(resposta, 404, "Ativo não encontrado.", estado_antes)
+
+    def test_editar_com_dado_invalido_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        corpo = criar_corpo_de_notebook(2)
+        corpo["responsavel"] = ""
+
+        resposta = self.editar(2, corpo)
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo não pode ser vazio.", estado_antes
+        )
+
+    def test_editar_sem_campo_obrigatorio_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        corpo = criar_corpo_de_notebook(2)
+        del corpo["tela"]
+
+        resposta = self.editar(2, corpo)
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DO_ATIVO_INVALIDOS, estado_antes
+        )
+
+    def test_editar_com_corpo_que_nao_e_json_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.put("/ativos/2", data="Rafael Torres", content_type="text/plain")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DO_ATIVO_INVALIDOS, estado_antes
+        )
+
+    def test_falha_do_banco_ao_editar_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "atualizar_ativo", side_effect=falha_do_banco):
+            resposta = self.editar(2, criar_corpo_de_notebook(2))
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
+        )
+
+
+class TesteDeExclusaoDeAtivo(TesteDaApi):
+
+    def setUp(self):
+        super().setUp()
+        self.cadastrar_notebook(2)
+        self.cadastrar_notebook(3)
+        self.cadastrar_vulnerabilidade()
+        self.vincular(2, 1)
+        cadastrar_dependencia(self.repositorio, self.ativos, 3, 2, 0.4)
+
+    def test_excluir_devolve_204_e_tira_o_ativo_e_as_dependencias_que_apontavam_para_ele(self):
+        resposta = self.cliente.delete("/ativos/2")
+
+        self.assertEqual(resposta.status_code, 204)
+        self.assertEqual(resposta.get_data(as_text=True), "")
+        self.conferir_memoria_e_banco(
+            {"ativos": {3: criar_notebook_esperado(3)}, "catalogo": {1: criar_log4shell_esperada()}}
+        )
+
+    def test_excluir_ativo_inexistente_devolve_404_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.delete("/ativos/99")
+
+        self.conferir_erro_sem_alteracao(resposta, 404, "Ativo não encontrado.", estado_antes)
+
+    def test_falha_do_banco_ao_excluir_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "remover_ativo", side_effect=falha_do_banco):
+            resposta = self.cliente.delete("/ativos/2")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
+        )
 
 
 class TesteDeVulnerabilidades(TesteDaApi):
