@@ -2,12 +2,18 @@ import math
 
 from inventario.dominio.excecoes import DadoInvalidoError
 
+MAIOR_INTEIRO_ACEITO = 2**63 - 1
+
 
 def validar_numero(valor):
     if type(valor) is not int and type(valor) is not float:
         raise DadoInvalidoError("Este campo precisa ser um número.")
     if type(valor) is float and not math.isfinite(valor):
         raise DadoInvalidoError("Este campo precisa ser um número finito.")
+    if type(valor) is int and valor > MAIOR_INTEIRO_ACEITO:
+        raise DadoInvalidoError(
+            f"Este número é grande demais. O máximo aceito é {MAIOR_INTEIRO_ACEITO}."
+        )
     return valor
 
 

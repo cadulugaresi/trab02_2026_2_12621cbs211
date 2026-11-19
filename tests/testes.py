@@ -63,6 +63,10 @@ from inventario.interface.conversao_das_opcoes_do_menu import (
 from tests.apoio import TesteComArquivosTemporarios
 from unittest.mock import patch
 
+MENSAGEM_DE_NUMERO_GRANDE_DEMAIS = (
+    "Este número é grande demais. O máximo aceito é 9223372036854775807."
+)
+
 
 # Exibir detalhes
 class TestExibirDetalhes(unittest.TestCase):
@@ -281,10 +285,18 @@ class TestValidacoesNumericas(unittest.TestCase):
                     str(contexto.exception), "Este campo precisa ser um número finito."
                 )
 
-    def test_inteiro_muito_grande_continua_sendo_um_inteiro_positivo(self):
-        inteiro_muito_grande = 10**400
+    def test_maior_inteiro_aceito_e_devolvido(self):
+        maior_inteiro_aceito = 2**63 - 1
 
-        self.assertEqual(validar_inteiro_positivo(inteiro_muito_grande), inteiro_muito_grande)
+        for validacao in [validar_numero, validar_numero_positivo, validar_inteiro_positivo]:
+            with self.subTest(validacao=validacao.__name__):
+                self.assertEqual(validacao(maior_inteiro_aceito), maior_inteiro_aceito)
+
+    def test_inteiro_acima_do_limite_e_recusado_sem_estourar(self):
+        for validacao in [validar_numero, validar_numero_positivo, validar_inteiro_positivo]:
+            for valor in [2**63, 10**400]:
+                with self.subTest(validacao=validacao.__name__, digitos=len(str(valor))):
+                    self.conferir_recusa(validacao, valor, MENSAGEM_DE_NUMERO_GRANDE_DEMAIS)
 
 
 # Funções encontrar ativo ------------------------
@@ -582,6 +594,12 @@ class TestPedirInt(unittest.TestCase):
 
         self.assertEqual(valor, 5)
         self.assertEqual(saida, "Digite um número válido\n")
+
+    def test_numero_acima_do_limite_mostra_o_maximo_e_pergunta_de_novo(self):
+        valor, saida = responder_e_capturar_saida(pedir_int, ["9223372036854775808", "5"])
+
+        self.assertEqual(valor, 5)
+        self.assertEqual(saida, MENSAGEM_DE_NUMERO_GRANDE_DEMAIS + "\n")
 
 
 class TestPedirFloat(unittest.TestCase):
