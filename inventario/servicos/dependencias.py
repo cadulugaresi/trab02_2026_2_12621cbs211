@@ -1,4 +1,4 @@
-from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.excecoes import DadoInvalidoError, RecursoNaoEncontradoError
 from inventario.dominio.validacoes import (
     validar_dependencia_de_si_mesmo,
     validar_fracao_da_dependencia,
@@ -77,7 +77,7 @@ def atualizar_dependencia(
 
 def garantir_que_dependencia_existe(ativo_que_depende, id_ativo_do_qual_depende):
     if id_ativo_do_qual_depende not in ativo_que_depende.dependencias:
-        raise DadoInvalidoError("Este ativo não possui essa dependência.")
+        raise RecursoNaoEncontradoError("Este ativo não possui essa dependência.")
 
 
 def somar_fracoes(dependencias):

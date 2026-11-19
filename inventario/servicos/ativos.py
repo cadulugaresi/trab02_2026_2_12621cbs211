@@ -1,4 +1,4 @@
-from inventario.dominio.excecoes import DadoInvalidoError
+from inventario.dominio.excecoes import DadoInvalidoError, RecursoNaoEncontradoError
 
 
 def registrar_ativo_no_inventario(repositorio, ativos, ativo):
@@ -18,7 +18,7 @@ def obter_ativo(ativos, id_ativo):
     ativo = encontrar_ativo_por_id(ativos, id_ativo)
 
     if ativo is None:
-        raise DadoInvalidoError("Ativo não encontrado.")
+        raise RecursoNaoEncontradoError("Ativo não encontrado.")
 
     return ativo
 
