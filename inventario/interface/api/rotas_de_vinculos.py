@@ -1,7 +1,6 @@
 from flask import Blueprint, request
 
 from inventario.dominio.enums import StatusDaVuln
-from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.validacoes import validar_inteiro_positivo
 from inventario.servicos.vulnerabilidades import vincular_vulnerabilidade
 
@@ -22,8 +21,6 @@ def criar_rotas_de_vinculos(repositorio, ativos, catalogo):
                 corpo["id_vulnerabilidade"],
                 status_da_vuln,
             )
-        except DadoInvalidoError as erro:
-            return {"erro": str(erro)}, 400
         except (KeyError, ValueError, TypeError):
             return {"erro": "Dados incompletos ou inválidos."}, 400
         return ativos[id_ativo].para_dicionario(), 201

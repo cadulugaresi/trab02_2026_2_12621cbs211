@@ -1,8 +1,7 @@
 from flask import Blueprint, request
 
 from inventario.dominio.ativo import MAPA_DE_TIPOS
-from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.servicos.ativos import encontrar_ativo_por_id, registrar_ativo_no_inventario
+from inventario.servicos.ativos import obter_ativo, registrar_ativo_no_inventario
 from inventario.servicos.ordenacao import listar_ativos_ordenados, por_id
 
 
@@ -18,10 +17,7 @@ def criar_rotas_de_ativos(repositorio, ativos):
 
     @rotas.get("/ativos/<int:id_ativo>")
     def buscar_ativo(id_ativo):
-        ativo = encontrar_ativo_por_id(ativos, id_ativo)
-        if ativo is None:
-            return {"erro": "Ativo não encontrado."}, 404
-        return ativo.para_dicionario()
+        return obter_ativo(ativos, id_ativo).para_dicionario()
 
     @rotas.post("/ativos")
     def cadastrar_ativo():
@@ -29,8 +25,6 @@ def criar_rotas_de_ativos(repositorio, ativos):
         try:
             ativo = MAPA_DE_TIPOS[corpo["tipo"]].de_dicionario(corpo)
             registrar_ativo_no_inventario(repositorio, ativos, ativo)
-        except DadoInvalidoError as erro:
-            return {"erro": str(erro)}, 400
         except (KeyError, ValueError, TypeError):
             return {"erro": "Dados do ativo incompletos ou inválidos."}, 400
         return ativo.para_dicionario(), 201

@@ -543,6 +543,37 @@ class TesteDeInteirosAcimaDoLimite(TesteDaApi):
         self.conferir_erro_sem_alteracao(resposta, 400, self.mensagem_esperada, estado_antes)
 
 
+class TesteDeErrosHttp(TesteDaApi):
+
+    def test_rota_inexistente_devolve_404_em_json(self):
+        resposta = self.cliente.get("/rota-que-nao-existe")
+
+        self.assertEqual(resposta.status_code, 404)
+        self.assertEqual(resposta.get_json(), {"erro": "Rota não encontrada."})
+
+    def test_id_em_texto_na_url_devolve_404_em_json(self):
+        resposta = self.cliente.get("/ativos/abc")
+
+        self.assertEqual(resposta.status_code, 404)
+        self.assertEqual(resposta.get_json(), {"erro": "Rota não encontrada."})
+
+    def test_metodo_nao_permitido_devolve_405_em_json(self):
+        resposta = self.cliente.delete("/saude")
+
+        self.assertEqual(resposta.status_code, 405)
+        self.assertEqual(resposta.get_json(), {"erro": "Método não permitido para esta rota."})
+
+    def test_erro_inesperado_devolve_500_em_json_sem_detalhes_internos(self):
+        estado_antes = self.estado_da_memoria()
+        erro_inesperado = RuntimeError("detalhe interno que não pode vazar")
+
+        with patch.object(self.repositorio, "adicionar_ativo", side_effect=erro_inesperado):
+            resposta = self.cadastrar_notebook()
+
+        self.conferir_erro_sem_alteracao(resposta, 500, "Erro interno do servidor.", estado_antes)
+        self.assertNotIn("detalhe interno", resposta.get_data(as_text=True))
+
+
 class TesteDeFalhaDePersistencia(TesteDaApi):
 
     mensagem_da_falha = "Não foi possível gravar no banco de dados."
@@ -616,20 +647,20 @@ class TesteDeVinculos(TesteDaApi):
             resposta, 400, "Esta vulnerabilidade já está vinculada a este ativo.", estado_antes
         )
 
-    def test_vincular_a_ativo_inexistente_devolve_400_sem_alterar_nada(self):
+    def test_vincular_a_ativo_inexistente_devolve_404_sem_alterar_nada(self):
         estado_antes = self.estado_da_memoria()
 
         resposta = self.vincular(99, 1)
 
-        self.conferir_erro_sem_alteracao(resposta, 400, "Ativo não encontrado.", estado_antes)
+        self.conferir_erro_sem_alteracao(resposta, 404, "Ativo não encontrado.", estado_antes)
 
-    def test_vincular_vulnerabilidade_inexistente_devolve_400_sem_alterar_nada(self):
+    def test_vincular_vulnerabilidade_inexistente_devolve_404_sem_alterar_nada(self):
         estado_antes = self.estado_da_memoria()
 
         resposta = self.vincular(2, 99)
 
         self.conferir_erro_sem_alteracao(
-            resposta, 400, "Vulnerabilidade não encontrada no catálogo.", estado_antes
+            resposta, 404, "Vulnerabilidade não encontrada no catálogo.", estado_antes
         )
 
     def test_vincular_com_status_inexistente_devolve_400_sem_alterar_nada(self):
