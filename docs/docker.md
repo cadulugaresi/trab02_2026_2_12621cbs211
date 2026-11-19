@@ -13,6 +13,8 @@ O container executa o **servidor da API** (`iniciar_api.py`), e não mais o menu
 
 O menu (`main.py`) continua existindo, mas só para uso local no terminal, com `python3 main.py`. Ele não entra na imagem: se o menu gravasse no mesmo banco enquanto a API está no ar, os dados que a API carregou na memória ficariam desatualizados. No container, só o servidor da API escreve no banco.
 
+**Por que o servidor usa `threaded=False`:** o `iniciar_api.py` liga o servidor com `app.run(host="0.0.0.0", port=5000, threaded=False)`. Por padrão, o servidor do Flask atende cada requisição numa thread nova. A conexão do `RepositorioSQLite` é criada uma vez, na thread principal, quando o servidor parte, e o módulo `sqlite3` do Python não permite usar uma conexão numa thread diferente da que a criou: com as threads ligadas, toda requisição que grava no banco (os `POST`) falhava com `sqlite3.ProgrammingError` e devolvia 500. Com `threaded=False`, todas as requisições são atendidas uma por vez, na mesma thread em que a conexão foi criada. Isso também impede que duas requisições alterem ao mesmo tempo os dicionários `ativos` e `catalogo`, que ficam na memória do servidor. Os testes da API não pegavam o problema porque o `test_client()` executa as requisições na mesma thread do teste. Para o volume de uso deste trabalho, atender uma requisição por vez não é uma limitação.
+
 **Por que o menu não servia como processo do container:** um container permanece em execução enquanto o seu processo principal estiver rodando. O menu passa a maior parte do tempo parado no `input()`, esperando alguém digitar. Sem um terminal ligado ao container, não existe essa entrada, e mantê-lo vivo exigia `stdin_open`, `tty` e `docker attach`. O servidor da API não depende de entrada: ele fica escutando a porta e atendendo requisições enquanto o container existir.
 
 ## 🫧 Dockerfile
@@ -105,8 +107,47 @@ docker build -t inventario:2.0 .
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de docker build -t inventario:2.0 .]
+#0 building with "desktop-linux" instance using docker driver
+
+#1 [internal] load build definition from Dockerfile
+#1 transferring dockerfile: 540B 0.0s done
+#1 DONE 0.0s
+
+[... trecho omitido: metadados da imagem base, .dockerignore e contexto ...]
+
+#6 [2/8] RUN useradd --create-home inventario && mkdir -p /app/dados && chown inventario /app/dados
+#6 CACHED
+
+#7 [3/8] WORKDIR /app
+#7 CACHED
+
+#8 [4/8] COPY requirements.txt .
+#8 CACHED
+
+#9 [5/8] RUN pip install --no-cache-dir -r requirements.txt
+#9 CACHED
+
+#10 [6/8] COPY iniciar_api.py .
+#10 DONE 0.0s
+
+#11 [7/8] COPY inventario/ inventario/
+#11 DONE 0.0s
+
+#12 [8/8] WORKDIR /app/dados
+#12 DONE 0.0s
+
+#13 exporting to image
+#13 exporting layers 0.0s done
+#13 exporting manifest sha256:7538a187e3d00127b1677c1ca28701a202dbdb5ba8500ff2a85e4134aeca04e5 done
+#13 exporting config sha256:b4c7ef13c2921b34686f3ccab41ca3eaf1b8464fb172b371ab4302a56429137d done
+#13 exporting attestation manifest sha256:f35a85b5e1898549f839977df78ad3319b2a740dc4f2aa4cb6561836772ffd85 done
+#13 exporting manifest list sha256:0ade52cb9bae09888a43953c1189bde47bb73259b94dd30ab6cdde58b36243e2 done
+#13 naming to docker.io/library/inventario:2.0 done
+#13 unpacking to docker.io/library/inventario:2.0 0.0s done
+#13 DONE 0.1s
 ```
+
+As etapas 2 a 5, inclusive o `pip install`, foram reaproveitadas do cache (`CACHED`). Só as camadas a partir do `COPY iniciar_api.py` foram refeitas, porque apenas o código mudou: é o efeito de copiar e instalar o `requirements.txt` antes do código.
 
 ### 2. Tamanho da imagem
 
@@ -115,8 +156,12 @@ docker images inventario
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de docker images inventario]
+IMAGE            ID             DISK USAGE   CONTENT SIZE   EXTRA
+inventario:1.0   82670bec2eec        202MB         43.4MB        
+inventario:2.0   0ade52cb9bae        296MB         64.5MB        
 ```
+
+A imagem `2.0` é maior que a `1.0` (a versão com o menu, do S4_16) porque passou a instalar as dependências do `requirements.txt`, `numpy` e `flask`.
 
 ### 3. Execução da API no container
 
@@ -129,12 +174,14 @@ curl http://localhost:5000/ativos
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de curl http://localhost:5000/saude]
+{"status":"ok"}
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de curl http://localhost:5000/ativos]
+[]
 ```
+
+A API respondeu de fora do container, pela porta publicada. A lista de ativos está vazia porque este container não tem volume: o banco foi criado do zero dentro dele.
 
 ### 4. Usuário sem privilégios
 
@@ -145,8 +192,10 @@ docker exec inventario whoami
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de docker exec inventario whoami]
+inventario
 ```
+
+O processo roda com o usuário `inventario`, e não como `root`.
 
 ### 5. Healthcheck
 
@@ -154,13 +203,23 @@ docker exec inventario whoami
 docker ps
 ```
 
-Logo após a inicialização, e de novo depois de 30 segundos:
+Logo após a inicialização:
 
 ```
-[EVIDÊNCIA: colar as duas saídas de docker ps, com o STATUS passando de health: starting para healthy]
+CONTAINER ID   IMAGE            COMMAND                  CREATED         STATUS                           PORTS                                         NAMES
+41f762faa02e   inventario:2.0   "python3 /app/inicia…"   2 seconds ago   Up 1 second (health: starting)   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp   inventario
 ```
 
-O status `healthy` confirma que a API respondeu à rota `/saude` dentro do container.
+Após o primeiro intervalo de verificação (30 segundos):
+
+```
+CONTAINER ID   IMAGE            COMMAND                  CREATED          STATUS                    PORTS                                         NAMES
+41f762faa02e   inventario:2.0   "python3 /app/inicia…"   46 seconds ago   Up 45 seconds (healthy)   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp   inventario
+```
+
+O status passou de `health: starting` para `healthy`, confirmando que a API respondeu à rota `/saude` dentro do container.
+
+Depois dessas evidências, o container avulso foi removido (`docker stop inventario` e `docker rm inventario`), para liberar o nome e a porta para o Compose.
 
 ---
 
@@ -215,7 +274,22 @@ docker compose up -d --build
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de docker compose up -d --build]
+ Image it-asset-vulnerability-manager-inventario Building 
+#1 [internal] load local bake definitions
+#1 reading from stdin 640B done
+#1 DONE 0.0s
+
+[... trecho omitido: as mesmas etapas de construção da imagem mostradas na seção anterior ...]
+
+ Image it-asset-vulnerability-manager-inventario Built 
+ Network it-asset-vulnerability-manager_default Creating 
+ Network it-asset-vulnerability-manager_default Creating 
+ Network it-asset-vulnerability-manager_default Created 
+ Network it-asset-vulnerability-manager_default Created 
+ Container inventario Creating 
+ Container inventario Created 
+ Container inventario Starting 
+ Container inventario Started 
 ```
 
 ```bash
@@ -223,7 +297,8 @@ docker compose ps
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de docker compose ps]
+NAME         IMAGE                                       COMMAND                  SERVICE      CREATED         STATUS                   PORTS
+inventario   it-asset-vulnerability-manager-inventario   "python3 /app/inicia…"   inventario   6 seconds ago   Up 5 seconds (healthy)   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp
 ```
 
 ```bash
@@ -231,8 +306,10 @@ curl http://localhost:5000/saude
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de curl http://localhost:5000/saude]
+{"status":"ok"}
 ```
+
+O Compose construiu a imagem, criou a rede e iniciou o container, que já aparece como `healthy` e com a porta 5000 publicada. O volume `dados` não aparece sendo criado porque já existia de execuções anteriores.
 
 ### 2. Teste de persistência
 
@@ -245,8 +322,10 @@ curl -X POST http://localhost:5000/ativos \
 ```
 
 ```
-[EVIDÊNCIA: colar a saída do POST /ativos, com o ativo cadastrado]
+{"dependencias":[],"fator_exposicao":1.2,"id":10,"nome":"Notebook do Rafael","responsavel":"Rafael Torres","setor":1,"sistema_operacional":"Linux","status":1,"tela":14.0,"tipo":"Notebook","vulnerabilidades":[]}
 ```
+
+O ativo foi gravado e devolvido com o fator de exposição padrão do Notebook (1.2), já que o corpo não informou um.
 
 Remoção do container com `down`:
 
@@ -257,8 +336,24 @@ docker volume ls
 ```
 
 ```
-[EVIDÊNCIA: colar as saídas de docker compose down, docker ps -a e docker volume ls]
+ Container inventario Stopping 
+ Container inventario Stopped 
+ Container inventario Removing 
+ Container inventario Removed 
+ Network it-asset-vulnerability-manager_default Removing 
+ Network it-asset-vulnerability-manager_default Removed 
 ```
+
+```
+CONTAINER ID   IMAGE     COMMAND   CREATED   STATUS    PORTS     NAMES
+```
+
+```
+DRIVER    VOLUME NAME
+local     it-asset-vulnerability-manager_dados
+```
+
+O container e a rede foram removidos, mas o volume continua existindo.
 
 Criação de um container novo e busca do ativo:
 
@@ -268,10 +363,10 @@ curl http://localhost:5000/ativos/10
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de curl http://localhost:5000/ativos/10]
+{"dependencias":[],"fator_exposicao":1.2,"id":10,"nome":"Notebook do Rafael","responsavel":"Rafael Torres","setor":1,"sistema_operacional":"Linux","status":1,"tela":14.0,"tipo":"Notebook","vulnerabilidades":[]}
 ```
 
-**Resultado esperado:** o ativo cadastrado no container anterior aparece no container novo, porque o banco ficou guardado no volume.
+**Resultado:** o ativo cadastrado no container anterior aparece no container novo. Os dados foram preservados no volume.
 
 ### 3. Teste de reinício automático
 
@@ -291,11 +386,12 @@ docker inspect -f '{{.RestartCount}}' inventario
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de docker compose ps, mostrando o container criado há mais tempo do que está em execução]
+NAME         IMAGE                                       COMMAND                  SERVICE      CREATED          STATUS                   PORTS
+inventario   it-asset-vulnerability-manager-inventario   "python3 /app/inicia…"   inventario   35 seconds ago   Up 6 seconds (healthy)   0.0.0.0:5000->5000/tcp, [::]:5000->5000/tcp
 ```
 
 ```
-[EVIDÊNCIA: colar a saída de docker inspect -f '{{.RestartCount}}' inventario]
+1
 ```
 
-**Resultado esperado:** a contagem de reinícios aumenta em 1, e o container volta a responder em `/saude`, já como `healthy`.
+**Resultado:** o container foi criado há 35 segundos, mas está em execução há apenas 6. O processo principal terminou e o Docker o reiniciou automaticamente, como mostra a contagem de reinícios igual a 1. O container voltou já como `healthy`.
