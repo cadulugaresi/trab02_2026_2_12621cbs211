@@ -12,7 +12,8 @@ interface ──► servicos ──► repositorio (recebido por parâmetro)
                               ├── RepositorioJSON    (arquivos_json.py)
                               └── RepositorioSQLite  (banco_sqlite.py)
 
-main.py escolhe a implementação e a injeta na cadeia menu → interface → serviços.
+main.py        escolhe a implementação e a injeta na cadeia menu → interface → serviços.
+iniciar_api.py escolhe a implementação e a injeta na cadeia criar_app → rotas da API → serviços.
 ```
 
 ## 🫧 1. Serviços presos ao JSON → DIP
@@ -21,13 +22,13 @@ main.py escolhe a implementação e a injeta na cadeia menu → interface → se
 
 **Correção:** toda função de serviço que grava dados recebe um `repositorio` como primeiro parâmetro e chama só as operações que as duas implementações oferecem (ex.: `repositorio.adicionar_ativo(ativo)`). A abstração da qual os serviços dependem é esse conjunto de operações, e não uma classe-mãe: a suíte de testes de contrato confere que o `RepositorioJSON` e o `RepositorioSQLite` oferecem as mesmas operações, com o mesmo comportamento. Nenhum arquivo de `servicos/` ou `interface/` importa mais a camada de persistência.
 
-**Princípio:** Inversão de Dependência (DIP), com injeção de dependência por parâmetro. O `main.py` é o único ponto que conhece a implementação concreta.
+**Princípio:** Inversão de Dependência (DIP), com injeção de dependência por parâmetro. Os dois pontos de entrada, `main.py` (menu) e `iniciar_api.py` (API), são os únicos que conhecem a implementação concreta: cada um cria o `RepositorioSQLite` e o injeta na sua interface. A API segue o mesmo princípio do menu: a função `criar_app(repositorio, ativos, catalogo)` recebe o repositório pronto, e é isso que permite aos testes da API usarem um banco SQLite em memória.
 
 ## ✨ 2. Trocar o armazenamento exigiria editar os serviços → OCP
 
 **Violação:** para passar de JSON para banco de dados, seria preciso abrir e alterar todos os serviços que gravavam dados.
 
-**Correção:** um novo armazenamento entra como uma nova classe que oferece as mesmas operações e passa na suíte de testes de contrato. O `RepositorioSQLite` foi criado assim, e a troca no programa foi uma linha no `main.py` (`RepositorioJSON()` → `RepositorioSQLite()`). Serviços, menus e telas não mudaram.
+**Correção:** um novo armazenamento entra como uma nova classe que oferece as mesmas operações e passa na suíte de testes de contrato. O `RepositorioSQLite` foi criado assim, e a troca no programa foi uma linha no ponto de entrada (`RepositorioJSON()` → `RepositorioSQLite()`). Serviços, menus e telas não mudaram. Hoje essa linha existe nos dois pontos de entrada, `main.py` e `iniciar_api.py`.
 
 **Princípio:** Aberto/Fechado (OCP).
 
