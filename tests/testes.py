@@ -42,7 +42,7 @@ from inventario.servicos.ativos import (
     registrar_ativo_no_inventario,
     remover_ativo_do_inventario,
 )
-from inventario.dominio.validacoes import validar_fator_exposicao, validar_nome_responsavel
+from inventario.dominio.validacoes import validar_fator_exposicao, validar_texto_obrigatorio
 from inventario.interface.conversao_das_opcoes_do_menu import (
     validar_cor,
     validar_setor,
@@ -180,18 +180,18 @@ class TestValidarTech(unittest.TestCase):
             validar_tecnologia("3")
 
 
-class TestValidarNomeResponsavel(unittest.TestCase):
+class TestValidarTextoObrigatorio(unittest.TestCase):
 
-    def test_nome_valido_nao_levanta_erro(self):
-        validar_nome_responsavel("Cadu")
+    def test_texto_valido_nao_levanta_erro(self):
+        validar_texto_obrigatorio("Cadu")
 
-    def test_nome_numerico_levanta_erro(self):
+    def test_texto_numerico_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            validar_nome_responsavel("123")
+            validar_texto_obrigatorio("123")
 
-    def test_nome_vazio_levanta_erro(self):
+    def test_texto_vazio_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            validar_nome_responsavel("")
+            validar_texto_obrigatorio("")
 
 
 class TestValidarFatorExposicao(unittest.TestCase):

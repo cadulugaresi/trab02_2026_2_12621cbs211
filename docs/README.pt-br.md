@@ -124,7 +124,7 @@ flowchart TD
   - `vulnerabilidade.py`: `Vulnerabilidade`, com o nível calculado pela nota CVSS
   - `enums.py`: `Setor`, `StatusDoAtivo`, `StatusDaVuln`, `NivelDaVulnerabilidade`, `Cor`, `Tecnologia`
   - `excecoes.py`: `DadoInvalidoError` e `PersistenciaError`
-  - `validacoes.py`: regras de validação (`validar_nome_responsavel`, `validar_cvss`)
+  - `validacoes.py`: regras de validação (`validar_texto_obrigatorio`, `validar_cvss`)
 
 ### Exemplo de fluxo: excluir um ativo
 

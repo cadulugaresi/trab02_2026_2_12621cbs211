@@ -1,7 +1,7 @@
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.validacoes import (
     validar_cvss,
-    validar_nome_responsavel,
+    validar_texto_obrigatorio,
     validar_fator_exposicao,
 )
 from inventario.interface.conversao_das_opcoes_do_menu import (
@@ -23,7 +23,7 @@ def pedir_info(mensagem):
         info = input(mensagem).strip()
 
         try:
-            validar_nome_responsavel(info)
+            validar_texto_obrigatorio(info)
             return info
         except DadoInvalidoError as erro:
             print(erro)

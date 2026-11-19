@@ -28,12 +28,12 @@ def validar_cvss(cvss):
     return cvss
 
 
-def validar_nome_responsavel(nome):
-    if type(nome) is not str:
+def validar_texto_obrigatorio(texto):
+    if type(texto) is not str:
         raise DadoInvalidoError("Este campo precisa ser um texto.")
-    if not nome.strip():
+    if not texto.strip():
         raise DadoInvalidoError("Este campo não pode ser vazio.")
-    if nome.strip().isnumeric():
+    if texto.strip().isnumeric():
         raise DadoInvalidoError("Este campo não pode ser composto apenas por números.")
 
 

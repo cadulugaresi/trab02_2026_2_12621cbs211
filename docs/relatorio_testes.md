@@ -30,7 +30,7 @@ python3 -m black --check main.py iniciar_api.py inventario
 ```
 
 **Cobertura por camada:**
-- **Domínio:** exibição e serialização das subclasses de `Ativo` e de `Vulnerabilidade`, nível calculado pelo CVSS, `validar_nome_responsavel` e `validar_cvss` (incluindo fronteiras como 0.04, 0.1, 10 e 10.1)
+- **Domínio:** exibição e serialização das subclasses de `Ativo` e de `Vulnerabilidade`, nível calculado pelo CVSS, `validar_texto_obrigatorio` e `validar_cvss` (incluindo fronteiras como 0.04, 0.1, 10 e 10.1)
 - **Serviços:** registro, atualização (inclusive troca de tipo mantendo vínculos) e remoção de ativos; buscas por ID, nome, status e tipo; catálogo (`proximo_id`, registro, edição e exclusão); vínculo, desvínculo e atualização de status
 - **Persistência:** salvar e recarregar ativos, vínculos e catálogo; arquivo inexistente devolve dados vazios
 - **Interface (menu):** funções `pedir_*` e conversões do menu, cadastro, edição e exclusão de ativos, edição de vulnerabilidade e vínculo logo após o cadastro, simulando a digitação com `unittest.mock.patch`

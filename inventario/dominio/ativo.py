@@ -2,7 +2,7 @@ from inventario.dominio.enums import Cor, Setor, StatusDoAtivo, Tecnologia
 from inventario.dominio.validacoes import (
     validar_fator_exposicao,
     validar_inteiro_positivo,
-    validar_nome_responsavel,
+    validar_texto_obrigatorio,
     validar_numero_positivo,
 )
 
@@ -25,8 +25,8 @@ class Ativo:
 
     def validar_dados(self):
         validar_inteiro_positivo(self.id)
-        validar_nome_responsavel(self.nome)
-        validar_nome_responsavel(self.responsavel)
+        validar_texto_obrigatorio(self.nome)
+        validar_texto_obrigatorio(self.responsavel)
         validar_fator_exposicao(self.fator_exposicao)
 
     def exibir_detalhes(self):
@@ -80,7 +80,7 @@ class Notebook(Ativo):
 
     def validar_dados(self):
         super().validar_dados()
-        validar_nome_responsavel(self.sistema_operacional)
+        validar_texto_obrigatorio(self.sistema_operacional)
         validar_numero_positivo(self.tela)
 
     def exibir_detalhes(self):

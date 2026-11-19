@@ -156,7 +156,7 @@ flowchart TD
   - `vulnerabilidade.py`: `Vulnerabilidade`, with the level calculated from the CVSS score
   - `enums.py`: `Setor`, `StatusDoAtivo`, `StatusDaVuln`, `NivelDaVulnerabilidade`, `Cor`, `Tecnologia`
   - `excecoes.py`: `DadoInvalidoError` and `PersistenciaError`
-  - `validacoes.py`: validation rules (`validar_nome_responsavel`, `validar_cvss`, `validar_fator_exposicao`...)
+  - `validacoes.py`: validation rules (`validar_texto_obrigatorio`, `validar_cvss`, `validar_fator_exposicao`...)
 
 ### Example flow: deleting an asset
 
@@ -174,7 +174,7 @@ menu_principal                         (interface)     user picks option 4
 
 - **Services take IDs, not questions:** every service works with ready-made data (e.g., `remover_ativo_do_inventario(ativos, id_ativo)`). The same rule can then be used by the terminal menu or by an API, without depending on `input`.
 - **Errors go up, the interface displays them:** services and the domain raise `DadoInvalidoError` with the message; the interface catches it and shows that message. Each error text is written in a single place.
-- **Defense in depth:** rules such as the CVSS range (`validar_cvss`), the asset name and owner (`validar_nome_responsavel`), and the exposure factor (`validar_fator_exposicao`) live in the domain and are used both by the menu (to ask again) and by the services (as a guarantee, wherever the data comes from). Because the API calls the services directly, an HTTP request with invalid data is rejected by the same rules as the menu.
+- **Defense in depth:** rules such as the CVSS range (`validar_cvss`), the asset name and owner (`validar_texto_obrigatorio`), and the exposure factor (`validar_fator_exposicao`) live in the domain and are used both by the menu (to ask again) and by the services (as a guarantee, wherever the data comes from). Because the API calls the services directly, an HTTP request with invalid data is rejected by the same rules as the menu.
 - **A single list of types:** the list of asset types lives in the domain (`MAPA_DE_TIPOS`); the menu numbering (`TIPOS_DE_ATIVOS`) is generated from it by the interface.
 - **Depend on the abstraction:** services receive a `repositorio` as a parameter instead of importing a storage module. Swapping the JSON files for the SQLite database only touched the persistence layer and the repository created in the entry point.
 - **Each operation saves only what changed:** instead of rewriting everything, each service calls the matching repository operation (`adicionar_ativo`, `desvincular`...), which becomes a single `INSERT`, `UPDATE`, or `DELETE` in the database.
