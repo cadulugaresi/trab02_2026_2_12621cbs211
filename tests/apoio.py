@@ -21,3 +21,15 @@ class TesteComArquivosTemporarios(unittest.TestCase):
             if os.path.exists(arquivo):
                 os.remove(arquivo)
         arquivos_json.ARQUIVO_ATIVOS, arquivos_json.ARQUIVO_CATALOGO = self.originais
+
+
+def estado_em_dicionarios(ativos, catalogo):
+    ativos_em_dicionario = {}
+    for id_ativo, ativo in ativos.items():
+        ativos_em_dicionario[id_ativo] = ativo.para_dicionario()
+
+    catalogo_em_dicionario = {}
+    for id_vulnerabilidade, vulnerabilidade in catalogo.items():
+        catalogo_em_dicionario[id_vulnerabilidade] = vulnerabilidade.para_dicionario()
+
+    return {"ativos": ativos_em_dicionario, "catalogo": catalogo_em_dicionario}

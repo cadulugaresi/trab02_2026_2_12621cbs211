@@ -1,9 +1,17 @@
+import json
 import unittest
 from unittest.mock import patch
 
 from inventario.dominio.excecoes import PersistenciaError
 from inventario.interface.api import criar_app
 from inventario.persistencia.banco_sqlite import RepositorioSQLite
+from tests.apoio import estado_em_dicionarios
+
+MENSAGEM_DE_DADOS_DO_ATIVO_INVALIDOS = "Dados do ativo incompletos ou inválidos."
+MENSAGEM_DE_DADOS_DA_VULNERABILIDADE_INVALIDOS = (
+    "Dados da vulnerabilidade incompletos ou inválidos."
+)
+MENSAGEM_DE_DADOS_DO_VINCULO_INVALIDOS = "Dados incompletos ou inválidos."
 
 
 def criar_corpo_de_notebook(id_ativo=2):
@@ -17,6 +25,42 @@ def criar_corpo_de_notebook(id_ativo=2):
         "sistema_operacional": "Linux",
         "tela": 14.0,
     }
+
+
+def criar_notebook_esperado(id_ativo=2, vulnerabilidades=None):
+    if vulnerabilidades is None:
+        vulnerabilidades = []
+
+    return {
+        "id": id_ativo,
+        "nome": "Notebook do Rafael",
+        "tipo": "Notebook",
+        "setor": 1,
+        "responsavel": "Rafael Torres",
+        "status": 1,
+        "vulnerabilidades": vulnerabilidades,
+        "dependencias": [],
+        "fator_exposicao": 1.2,
+        "sistema_operacional": "Linux",
+        "tela": 14.0,
+    }
+
+
+def criar_corpo_de_impressora():
+    return {
+        "tipo": "Impressora",
+        "id": 2,
+        "nome": "Impressora do Rafael",
+        "setor": 1,
+        "responsavel": "Rafael Torres",
+        "status": 1,
+        "cor": 1,
+        "tecnologia": 2,
+    }
+
+
+def criar_log4shell_esperada():
+    return {"id_vulnerabilidade": 1, "nome_vulnerabilidade": "Log4Shell", "cvss": 10}
 
 
 class TesteDaApi(unittest.TestCase):
@@ -34,6 +78,11 @@ class TesteDaApi(unittest.TestCase):
     def cadastrar_notebook(self, id_ativo=2):
         return self.cliente.post("/ativos", json=criar_corpo_de_notebook(id_ativo))
 
+    def cadastrar_notebook_com_campo_alterado(self, campo, valor):
+        corpo = criar_corpo_de_notebook()
+        corpo[campo] = valor
+        return self.cliente.post("/ativos", json=corpo)
+
     def cadastrar_vulnerabilidade(self, nome="Log4Shell", cvss=10):
         corpo = {"nome_vulnerabilidade": nome, "cvss": cvss}
         return self.cliente.post("/vulnerabilidades", json=corpo)
@@ -41,6 +90,23 @@ class TesteDaApi(unittest.TestCase):
     def vincular(self, id_ativo, id_vulnerabilidade, status_tratamento=1):
         corpo = {"id_vulnerabilidade": id_vulnerabilidade, "status_tratamento": status_tratamento}
         return self.cliente.post(f"/ativos/{id_ativo}/vulnerabilidades", json=corpo)
+
+    def estado_da_memoria(self):
+        return estado_em_dicionarios(self.ativos, self.catalogo)
+
+    def estado_do_banco(self):
+        return estado_em_dicionarios(
+            self.repositorio.carregar_ativos(), self.repositorio.carregar_catalogo()
+        )
+
+    def conferir_memoria_e_banco(self, estado_esperado):
+        self.assertEqual(self.estado_da_memoria(), estado_esperado)
+        self.assertEqual(self.estado_do_banco(), estado_esperado)
+
+    def conferir_erro_sem_alteracao(self, resposta, status_esperado, mensagem, estado_antes):
+        self.assertEqual(resposta.status_code, status_esperado)
+        self.assertEqual(resposta.get_json(), {"erro": mensagem})
+        self.conferir_memoria_e_banco(estado_antes)
 
 
 class TesteDaSaude(TesteDaApi):
@@ -60,126 +126,144 @@ class TesteDeAtivos(TesteDaApi):
         self.assertEqual(resposta.status_code, 200)
         self.assertEqual(resposta.get_json(), [])
 
-    def test_listar_devolve_ativos_ordenados_por_id(self):
+    def test_listar_devolve_os_ativos_completos_ordenados_por_id(self):
         self.cadastrar_notebook(3)
         self.cadastrar_notebook(1)
 
         resposta = self.cliente.get("/ativos")
 
-        ids_na_resposta = []
-        for ativo in resposta.get_json():
-            ids_na_resposta.append(ativo["id"])
-        self.assertEqual(ids_na_resposta, [1, 3])
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.get_json(), [criar_notebook_esperado(1), criar_notebook_esperado(3)]
+        )
 
-    def test_cadastrar_ativo_devolve_201_com_fator_padrao_do_tipo(self):
+    def test_cadastrar_ativo_devolve_201_com_o_ativo_completo(self):
         resposta = self.cadastrar_notebook()
 
         self.assertEqual(resposta.status_code, 201)
-        self.assertEqual(resposta.get_json()["responsavel"], "Rafael Torres")
-        self.assertEqual(resposta.get_json()["fator_exposicao"], 1.2)
+        self.assertEqual(resposta.get_json(), criar_notebook_esperado())
 
-    def test_cadastrar_ativo_grava_no_banco(self):
+    def test_cadastrar_ativo_grava_na_memoria_e_no_banco(self):
         self.cadastrar_notebook()
 
-        ativos_no_banco = self.repositorio.carregar_ativos()
+        self.conferir_memoria_e_banco({"ativos": {2: criar_notebook_esperado()}, "catalogo": {}})
 
-        self.assertIn(2, ativos_no_banco)
-
-    def test_cadastrar_ativo_com_id_repetido_devolve_400(self):
+    def test_cadastrar_ativo_com_id_repetido_devolve_400_sem_alterar_nada(self):
         self.cadastrar_notebook()
+        estado_antes = self.estado_da_memoria()
 
         resposta = self.cadastrar_notebook()
 
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(resposta.get_json()["erro"], "Já existe um ativo cadastrado com este ID.")
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Já existe um ativo cadastrado com este ID.", estado_antes
+        )
 
-    def test_cadastrar_ativo_com_tipo_inexistente_devolve_400(self):
-        corpo = criar_corpo_de_notebook()
-        corpo["tipo"] = "Tablet"
+    def test_cadastrar_ativo_com_tipo_inexistente_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
 
-        resposta = self.cliente.post("/ativos", json=corpo)
+        resposta = self.cadastrar_notebook_com_campo_alterado("tipo", "Tablet")
 
-        self.assertEqual(resposta.status_code, 400)
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DO_ATIVO_INVALIDOS, estado_antes
+        )
 
-    def test_cadastrar_ativo_sem_campo_obrigatorio_devolve_400(self):
+    def test_cadastrar_ativo_sem_campo_obrigatorio_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
         corpo = criar_corpo_de_notebook()
         del corpo["tela"]
 
         resposta = self.cliente.post("/ativos", json=corpo)
 
-        self.assertEqual(resposta.status_code, 400)
-
-    def test_cadastrar_ativo_com_setor_inexistente_devolve_400(self):
-        corpo = criar_corpo_de_notebook()
-        corpo["setor"] = 99
-
-        resposta = self.cliente.post("/ativos", json=corpo)
-
-        self.assertEqual(resposta.status_code, 400)
-
-    def test_cadastrar_ativo_com_fator_fora_do_limite_devolve_400(self):
-        corpo = criar_corpo_de_notebook()
-        corpo["fator_exposicao"] = 7
-
-        resposta = self.cliente.post("/ativos", json=corpo)
-
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(
-            resposta.get_json()["erro"],
-            "O fator de exposição deve ser maior que 0 e no máximo 2.",
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DO_ATIVO_INVALIDOS, estado_antes
         )
 
-    def test_cadastrar_ativo_com_responsavel_vazio_devolve_400(self):
-        corpo = criar_corpo_de_notebook()
-        corpo["responsavel"] = ""
+    def test_cadastrar_ativo_com_setor_inexistente_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
 
-        resposta = self.cliente.post("/ativos", json=corpo)
+        resposta = self.cadastrar_notebook_com_campo_alterado("setor", 99)
 
-        self.assertEqual(resposta.status_code, 400)
-        self.assertNotIn(2, self.ativos)
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DO_ATIVO_INVALIDOS, estado_antes
+        )
 
-    def cadastrar_notebook_com_campo_alterado(self, campo, valor):
-        corpo = criar_corpo_de_notebook()
-        corpo[campo] = valor
-        return self.cliente.post("/ativos", json=corpo)
+    def test_cadastrar_ativo_com_fator_fora_do_limite_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
 
-    def conferir_recusa_sem_gravacao(self, resposta, mensagem_esperada):
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(resposta.get_json(), {"erro": mensagem_esperada})
-        self.assertEqual(self.ativos, {})
-        self.assertEqual(self.repositorio.carregar_ativos(), {})
+        resposta = self.cadastrar_notebook_com_campo_alterado("fator_exposicao", 7)
 
-    def test_cadastrar_ativo_com_id_em_texto_devolve_400(self):
-        resposta = self.cadastrar_notebook_com_campo_alterado("id", "abc")
+        self.conferir_erro_sem_alteracao(
+            resposta,
+            400,
+            "O fator de exposição deve ser maior que 0 e no máximo 2.",
+            estado_antes,
+        )
 
-        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um número inteiro.")
+    def test_cadastrar_ativo_com_fator_booleano_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
 
-    def test_cadastrar_ativo_com_id_negativo_devolve_400(self):
-        resposta = self.cadastrar_notebook_com_campo_alterado("id", -5)
-
-        self.conferir_recusa_sem_gravacao(resposta, "Este campo não pode ser nulo ou negativo.")
-
-    def test_cadastrar_ativo_com_nome_numerico_devolve_400(self):
-        resposta = self.cadastrar_notebook_com_campo_alterado("nome", 123)
-
-        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um texto.")
-
-    def test_cadastrar_ativo_com_nome_so_com_espacos_devolve_400(self):
-        resposta = self.cadastrar_notebook_com_campo_alterado("nome", "   ")
-
-        self.conferir_recusa_sem_gravacao(resposta, "Este campo não pode ser vazio.")
-
-    def test_cadastrar_ativo_com_campo_do_tipo_em_texto_devolve_400(self):
-        resposta = self.cadastrar_notebook_com_campo_alterado("tela", "grande")
-
-        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um número.")
-
-    def test_cadastrar_ativo_com_fator_booleano_devolve_400(self):
         resposta = self.cadastrar_notebook_com_campo_alterado("fator_exposicao", True)
 
-        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um número.")
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um número.", estado_antes
+        )
 
-    def test_cadastrar_roteador_com_portas_fracionarias_devolve_400(self):
+    def test_cadastrar_ativo_com_responsavel_vazio_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook_com_campo_alterado("responsavel", "")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo não pode ser vazio.", estado_antes
+        )
+
+    def test_cadastrar_ativo_com_id_em_texto_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook_com_campo_alterado("id", "abc")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um número inteiro.", estado_antes
+        )
+
+    def test_cadastrar_ativo_com_id_negativo_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook_com_campo_alterado("id", -5)
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo não pode ser nulo ou negativo.", estado_antes
+        )
+
+    def test_cadastrar_ativo_com_nome_numerico_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook_com_campo_alterado("nome", 123)
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um texto.", estado_antes
+        )
+
+    def test_cadastrar_ativo_com_nome_so_com_espacos_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook_com_campo_alterado("nome", "   ")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo não pode ser vazio.", estado_antes
+        )
+
+    def test_cadastrar_ativo_com_campo_do_tipo_em_texto_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook_com_campo_alterado("tela", "grande")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um número.", estado_antes
+        )
+
+    def test_cadastrar_roteador_com_portas_fracionarias_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
         corpo = {
             "tipo": "Roteador",
             "id": 2,
@@ -193,15 +277,62 @@ class TesteDeAtivos(TesteDaApi):
 
         resposta = self.cliente.post("/ativos", json=corpo)
 
-        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um número inteiro.")
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um número inteiro.", estado_antes
+        )
 
-    def test_buscar_ativo_existente_devolve_200(self):
+    def test_cadastrar_impressora_devolve_201_com_cor_e_tecnologia(self):
+        resposta = self.cliente.post("/ativos", json=criar_corpo_de_impressora())
+
+        self.assertEqual(resposta.status_code, 201)
+        self.assertEqual(
+            resposta.get_json(),
+            {
+                "id": 2,
+                "nome": "Impressora do Rafael",
+                "tipo": "Impressora",
+                "setor": 1,
+                "responsavel": "Rafael Torres",
+                "status": 1,
+                "vulnerabilidades": [],
+                "dependencias": [],
+                "fator_exposicao": 0.9,
+                "cor": 1,
+                "tecnologia": 2,
+            },
+        )
+
+    def conferir_campos_que_aceitam_so_inteiro(self, corpo_valido, campos):
+        valores_que_nao_sao_inteiros = [True, 1.0]
+
+        for campo in campos:
+            for valor in valores_que_nao_sao_inteiros:
+                with self.subTest(campo=campo, valor=valor):
+                    estado_antes = self.estado_da_memoria()
+                    corpo = dict(corpo_valido)
+                    corpo[campo] = valor
+
+                    resposta = self.cliente.post("/ativos", json=corpo)
+
+                    self.conferir_erro_sem_alteracao(
+                        resposta, 400, "Este campo precisa ser um número inteiro.", estado_antes
+                    )
+
+    def test_setor_e_status_aceitam_so_inteiro(self):
+        self.conferir_campos_que_aceitam_so_inteiro(criar_corpo_de_notebook(), ["setor", "status"])
+
+    def test_cor_e_tecnologia_da_impressora_aceitam_so_inteiro(self):
+        self.conferir_campos_que_aceitam_so_inteiro(
+            criar_corpo_de_impressora(), ["cor", "tecnologia"]
+        )
+
+    def test_buscar_ativo_existente_devolve_200_com_o_ativo_completo(self):
         self.cadastrar_notebook()
 
         resposta = self.cliente.get("/ativos/2")
 
         self.assertEqual(resposta.status_code, 200)
-        self.assertEqual(resposta.get_json()["nome"], "Notebook do Rafael")
+        self.assertEqual(resposta.get_json(), criar_notebook_esperado())
 
     def test_buscar_ativo_inexistente_devolve_404(self):
         resposta = self.cliente.get("/ativos/99")
@@ -216,94 +347,177 @@ class TesteDeVulnerabilidades(TesteDaApi):
         resposta = self.cadastrar_vulnerabilidade()
 
         self.assertEqual(resposta.status_code, 201)
-        self.assertEqual(
-            resposta.get_json(),
-            {"id_vulnerabilidade": 1, "nome_vulnerabilidade": "Log4Shell", "cvss": 10},
-        )
+        self.assertEqual(resposta.get_json(), criar_log4shell_esperada())
 
-    def test_cadastrar_vulnerabilidade_grava_no_banco(self):
+    def test_cadastrar_vulnerabilidade_grava_na_memoria_e_no_banco(self):
         self.cadastrar_vulnerabilidade()
 
-        catalogo_no_banco = self.repositorio.carregar_catalogo()
+        self.conferir_memoria_e_banco({"ativos": {}, "catalogo": {1: criar_log4shell_esperada()}})
 
-        self.assertIn(1, catalogo_no_banco)
-
-    def test_listar_vulnerabilidades_mostra_a_cadastrada(self):
+    def test_listar_vulnerabilidades_devolve_o_catalogo_completo(self):
         self.cadastrar_vulnerabilidade()
 
         resposta = self.cliente.get("/vulnerabilidades")
 
-        self.assertEqual(len(resposta.get_json()), 1)
-        self.assertEqual(resposta.get_json()[0]["nome_vulnerabilidade"], "Log4Shell")
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.get_json(), [criar_log4shell_esperada()])
 
-    def test_cadastrar_vulnerabilidade_com_cvss_fora_do_limite_devolve_400(self):
+    def test_cadastrar_vulnerabilidade_com_cvss_fora_do_limite_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
         resposta = self.cadastrar_vulnerabilidade(cvss=15)
 
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(resposta.get_json()["erro"], "O CVSS deve estar entre 0.1 e 10.")
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "O CVSS deve estar entre 0.1 e 10.", estado_antes
+        )
 
-    def test_cadastrar_vulnerabilidade_com_cvss_em_texto_devolve_400(self):
+    def test_cadastrar_vulnerabilidade_com_cvss_em_texto_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
         resposta = self.cadastrar_vulnerabilidade(cvss="abc")
 
-        self.assertEqual(resposta.status_code, 400)
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um número.", estado_antes
+        )
 
-    def test_cadastrar_vulnerabilidade_com_nome_vazio_devolve_400(self):
-        resposta = self.cadastrar_vulnerabilidade(nome="")
+    def test_cadastrar_vulnerabilidade_com_cvss_booleano_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
 
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(self.catalogo, {})
-
-    def test_cadastrar_vulnerabilidade_sem_cvss_devolve_400(self):
-        resposta = self.cliente.post("/vulnerabilidades", json={"nome_vulnerabilidade": "X"})
-
-        self.assertEqual(resposta.status_code, 400)
-
-    def test_cadastrar_vulnerabilidade_com_cvss_booleano_devolve_400(self):
         resposta = self.cadastrar_vulnerabilidade(cvss=True)
 
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(resposta.get_json(), {"erro": "Este campo precisa ser um número."})
-        self.assertEqual(self.catalogo, {})
-        self.assertEqual(self.repositorio.carregar_catalogo(), {})
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um número.", estado_antes
+        )
+
+    def test_cadastrar_vulnerabilidade_com_nome_vazio_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_vulnerabilidade(nome="")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo não pode ser vazio.", estado_antes
+        )
+
+    def test_cadastrar_vulnerabilidade_sem_cvss_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.post(
+            "/vulnerabilidades", json={"nome_vulnerabilidade": "Log4Shell"}
+        )
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DA_VULNERABILIDADE_INVALIDOS, estado_antes
+        )
 
 
 class TesteDeCorposInvalidos(TesteDaApi):
 
-    def test_corpo_que_nao_e_json_devolve_400_em_json_nas_rotas_de_cadastro(self):
-        rotas_de_cadastro = ["/ativos", "/vulnerabilidades", "/ativos/2/vulnerabilidades"]
+    def setUp(self):
+        super().setUp()
+        self.mensagem_esperada_por_rota = {
+            "/ativos": MENSAGEM_DE_DADOS_DO_ATIVO_INVALIDOS,
+            "/vulnerabilidades": MENSAGEM_DE_DADOS_DA_VULNERABILIDADE_INVALIDOS,
+            "/ativos/2/vulnerabilidades": MENSAGEM_DE_DADOS_DO_VINCULO_INVALIDOS,
+        }
 
-        for rota in rotas_de_cadastro:
+    def enviar_corpo_para_cada_rota(self, corpo_em_texto, tipo_do_conteudo):
+        for rota, mensagem_esperada in self.mensagem_esperada_por_rota.items():
             with self.subTest(rota=rota):
-                resposta = self.cliente.post(rota, data="Rafael Torres", content_type="text/plain")
+                estado_antes = self.estado_da_memoria()
 
-                self.assertEqual(resposta.status_code, 400)
-                self.assertIn("erro", resposta.get_json())
-
-    def test_json_malformado_devolve_400_em_json_nas_rotas_de_cadastro(self):
-        rotas_de_cadastro = ["/ativos", "/vulnerabilidades", "/ativos/2/vulnerabilidades"]
-
-        for rota in rotas_de_cadastro:
-            with self.subTest(rota=rota):
                 resposta = self.cliente.post(
-                    rota, data='{"tipo": "Notebook",', content_type="application/json"
+                    rota, data=corpo_em_texto, content_type=tipo_do_conteudo
                 )
 
-                self.assertEqual(resposta.status_code, 400)
-                self.assertIn("erro", resposta.get_json())
+                self.conferir_erro_sem_alteracao(resposta, 400, mensagem_esperada, estado_antes)
+
+    def test_corpo_que_nao_e_json_devolve_400_em_json_sem_alterar_nada(self):
+        self.enviar_corpo_para_cada_rota("Rafael Torres", "text/plain")
+
+    def test_json_malformado_devolve_400_em_json_sem_alterar_nada(self):
+        self.enviar_corpo_para_cada_rota('{"tipo": "Notebook",', "application/json")
+
+
+class TesteDeNumerosNaoFinitos(TesteDaApi):
+
+    def enviar_corpo_em_texto(self, rota, corpo):
+        corpo_em_texto = json.dumps(corpo)
+        return self.cliente.post(rota, data=corpo_em_texto, content_type="application/json")
+
+    def test_o_corpo_enviado_tem_nan_e_infinity_escritos_como_texto(self):
+        corpo_em_texto = json.dumps({"cvss": float("nan"), "tela": float("inf")})
+
+        self.assertEqual(corpo_em_texto, '{"cvss": NaN, "tela": Infinity}')
+
+    def test_cvss_nao_finito_devolve_400_sem_alterar_nada(self):
+        for valor in [float("nan"), float("inf"), float("-inf")]:
+            with self.subTest(cvss=valor):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.enviar_corpo_em_texto(
+                    "/vulnerabilidades", {"nome_vulnerabilidade": "Log4Shell", "cvss": valor}
+                )
+
+                self.conferir_erro_sem_alteracao(
+                    resposta, 400, "Este campo precisa ser um número finito.", estado_antes
+                )
+
+    def test_fator_de_exposicao_nan_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        corpo = criar_corpo_de_notebook()
+        corpo["fator_exposicao"] = float("nan")
+
+        resposta = self.enviar_corpo_em_texto("/ativos", corpo)
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um número finito.", estado_antes
+        )
+
+    def test_tela_infinita_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        corpo = criar_corpo_de_notebook()
+        corpo["tela"] = float("inf")
+
+        resposta = self.enviar_corpo_em_texto("/ativos", corpo)
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Este campo precisa ser um número finito.", estado_antes
+        )
 
 
 class TesteDeFalhaDePersistencia(TesteDaApi):
 
-    def test_falha_do_repositorio_devolve_500_em_json(self):
-        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+    mensagem_da_falha = "Não foi possível gravar no banco de dados."
 
-        with patch.object(self.repositorio, "adicionar_ativo", side_effect=falha_do_banco):
+    def banco_falhando_em(self, nome_da_operacao):
+        falha_do_banco = PersistenciaError(self.mensagem_da_falha)
+        return patch.object(self.repositorio, nome_da_operacao, side_effect=falha_do_banco)
+
+    def test_falha_ao_gravar_ativo_devolve_500_sem_alterar_memoria_nem_banco(self):
+        estado_antes = self.estado_da_memoria()
+
+        with self.banco_falhando_em("adicionar_ativo"):
             resposta = self.cadastrar_notebook()
 
-        self.assertEqual(resposta.status_code, 500)
-        self.assertEqual(
-            resposta.get_json(), {"erro": "Não foi possível gravar no banco de dados."}
-        )
+        self.conferir_erro_sem_alteracao(resposta, 500, self.mensagem_da_falha, estado_antes)
+
+    def test_falha_ao_gravar_vulnerabilidade_devolve_500_sem_alterar_memoria_nem_banco(self):
+        estado_antes = self.estado_da_memoria()
+
+        with self.banco_falhando_em("adicionar_vulnerabilidade"):
+            resposta = self.cadastrar_vulnerabilidade()
+
+        self.conferir_erro_sem_alteracao(resposta, 500, self.mensagem_da_falha, estado_antes)
+
+    def test_falha_ao_gravar_vinculo_devolve_500_sem_alterar_memoria_nem_banco(self):
+        self.cadastrar_notebook()
+        self.cadastrar_vulnerabilidade()
+        estado_antes = self.estado_da_memoria()
+
+        with self.banco_falhando_em("vincular"):
+            resposta = self.vincular(2, 1)
+
+        self.conferir_erro_sem_alteracao(resposta, 500, self.mensagem_da_falha, estado_antes)
 
 
 class TesteDeVinculos(TesteDaApi):
@@ -313,41 +527,83 @@ class TesteDeVinculos(TesteDaApi):
         self.cadastrar_notebook()
         self.cadastrar_vulnerabilidade()
 
-    def test_vincular_devolve_201_com_o_vinculo_no_ativo(self):
+    def test_vincular_devolve_201_com_o_ativo_e_o_vinculo(self):
         resposta = self.vincular(2, 1)
 
         self.assertEqual(resposta.status_code, 201)
         self.assertEqual(
-            resposta.get_json()["vulnerabilidades"],
-            [{"id_vulnerabilidade": 1, "status_tratamento": 1}],
+            resposta.get_json(),
+            criar_notebook_esperado(
+                vulnerabilidades=[{"id_vulnerabilidade": 1, "status_tratamento": 1}]
+            ),
         )
 
-    def test_vincular_duas_vezes_devolve_400(self):
+    def test_vincular_grava_na_memoria_e_no_banco(self):
         self.vincular(2, 1)
+
+        ativo_esperado = criar_notebook_esperado(
+            vulnerabilidades=[{"id_vulnerabilidade": 1, "status_tratamento": 1}]
+        )
+        self.conferir_memoria_e_banco(
+            {"ativos": {2: ativo_esperado}, "catalogo": {1: criar_log4shell_esperada()}}
+        )
+
+    def test_vincular_duas_vezes_devolve_400_sem_alterar_nada(self):
+        self.vincular(2, 1)
+        estado_antes = self.estado_da_memoria()
 
         resposta = self.vincular(2, 1)
 
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(
-            resposta.get_json()["erro"], "Esta vulnerabilidade já está vinculada a este ativo."
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Esta vulnerabilidade já está vinculada a este ativo.", estado_antes
         )
 
-    def test_vincular_a_ativo_inexistente_devolve_400(self):
+    def test_vincular_a_ativo_inexistente_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
         resposta = self.vincular(99, 1)
 
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(resposta.get_json()["erro"], "Ativo não encontrado.")
+        self.conferir_erro_sem_alteracao(resposta, 400, "Ativo não encontrado.", estado_antes)
 
-    def test_vincular_vulnerabilidade_inexistente_devolve_400(self):
+    def test_vincular_vulnerabilidade_inexistente_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
         resposta = self.vincular(2, 99)
 
-        self.assertEqual(resposta.status_code, 400)
-        self.assertEqual(resposta.get_json()["erro"], "Vulnerabilidade não encontrada no catálogo.")
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, "Vulnerabilidade não encontrada no catálogo.", estado_antes
+        )
 
-    def test_vincular_com_status_inexistente_devolve_400(self):
+    def test_vincular_com_status_inexistente_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
         resposta = self.vincular(2, 1, status_tratamento=9)
 
-        self.assertEqual(resposta.status_code, 400)
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DO_VINCULO_INVALIDOS, estado_antes
+        )
+
+    def test_status_do_vinculo_aceita_so_inteiro(self):
+        for valor in [True, 1.0]:
+            with self.subTest(status_tratamento=valor):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.vincular(2, 1, status_tratamento=valor)
+
+                self.conferir_erro_sem_alteracao(
+                    resposta, 400, "Este campo precisa ser um número inteiro.", estado_antes
+                )
+
+    def test_id_da_vulnerabilidade_no_vinculo_aceita_so_inteiro(self):
+        for valor in [True, 1.0]:
+            with self.subTest(id_vulnerabilidade=valor):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.vincular(2, valor)
+
+                self.conferir_erro_sem_alteracao(
+                    resposta, 400, "Este campo precisa ser um número inteiro.", estado_antes
+                )
 
 
 class TesteDeRiscos(TesteDaApi):
@@ -358,7 +614,7 @@ class TesteDeRiscos(TesteDaApi):
         self.assertEqual(resposta.status_code, 200)
         self.assertEqual(resposta.get_json(), [])
 
-    def test_riscos_coloca_o_ativo_vulneravel_em_primeiro(self):
+    def test_riscos_devolve_o_ranking_completo_com_o_ativo_vulneravel_em_primeiro(self):
         self.cadastrar_notebook(1)
         self.cadastrar_notebook(2)
         self.cadastrar_vulnerabilidade()
@@ -366,11 +622,32 @@ class TesteDeRiscos(TesteDaApi):
 
         resposta = self.cliente.get("/riscos")
 
-        primeiro_do_ranking = resposta.get_json()[0]
         self.assertEqual(resposta.status_code, 200)
-        self.assertEqual(primeiro_do_ranking["posicao"], 1)
-        self.assertEqual(primeiro_do_ranking["id"], 2)
-        self.assertEqual(primeiro_do_ranking["tipo"], "Notebook")
+        self.assertEqual(
+            resposta.get_json(),
+            [
+                {
+                    "posicao": 1,
+                    "id": 2,
+                    "nome": "Notebook do Rafael",
+                    "tipo": "Notebook",
+                    "fator_exposicao": 1.2,
+                    "risco_proprio": 12.0,
+                    "risco_herdado": 0.0,
+                    "risco_efetivo": 12.0,
+                },
+                {
+                    "posicao": 2,
+                    "id": 1,
+                    "nome": "Notebook do Rafael",
+                    "tipo": "Notebook",
+                    "fator_exposicao": 1.2,
+                    "risco_proprio": 0.0,
+                    "risco_herdado": 0.0,
+                    "risco_efetivo": 0.0,
+                },
+            ],
+        )
 
 
 if __name__ == "__main__":
