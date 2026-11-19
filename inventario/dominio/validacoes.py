@@ -51,7 +51,8 @@ def validar_soma_fracao(soma_atual, fracao_nova):
     soma = round(soma_atual + fracao_nova, 6)
     if soma >= 1:
         raise DadoInvalidoError(
-            f"A soma das frações precisa ficar abaixo de 1. Ainda cabem {1 - soma_atual:.3f}."
+            "A soma das frações precisa ficar abaixo de 1. "
+            f"A nova fração precisa ser menor que {round(1 - soma_atual, 6)}."
         )
     return fracao_nova
 

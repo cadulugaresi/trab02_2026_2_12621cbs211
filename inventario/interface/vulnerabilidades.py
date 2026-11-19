@@ -101,7 +101,13 @@ def editar_vulnerabilidade(repositorio, vulnerabilidade, catalogo):
         print("Opção inválida. Tente novamente.")
         return
 
-    atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade_em_edicao)
+    try:
+        atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade_em_edicao)
+    except DadoInvalidoError as erro:
+        print(erro)
+        print("As alterações não foram salvas.")
+        return
+
     print("Vulnerabilidade atualizada com sucesso!")
     mostrar_vulnerabilidade(vulnerabilidade_em_edicao)
 

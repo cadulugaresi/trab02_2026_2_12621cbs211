@@ -49,20 +49,37 @@ Modelo baseado em álgebra linear que estima o risco de cada ativo a partir de s
 A opção 7 do menu principal mostra uma linha por ativo, na ordem do ranking, com o fator de exposição e os riscos próprio, herdado e efetivo, seguida de uma legenda. O mesmo ranking está disponível pela API, em `GET /riscos`.
 
 ### API HTTP
-Uma API Flask expõe as principais operações como um serviço HTTP na porta 5000, para que outros programas (como um frontend web) possam usar o sistema. As requisições e as respostas usam JSON, com as mesmas chaves que o `para_dicionario()` produz.
+Uma API Flask expõe todas as operações do menu como um serviço HTTP na porta 5000, para que outros programas (como um frontend web) possam usar o sistema. As requisições e as respostas usam JSON, com as mesmas chaves que o `para_dicionario()` produz; as respostas de vulnerabilidade também trazem o nível de severidade (`"nivel": "CRITICO"`).
 
-| Método | Rota                            | O que faz                                                         |
-| ------ | ------------------------------- | ----------------------------------------------------------------- |
-| GET    | `/saude`                        | Verificação de funcionamento: devolve `{"status": "ok"}`          |
-| GET    | `/ativos`                       | Lista todos os ativos, ordenados por ID                           |
-| GET    | `/ativos/<id>`                  | Devolve um ativo (404 se ele não existir)                         |
-| POST   | `/ativos`                       | Cadastra um ativo de qualquer tipo (201)                          |
-| GET    | `/vulnerabilidades`             | Lista o catálogo de vulnerabilidades                              |
-| POST   | `/vulnerabilidades`             | Cadastra uma vulnerabilidade; o ID é gerado pelo servidor (201)   |
-| POST   | `/ativos/<id>/vulnerabilidades` | Vincula uma vulnerabilidade do catálogo a um ativo (201)          |
-| GET    | `/riscos`                       | Ranking de risco com os riscos próprio, herdado e efetivo         |
+| Método | Rota                                      | O que faz                                                                                                 |
+| ------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| GET    | `/saude`                                  | Verificação de funcionamento: devolve `{"status": "ok"}`                                                  |
+| GET    | `/opcoes`                                 | Listas para os formulários: tipos (com o fator de exposição padrão), setores, status, cores e tecnologias |
+| GET    | `/ativos`                                 | Lista os ativos, com filtros e ordenação opcionais                                                        |
+| POST   | `/ativos`                                 | Cadastra um ativo de qualquer tipo (201)                                                                  |
+| GET    | `/ativos/<id>`                            | Devolve um ativo                                                                                          |
+| PUT    | `/ativos/<id>`                            | Edita um ativo, inclusive trocando o tipo                                                                 |
+| DELETE | `/ativos/<id>`                            | Exclui um ativo (204)                                                                                     |
+| GET    | `/ativos/<id>/vulnerabilidades`           | Vulnerabilidades de um ativo, com nome, CVSS, nível e status de tratamento                                |
+| POST   | `/ativos/<id>/vulnerabilidades`           | Vincula uma vulnerabilidade do catálogo a um ativo (201)                                                  |
+| PUT    | `/ativos/<id>/vulnerabilidades/<id_vuln>` | Atualiza o status de tratamento de um vínculo                                                             |
+| DELETE | `/ativos/<id>/vulnerabilidades/<id_vuln>` | Desvincula uma vulnerabilidade de um ativo (204)                                                          |
+| GET    | `/ativos/<id>/dependencias`               | Dependências de um ativo, com o nome do ativo do qual ele depende                                         |
+| POST   | `/ativos/<id>/dependencias`               | Adiciona uma dependência (201)                                                                            |
+| PUT    | `/ativos/<id>/dependencias/<id_dep>`      | Troca o ativo do qual depende e/ou a fração                                                               |
+| DELETE | `/ativos/<id>/dependencias/<id_dep>`      | Remove uma dependência (204)                                                                              |
+| GET    | `/vulnerabilidades`                       | Lista o catálogo de vulnerabilidades                                                                      |
+| POST   | `/vulnerabilidades`                       | Cadastra uma vulnerabilidade; o ID é gerado pelo servidor (201)                                           |
+| GET    | `/vulnerabilidades/<id>`                  | Devolve uma vulnerabilidade                                                                               |
+| PUT    | `/vulnerabilidades/<id>`                  | Edita o nome e/ou o CVSS                                                                                  |
+| DELETE | `/vulnerabilidades/<id>`                  | Exclui do catálogo e desvincula de todos os ativos (204)                                                  |
+| GET    | `/riscos`                                 | Ranking de risco com os riscos próprio, herdado e efetivo                                                 |
 
-Campos faltando, tipos errados e valores fora das regras devolvem **400** com uma mensagem `{"erro": "..."}`, nunca 500. Exemplo de cadastro de um ativo:
+O `GET /ativos` aceita filtros e ordenação na query string, que podem ser combinados: `tipo` (ex.: `Notebook`), `status` (ex.: `1`), `nome` (parte do nome, sem diferenciar maiúsculas) e `ordenar` (`id`, `nome` ou `vulnerabilidades`). Exemplo: `/ativos?tipo=Notebook&status=1&ordenar=nome`.
+
+**Edição e exclusão:** o `PUT /ativos/<id>` recebe o ativo inteiro; o ID da URL é o que vale, e se o `fator_exposicao` não vier e o tipo não mudar, o fator atual é mantido. No `PUT` de vulnerabilidades e de dependências, o campo que não vier, ou vier `null`, continua com o valor atual. Excluir um ativo também remove as dependências que apontavam para ele, e excluir uma vulnerabilidade a desvincula de todos os ativos.
+
+**Erros** são sempre um JSON `{"erro": "..."}`, nunca uma página HTML: **400** para dados ou filtros inválidos, **404** quando o ativo, a vulnerabilidade, o vínculo, a dependência ou a rota não existe, **405** para um método que a rota não aceita e **500** para falha do banco ou erro inesperado, sem detalhes internos. Exemplo de cadastro de um ativo:
 
 ```bash
 curl -X POST http://localhost:5000/ativos \
@@ -96,7 +113,7 @@ flowchart TD
     iniciarApi["iniciar_api.py<br/>cria o RepositorioSQLite, carrega os dados<br/>e liga a API em 0.0.0.0:5000"]
     subgraph interface["INTERFACE · inventario/interface"]
         menu["Menu do terminal<br/>menu.py, ativos.py, vulnerabilidades.py,<br/>entradas.py, conversao_das_opcoes_do_menu.py"]
-        api["API HTTP<br/>api.py: criar_app(repositorio, ativos, catalogo)"]
+        api["API HTTP<br/>api/: criar_app + um Blueprint por recurso"]
     end
     servicos["SERVIÇOS<br/>inventario/servicos<br/>ativos.py, vulnerabilidades.py"]
     subgraph persistencia["PERSISTÊNCIA · inventario/persistencia"]
@@ -138,7 +155,7 @@ flowchart TD
 ### Responsabilidade de cada camada
 
 - **Interface** (`inventario/interface/`): é a única camada que conversa com o mundo de fora. O menu do terminal usa `input` e `print`; a API recebe requisições HTTP e responde com JSON. Os dois leem e convertem as entradas e apresentam os resultados e as mensagens de erro.
-  - `api.py`: `criar_app(repositorio, ativos, catalogo)`, uma fábrica que cria o app Flask com todas as rotas; transforma os corpos JSON em chamadas aos serviços e os erros deles em respostas 400 ou 404
+  - `api/`: o pacote da API. O `__init__.py` tem o `criar_app(repositorio, ativos, catalogo)`, que cria o app Flask, registra os tratadores de erro (sempre em JSON) e registra um Blueprint por recurso (`rotas_de_ativos.py`, `rotas_de_vulnerabilidades.py`, `rotas_de_vinculos.py`, `rotas_de_dependencias.py`, `rotas_de_riscos.py`, `rotas_de_opcoes.py`, `rotas_de_saude.py`); o `requisicoes.py` e o `respostas.py` guardam ajudantes pequenos para ler os corpos e montar as respostas
   - `menu.py`: `menu_principal`, `menu_listagem` e `menu_vulnerabilidades`
   - `ativos.py`: telas de cadastro, edição e exclusão de ativos (`cadastrar_ativo`, `editar_ativo`, `excluir_ativo`, `perguntar_ativo`...)
   - `vulnerabilidades.py`: telas do catálogo e dos vínculos (`cadastrar_vulnerabilidade`, `editar_vulnerabilidade`, `vincular_a_um_ativo`, `mostrar_vulnerabilidade`...)
@@ -146,7 +163,7 @@ flowchart TD
   - `conversao_das_opcoes_do_menu.py`: converte a opção numerada do menu no valor do domínio (`"1"` → `StatusDoAtivo.ATIVO`, `"1"` → `Notebook`...)
 - **Serviços** (`inventario/servicos/`): concentram as operações de cadastro, busca, edição, exclusão e associação. Recebem o repositório e os dados prontos por parâmetro, aplicam as regras, salvam pelo repositório (`repositorio.adicionar_ativo`, `repositorio.vincular`...) e lançam `DadoInvalidoError` quando algo está errado. Não usam `input` nem `print`.
   - `ativos.py`: `registrar_ativo_no_inventario`, `atualizar_ativo_no_inventario`, `remover_ativo_do_inventario`, `obter_ativo` e as buscas (`encontrar_ativo_por_id`, `encontrar_ativos_por_nome`, `encontrar_ativos_por_status`, `encontrar_ativos_por_tipo`)
-  - `vulnerabilidades.py`: `registrar_vulnerabilidade_no_catalogo`, `atualizar_vulnerabilidade_no_catalogo`, `excluir_vulnerabilidade_do_catalogo`, `vincular_vulnerabilidade`, `desvincular_vulnerabilidade`, `atualizar_status_vulnerabilidade` e `proximo_id`
+  - `vulnerabilidades.py`: `registrar_vulnerabilidade_no_catalogo`, `atualizar_vulnerabilidade_no_catalogo`, `excluir_vulnerabilidade_do_catalogo`, `vincular_vulnerabilidade`, `desvincular_vulnerabilidade`, `atualizar_status_vulnerabilidade`, `obter_vulnerabilidade` e `proximo_id`
 - **Persistência** (`inventario/persistencia/`): salva e carrega os dados e traduz as falhas do armazenamento em `PersistenciaError`. As duas implementações oferecem as mesmas 14 operações, conferidas pela suíte de testes de contrato: `carregar_ativos`, `carregar_catalogo`, `adicionar_ativo`, `atualizar_ativo`, `remover_ativo`, `adicionar_vulnerabilidade`, `atualizar_vulnerabilidade`, `remover_vulnerabilidade`, `vincular`, `atualizar_status_vinculo`, `desvincular`, `adicionar_dependencia`, `remover_dependencia` e `atualizar_dependencia`.
   - `banco_sqlite.py`: `RepositorioSQLite`, o armazenamento usado pelo programa (`inventario.db`); cria as tabelas ao iniciar, liga as chaves estrangeiras e remonta cada ativo com um `JOIN` entre `ativos` e a tabela do tipo dele
   - `esquema.sql`: o esquema do banco: a tabela `ativos`, uma tabela por tipo (`notebooks`, `servidores`, `roteadores`, `impressoras`), `vulnerabilidades` e a tabela associativa `vinculos`, todas com `ON DELETE CASCADE`
@@ -155,7 +172,7 @@ flowchart TD
   - `ativo.py`: `Ativo` e as subclasses `Notebook`, `Servidor`, `Roteador`, `Impressora`, além do `MAPA_DE_TIPOS`
   - `vulnerabilidade.py`: `Vulnerabilidade`, com o nível calculado pela nota CVSS
   - `enums.py`: `Setor`, `StatusDoAtivo`, `StatusDaVuln`, `NivelDaVulnerabilidade`, `Cor`, `Tecnologia`
-  - `excecoes.py`: `DadoInvalidoError` e `PersistenciaError`
+  - `excecoes.py`: `DadoInvalidoError`, a filha dela `RecursoNaoEncontradoError` e `PersistenciaError`
   - `validacoes.py`: regras de validação (`validar_texto_obrigatorio`, `validar_cvss`, `validar_fator_exposicao`...)
 
 ### Exemplo de fluxo: excluir um ativo
@@ -174,11 +191,13 @@ menu_principal                         (interface)     usuário escolhe a opçã
 
 - **Serviços recebem IDs, não perguntas:** todo serviço trabalha com dados prontos (ex.: `remover_ativo_do_inventario(ativos, id_ativo)`). Assim, a mesma regra pode ser usada pelo menu do terminal ou por uma API, sem depender de `input`.
 - **Erros sobem, a interface mostra:** os serviços e o domínio lançam `DadoInvalidoError` com a mensagem; a interface captura e exibe essa mensagem. O texto de cada erro fica escrito em um lugar só.
+- **"Não encontrado" tem um erro próprio:** o `RecursoNaoEncontradoError` é filho de `DadoInvalidoError`. O menu continua capturando os dois do mesmo jeito, e a API responde 404 para ele e 400 para qualquer outro dado inválido.
+- **Banco primeiro, memória depois:** todo serviço grava no banco antes de mudar os dicionários em memória, e as telas de edição do menu trabalham sobre uma cópia. Se a gravação falhar, a memória continua igual ao banco.
 - **Validação em profundidade:** regras como a faixa do CVSS (`validar_cvss`), o nome e o responsável do ativo (`validar_texto_obrigatorio`) e o fator de exposição (`validar_fator_exposicao`) ficam no domínio e são usadas tanto pelo menu (para pedir de novo) quanto pelos serviços (como garantia, venha o dado de onde vier). Como a API chama os serviços diretamente, uma requisição HTTP com dados inválidos é recusada pelas mesmas regras do menu.
 - **Uma lista de tipos só:** a lista de tipos de ativo mora no domínio (`MAPA_DE_TIPOS`); a numeração do menu (`TIPOS_DE_ATIVOS`) é gerada a partir dela pela interface.
 - **Depender da abstração:** os serviços recebem um `repositorio` por parâmetro, em vez de importar um módulo de armazenamento. Trocar os arquivos JSON pelo banco SQLite mexeu só na camada de persistência e no repositório criado no ponto de entrada.
 - **Cada operação salva só o que mudou:** em vez de regravar tudo, cada serviço chama a operação correspondente do repositório (`adicionar_ativo`, `desvincular`...), que vira um único `INSERT`, `UPDATE` ou `DELETE` no banco.
-- **Uma segunda interface sem mexer nas regras:** a API HTTP entrou como um módulo novo na camada de interface (`api.py`) e um ponto de entrada novo (`iniciar_api.py`). Os serviços só ganharam as validações que antes eram chamadas apenas pelo menu.
+- **Uma segunda interface sem mexer nas regras:** a API HTTP entrou como um pacote novo na camada de interface (`api/`) e um ponto de entrada novo (`iniciar_api.py`). Os serviços só ganharam as validações que antes eram chamadas apenas pelo menu.
 - **A API recebe as suas dependências:** o `criar_app` recebe o repositório e os dados em vez de criá-los, assim como o `menu_principal`. Isso permite que os testes da API criem o app com um banco SQLite em memória, sem mexer no `inventario.db`.
 
 ### Modelo do domínio
@@ -198,7 +217,17 @@ menu_principal                         (interface)     usuário escolhe a opçã
 ├── iniciar_api.py
 ├── inventario/
 │   ├── interface/
-│   │   ├── api.py
+│   │   ├── api/
+│   │   │   ├── __init__.py
+│   │   │   ├── rotas_de_ativos.py
+│   │   │   ├── rotas_de_vulnerabilidades.py
+│   │   │   ├── rotas_de_vinculos.py
+│   │   │   ├── rotas_de_dependencias.py
+│   │   │   ├── rotas_de_riscos.py
+│   │   │   ├── rotas_de_opcoes.py
+│   │   │   ├── rotas_de_saude.py
+│   │   │   ├── requisicoes.py
+│   │   │   └── respostas.py
 │   │   ├── menu.py
 │   │   ├── ativos.py
 │   │   ├── vulnerabilidades.py
@@ -227,6 +256,7 @@ menu_principal                         (interface)     usuário escolhe a opçã
 │   ├── test_vulnerabilidades.py
 │   ├── test_api.py
 │   ├── test_falha_de_persistencia.py
+│   ├── test_recurso_nao_encontrado.py
 │   └── test_exemplos.py
 ├── docs/
 │   ├── README.pt-br.md
@@ -336,7 +366,7 @@ python3 -m flake8 main.py iniciar_api.py inventario
 python3 -m black --check main.py iniciar_api.py inventario
 ```
 
-**Testes da API:** `tests/test_api.py` tem 55 testes que usam o `test_client()` do Flask, sem ligar o servidor. Cada teste cria o app com o `criar_app` e um banco SQLite em memória (`RepositorioSQLite(":memory:")`), e confere os códigos de status e os corpos JSON de todas as rotas, inclusive que dados inválidos devolvem 400 e não são gravados.
+**Testes da API:** `tests/test_api.py` tem 127 testes que usam o `test_client()` do Flask, sem ligar o servidor. Cada teste cria o app com o `criar_app` e um banco SQLite em memória (`RepositorioSQLite(":memory:")`), e confere os códigos de status e os corpos JSON de todas as rotas, inclusive que dados inválidos devolvem 400 e não são gravados.
 
 **Suíte de contrato do repositório:** `tests/contrato_repositorio.py` define o `ContratoDoRepositorio`, um conjunto de 24 testes que descreve o que todo repositório precisa fazer: gravar e recarregar ativos, catálogo, vínculos e dependências entre ativos; atualizá-los, inclusive trocando o tipo de um ativo; e removê-los, tirando de todos os ativos uma vulnerabilidade removida. A mesma suíte roda nas duas implementações:
 - `tests/test_repositorio.py`: `TestRepositorioJSON`, com arquivos JSON temporários
@@ -371,15 +401,17 @@ O `RepositorioJSON` segue a mesma política, removendo os vínculos manualmente.
 
 ## 🫧 Requisitos do Trabalho 2
 
-| #   | Requisito                                    | Status |
-| --- | -------------------------------------------- | ------ |
-| 1   | Ativos como objetos individuais (subclasses) | ✅     |
-| 2   | Persistência em banco SQL (SQLite)           | ✅     |
-| 3   | Arquitetura em camadas (S4_01)               | ✅     |
-| 4   | Execução em container Docker (24h no servidor do curso) | ⏳ A API roda no container localmente, com verificação de funcionamento e política de reinício; a execução de 24h no servidor do curso está pendente |
-| 5   | Cálculo de risco (álgebra linear)            | ✅     |
+| # | Requisito                                               | Status |
+| - | ------------------------------------------------------- | ------ |
+| 1 | Ativos como objetos individuais (subclasses)            | ✅     |
+| 2 | Persistência em banco SQL (SQLite)                      | ✅     |
+| 3 | Arquitetura em camadas (S4_01)                          | ✅     |
+| 4 | Execução em container Docker (24h no servidor do curso) | ⏳     |
+| 5 | Cálculo de risco (álgebra linear)                       | ✅     |
 
 > O requisito 2 era originalmente persistência em JSON; a persistência em banco SQLite foi confirmada pelo professor como válida.
+>
+> Requisito 4: a API já roda no container localmente, com verificação de funcionamento e política de reinício; a execução de 24h no servidor do curso está pendente.
 
 ## ✨ Licença
 

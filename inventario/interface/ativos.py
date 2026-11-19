@@ -247,7 +247,11 @@ def editar_ativo(repositorio, ativos):
             print(f"Fator de exposição atual: {ativo_em_edicao.fator_exposicao}.")
 
         elif opcao == "7":
-            atualizar_ativo_no_inventario(repositorio, ativos, ativo_em_edicao)
+            try:
+                atualizar_ativo_no_inventario(repositorio, ativos, ativo_em_edicao)
+            except DadoInvalidoError as erro:
+                print(erro)
+                print("As alterações não foram salvas.")
             print("Voltando...")
             break
 

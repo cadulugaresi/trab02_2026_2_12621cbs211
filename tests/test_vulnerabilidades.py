@@ -426,6 +426,24 @@ class TestAtualizarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
             atualizar_vulnerabilidade_no_catalogo(self.repositorio, self.catalogo, self.catalogo[3])
         self.assertEqual(carregar_catalogo(), {})
 
+    def test_recusa_nome_invalido_sem_alterar_catalogo_nem_arquivo(self):
+        vulnerabilidade_original = self.catalogo[3]
+        casos = [
+            ("", "Este campo não pode ser vazio."),
+            ("123", "Este campo não pode ser composto apenas por números."),
+        ]
+
+        for nome_invalido, mensagem_esperada in casos:
+            with self.subTest(nome=nome_invalido):
+                with self.assertRaises(DadoInvalidoError) as contexto:
+                    atualizar_vulnerabilidade_no_catalogo(
+                        self.repositorio, self.catalogo, Vulnerabilidade(3, nome_invalido, 5.3)
+                    )
+
+                self.assertEqual(str(contexto.exception), mensagem_esperada)
+                self.assertIs(self.catalogo[3], vulnerabilidade_original)
+                self.assertEqual(carregar_catalogo(), {})
+
 
 class TestRegistrarVulnerabilidadeNoCatalogo(TesteComArquivosTemporarios):
 
@@ -563,6 +581,20 @@ class TestEditarVulnerabilidade(TesteComArquivosTemporarios):
 
     def test_opcao_invalida_nao_muda_nada(self):
         self.editar(["x"])
+        self.assertEqual(self.catalogo[3].cvss, 5.3)
+        self.assertEqual(carregar_catalogo(), {})
+
+    def test_vulnerabilidade_antiga_invalida_mostra_o_erro_sem_travar_nem_salvar(self):
+        self.vulnerabilidade.nome_vulnerabilidade = "123"
+        saida = io.StringIO()
+
+        with patch("builtins.input", side_effect=["2", "7.4"]):
+            with redirect_stdout(saida):
+                editar_vulnerabilidade(self.repositorio, self.vulnerabilidade, self.catalogo)
+
+        self.assertIn("Este campo não pode ser composto apenas por números.", saida.getvalue())
+        self.assertIn("As alterações não foram salvas.", saida.getvalue())
+        self.assertIs(self.catalogo[3], self.vulnerabilidade)
         self.assertEqual(self.catalogo[3].cvss, 5.3)
         self.assertEqual(carregar_catalogo(), {})
 

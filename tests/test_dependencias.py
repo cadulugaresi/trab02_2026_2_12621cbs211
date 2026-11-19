@@ -106,6 +106,22 @@ class TestCadastrarDependencia(TesteComTresAtivos):
             cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, -0.3)
         self.assertEqual(self.notebook.dependencias, {})
 
+    def test_ids_que_nao_sao_inteiros_sao_recusados(self):
+        casos = [(True, 2), (1, True), (1, 2.0)]
+
+        for id_que_depende, id_do_qual_depende in casos:
+            with self.subTest(id_que_depende=id_que_depende, id_do_qual_depende=id_do_qual_depende):
+                with self.assertRaises(DadoInvalidoError) as contexto:
+                    cadastrar_dependencia(
+                        self.repositorio, self.ativos, id_que_depende, id_do_qual_depende, 0.5
+                    )
+
+                self.assertEqual(
+                    str(contexto.exception), "Este campo precisa ser um número inteiro."
+                )
+                self.assertEqual(self.notebook.dependencias, {})
+                self.assertEqual(carregar_ativos()[1].dependencias, {})
+
 
 class TestRemoverDependencia(TesteComTresAtivos):
 
@@ -180,6 +196,22 @@ class TestAtualizarDependencia(TesteComTresAtivos):
         with self.assertRaises(DadoInvalidoError):
             atualizar_dependencia(self.repositorio, self.ativos, 1, 2, 2, -0.3)
         self.assertEqual(self.notebook.dependencias, {2: 0.5})
+
+    def test_ids_que_nao_sao_inteiros_sao_recusados(self):
+        casos = [(True, 2, 3), (1, True, 3), (1, 2, True), (1, 2, 3.0)]
+
+        for id_que_depende, id_antigo, id_novo in casos:
+            with self.subTest(id_que_depende=id_que_depende, id_antigo=id_antigo, id_novo=id_novo):
+                with self.assertRaises(DadoInvalidoError) as contexto:
+                    atualizar_dependencia(
+                        self.repositorio, self.ativos, id_que_depende, id_antigo, id_novo, 0.3
+                    )
+
+                self.assertEqual(
+                    str(contexto.exception), "Este campo precisa ser um número inteiro."
+                )
+                self.assertEqual(self.notebook.dependencias, {2: 0.5})
+                self.assertEqual(carregar_ativos()[1].dependencias, {2: 0.5})
 
 
 class TestRemoverAtivoComDependencias(TesteComTresAtivos):
