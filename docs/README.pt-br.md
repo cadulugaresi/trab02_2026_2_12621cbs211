@@ -2,7 +2,7 @@
 
 *[Read in English](../README.md)*
 
-Aplicação CLI em Python para cadastro e gestão de ativos de TI e suas vulnerabilidades, com análise de risco baseada em álgebra linear. Projeto de estudo do curso de Cibersegurança da UFU, com foco em boas práticas de código: nomenclatura clara, funções com responsabilidade única, arquitetura em camadas, programação orientada a objetos e tratamento de erros sem exposição de dados internos.
+Aplicação em Python para cadastro e gestão de ativos de TI e suas vulnerabilidades, com análise de risco baseada em álgebra linear. Pode ser usada por um menu de linha de comando (CLI) ou por uma API HTTP, que roda em um container Docker. Projeto de estudo do curso de Cibersegurança da UFU, com foco em boas práticas de código: nomenclatura clara, funções com responsabilidade única, arquitetura em camadas, programação orientada a objetos e tratamento de erros sem exposição de dados internos.
 
 ## ✨ Funcionalidades
 
@@ -46,11 +46,33 @@ Modelo baseado em álgebra linear que estima o risco de cada ativo a partir de s
 - **Risco herdado**: risco efetivo − risco próprio
 - **Ranking**: os ativos ordenados pelo risco efetivo, do maior para o menor (`AnaliseDeRisco.ranking()`)
 
-A opção 7 do menu principal mostra uma linha por ativo, na ordem do ranking, com o fator de exposição e os riscos próprio, herdado e efetivo, seguida de uma legenda.
+A opção 7 do menu principal mostra uma linha por ativo, na ordem do ranking, com o fator de exposição e os riscos próprio, herdado e efetivo, seguida de uma legenda. O mesmo ranking está disponível pela API, em `GET /riscos`.
+
+### API HTTP
+Uma API Flask expõe as principais operações como um serviço HTTP na porta 5000, para que outros programas (como um frontend web) possam usar o sistema. As requisições e as respostas usam JSON, com as mesmas chaves que o `para_dicionario()` produz.
+
+| Método | Rota                            | O que faz                                                         |
+| ------ | ------------------------------- | ----------------------------------------------------------------- |
+| GET    | `/saude`                        | Verificação de funcionamento: devolve `{"status": "ok"}`          |
+| GET    | `/ativos`                       | Lista todos os ativos, ordenados por ID                           |
+| GET    | `/ativos/<id>`                  | Devolve um ativo (404 se ele não existir)                         |
+| POST   | `/ativos`                       | Cadastra um ativo de qualquer tipo (201)                          |
+| GET    | `/vulnerabilidades`             | Lista o catálogo de vulnerabilidades                              |
+| POST   | `/vulnerabilidades`             | Cadastra uma vulnerabilidade; o ID é gerado pelo servidor (201)   |
+| POST   | `/ativos/<id>/vulnerabilidades` | Vincula uma vulnerabilidade do catálogo a um ativo (201)          |
+| GET    | `/riscos`                       | Ranking de risco com os riscos próprio, herdado e efetivo         |
+
+Campos faltando, tipos errados e valores fora das regras devolvem **400** com uma mensagem `{"erro": "..."}`, nunca 500. Exemplo de cadastro de um ativo:
+
+```bash
+curl -X POST http://localhost:5000/ativos \
+  -H "Content-Type: application/json" \
+  -d '{"tipo": "Notebook", "id": 10, "nome": "Notebook do Rafael", "setor": 1, "responsavel": "Rafael Torres", "status": 1, "sistema_operacional": "Linux", "tela": 14.0}'
+```
 
 ### Geral
 - **Persistência de dados**: os ativos, o catálogo e os vínculos são salvos em um banco SQLite (`inventario.db`), com uma tabela por tipo de ativo e a tabela associativa `vinculos` entre ativos e vulnerabilidades, e recarregados a cada execução
-- **Armazenamento substituível**: os serviços recebem um `repositorio` como parâmetro (injeção de dependência feita no `main.py`) e não importam a persistência; o `RepositorioSQLite` é o armazenamento em uso, e o `RepositorioJSON` (arquivos JSON) é mantido como segunda implementação, que oferece as mesmas operações, o que é garantido pela suíte de testes de contrato
+- **Armazenamento substituível**: os serviços recebem um `repositorio` como parâmetro (injeção de dependência feita pelos pontos de entrada, `main.py` e `iniciar_api.py`) e não importam a persistência; o `RepositorioSQLite` é o armazenamento em uso, e o `RepositorioJSON` (arquivos JSON) é mantido como segunda implementação, que oferece as mesmas operações, o que é garantido pela suíte de testes de contrato
 - **Índice por ID**: ativos e vulnerabilidades do catálogo são armazenados em dicionários indexados por ID, permitindo busca eficiente e em tempo constante (O(1))
 - **Tratamento de erro global**: Ctrl+C e Ctrl+D em qualquer ponto do programa encerram de forma limpa, sem traceback
 
@@ -60,8 +82,9 @@ A opção 7 do menu principal mostra uma linha por ativo, na ordem do ranking, c
 - Módulos da biblioteca padrão: `sqlite3`, `abc`, `json`, `enum`
 - Banco de dados: SQLite (sem servidor para instalar; esquema em `inventario/persistencia/esquema.sql`)
 - Álgebra linear: `numpy` (listado no `requirements.txt`)
+- API HTTP: `flask` (listado no `requirements.txt`)
 - Testes: `unittest` e `pytest`; padronização: `flake8` e `black`; integração contínua com GitHub Actions
-- **Em desenvolvimento**: Docker
+- Container: Docker e Docker Compose, rodando a API com um volume para o banco, uma política de reinício e uma verificação de funcionamento em `/saude` (detalhes em `docs/docker.md`)
 
 ## ✨ Arquitetura
 
@@ -70,7 +93,11 @@ O projeto é organizado em **camadas**. Cada camada é um pacote dentro de `inve
 ```mermaid
 flowchart TD
     main["main.py<br/>cria o RepositorioSQLite, carrega os dados<br/>e abre o menu"]
-    interface["INTERFACE<br/>inventario/interface<br/>menu.py, ativos.py, vulnerabilidades.py,<br/>entradas.py, conversao_das_opcoes_do_menu.py"]
+    iniciarApi["iniciar_api.py<br/>cria o RepositorioSQLite, carrega os dados<br/>e liga a API em 0.0.0.0:5000"]
+    subgraph interface["INTERFACE · inventario/interface"]
+        menu["Menu do terminal<br/>menu.py, ativos.py, vulnerabilidades.py,<br/>entradas.py, conversao_das_opcoes_do_menu.py"]
+        api["API HTTP<br/>api.py: criar_app(repositorio, ativos, catalogo)"]
+    end
     servicos["SERVIÇOS<br/>inventario/servicos<br/>ativos.py, vulnerabilidades.py"]
     subgraph persistencia["PERSISTÊNCIA · inventario/persistencia"]
         repositorioSQLite["RepositorioSQLite<br/>banco_sqlite.py + esquema.sql<br/>armazenamento em uso (inventario.db)"]
@@ -78,9 +105,12 @@ flowchart TD
     end
     dominio["DOMÍNIO<br/>inventario/dominio<br/>ativo.py, vulnerabilidade.py, enums.py,<br/>excecoes.py, validacoes.py"]
 
-    main --> interface
+    main --> menu
     main -->|cria e injeta| repositorioSQLite
-    interface --> servicos
+    iniciarApi --> api
+    iniciarApi -->|cria e injeta| repositorioSQLite
+    menu --> servicos
+    api --> servicos
     servicos -->|recebem o repositorio por parâmetro| persistencia
     interface -.-> dominio
     servicos -.-> dominio
@@ -92,21 +122,23 @@ flowchart TD
     classDef corPersistencia fill:#1e1e2e,stroke:#fab387,stroke-width:2px,color:#cdd6f4
     classDef corDominio fill:#1e1e2e,stroke:#cba6f7,stroke-width:2px,color:#cdd6f4
 
-    class main corMain
-    class interface corInterface
+    class main,iniciarApi corMain
+    class menu,api corInterface
     class servicos corServicos
     class repositorioSQLite,repositorioJSON corPersistencia
     class dominio corDominio
+    style interface fill:#181825,stroke:#89b4fa,stroke-width:2px,color:#cdd6f4
     style persistencia fill:#181825,stroke:#fab387,stroke-width:2px,color:#cdd6f4
 
     linkStyle default stroke:#9399b2,stroke-width:2px
 ```
 
-**Regra de dependência:** as setas só apontam para baixo. A interface chama os serviços, e os serviços usam o `repositorio` que recebem como parâmetro, sem importar a persistência. Só o `main.py` sabe qual implementação é usada: ele cria o `RepositorioSQLite` e o injeta no menu, que o repassa para as telas da interface e para os serviços. As duas implementações (`RepositorioSQLite` e `RepositorioJSON`) oferecem as mesmas operações, e isso é garantido pela suíte de testes de contrato. Todas as camadas podem usar o domínio (setas tracejadas), mas o domínio não importa nenhuma outra camada.
+**Regra de dependência:** as setas só apontam para baixo. A interface chama os serviços, e os serviços usam o `repositorio` que recebem como parâmetro, sem importar a persistência. Há dois pontos de entrada, e eles são os únicos arquivos que sabem qual implementação é usada: o `main.py` cria o `RepositorioSQLite` e o injeta no menu, que o repassa para as telas da interface e para os serviços; o `iniciar_api.py` cria o `RepositorioSQLite` e o injeta no `criar_app`, cujas rotas o repassam para os serviços. O menu e a API ficam lado a lado na camada de interface e chamam os mesmos serviços, então nenhuma regra de negócio é duplicada entre eles. As duas implementações (`RepositorioSQLite` e `RepositorioJSON`) oferecem as mesmas operações, e isso é garantido pela suíte de testes de contrato. Todas as camadas podem usar o domínio (setas tracejadas), mas o domínio não importa nenhuma outra camada.
 
 ### Responsabilidade de cada camada
 
-- **Interface** (`inventario/interface/`): é a única camada que conversa com o usuário (`input` e `print`). Mostra os menus, pede e converte as entradas e exibe os resultados e as mensagens de erro.
+- **Interface** (`inventario/interface/`): é a única camada que conversa com o mundo de fora. O menu do terminal usa `input` e `print`; a API recebe requisições HTTP e responde com JSON. Os dois leem e convertem as entradas e apresentam os resultados e as mensagens de erro.
+  - `api.py`: `criar_app(repositorio, ativos, catalogo)`, uma fábrica que cria o app Flask com todas as rotas; transforma os corpos JSON em chamadas aos serviços e os erros deles em respostas 400 ou 404
   - `menu.py`: `menu_principal`, `menu_listagem` e `menu_vulnerabilidades`
   - `ativos.py`: telas de cadastro, edição e exclusão de ativos (`cadastrar_ativo`, `editar_ativo`, `excluir_ativo`, `perguntar_ativo`...)
   - `vulnerabilidades.py`: telas do catálogo e dos vínculos (`cadastrar_vulnerabilidade`, `editar_vulnerabilidade`, `vincular_a_um_ativo`, `mostrar_vulnerabilidade`...)
@@ -124,7 +156,7 @@ flowchart TD
   - `vulnerabilidade.py`: `Vulnerabilidade`, com o nível calculado pela nota CVSS
   - `enums.py`: `Setor`, `StatusDoAtivo`, `StatusDaVuln`, `NivelDaVulnerabilidade`, `Cor`, `Tecnologia`
   - `excecoes.py`: `DadoInvalidoError` e `PersistenciaError`
-  - `validacoes.py`: regras de validação (`validar_texto_obrigatorio`, `validar_cvss`)
+  - `validacoes.py`: regras de validação (`validar_texto_obrigatorio`, `validar_cvss`, `validar_fator_exposicao`...)
 
 ### Exemplo de fluxo: excluir um ativo
 
@@ -142,11 +174,12 @@ menu_principal                         (interface)     usuário escolhe a opçã
 
 - **Serviços recebem IDs, não perguntas:** todo serviço trabalha com dados prontos (ex.: `remover_ativo_do_inventario(ativos, id_ativo)`). Assim, a mesma regra pode ser usada pelo menu do terminal ou por uma API, sem depender de `input`.
 - **Erros sobem, a interface mostra:** os serviços e o domínio lançam `DadoInvalidoError` com a mensagem; a interface captura e exibe essa mensagem. O texto de cada erro fica escrito em um lugar só.
-- **Validação em profundidade:** regras como a faixa do CVSS (`validar_cvss`) ficam no domínio e são usadas tanto pela interface (para pedir de novo) quanto pelos serviços (como garantia, venha o dado de onde vier).
+- **Validação em profundidade:** regras como a faixa do CVSS (`validar_cvss`), o nome e o responsável do ativo (`validar_texto_obrigatorio`) e o fator de exposição (`validar_fator_exposicao`) ficam no domínio e são usadas tanto pelo menu (para pedir de novo) quanto pelos serviços (como garantia, venha o dado de onde vier). Como a API chama os serviços diretamente, uma requisição HTTP com dados inválidos é recusada pelas mesmas regras do menu.
 - **Uma lista de tipos só:** a lista de tipos de ativo mora no domínio (`MAPA_DE_TIPOS`); a numeração do menu (`TIPOS_DE_ATIVOS`) é gerada a partir dela pela interface.
-- **Depender da abstração:** os serviços recebem um `repositorio` por parâmetro, em vez de importar um módulo de armazenamento. Trocar os arquivos JSON pelo banco SQLite mexeu só na camada de persistência e no repositório criado no `main.py`.
+- **Depender da abstração:** os serviços recebem um `repositorio` por parâmetro, em vez de importar um módulo de armazenamento. Trocar os arquivos JSON pelo banco SQLite mexeu só na camada de persistência e no repositório criado no ponto de entrada.
 - **Cada operação salva só o que mudou:** em vez de regravar tudo, cada serviço chama a operação correspondente do repositório (`adicionar_ativo`, `desvincular`...), que vira um único `INSERT`, `UPDATE` ou `DELETE` no banco.
-- **Preparado para mudanças:** trocar o terminal por um serviço HTTP mexe só na camada de interface.
+- **Uma segunda interface sem mexer nas regras:** a API HTTP entrou como um módulo novo na camada de interface (`api.py`) e um ponto de entrada novo (`iniciar_api.py`). Os serviços só ganharam as validações que antes eram chamadas apenas pelo menu.
+- **A API recebe as suas dependências:** o `criar_app` recebe o repositório e os dados em vez de criá-los, assim como o `menu_principal`. Isso permite que os testes da API criem o app com um banco SQLite em memória, sem mexer no `inventario.db`.
 
 ### Modelo do domínio
 
@@ -162,8 +195,10 @@ menu_principal                         (interface)     usuário escolhe a opçã
 ```
 .
 ├── main.py
+├── iniciar_api.py
 ├── inventario/
 │   ├── interface/
+│   │   ├── api.py
 │   │   ├── menu.py
 │   │   ├── ativos.py
 │   │   ├── vulnerabilidades.py
@@ -190,6 +225,8 @@ menu_principal                         (interface)     usuário escolhe a opçã
 │   ├── test_persistencia.py
 │   ├── testes.py
 │   ├── test_vulnerabilidades.py
+│   ├── test_api.py
+│   ├── test_falha_de_persistencia.py
 │   └── test_exemplos.py
 ├── docs/
 │   ├── README.pt-br.md
@@ -216,18 +253,48 @@ menu_principal                         (interface)     usuário escolhe a opçã
 
 ## ✨ Como executar
 
-Pré-requisito: Python 3.8 ou superior instalado. A única dependência externa é o `numpy`, listado no `requirements.txt`.
+Pré-requisito: Python 3.8 ou superior instalado. As dependências externas são o `numpy` e o `flask`, listados no `requirements.txt`.
 
 ```bash
 git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
 cd it-asset-vulnerability-manager
 python3 -m pip install -r requirements.txt
-python3 main.py
 ```
 
 > No Windows, use `python` no lugar de `python3`.
 
-O programa abre um menu interativo no terminal. Basta seguir as opções numeradas para cadastrar ativos, gerenciar vulnerabilidades e salvar os dados.
+### Rodando a API localmente
+
+```bash
+python3 iniciar_api.py
+```
+
+O servidor escuta na porta 5000. Em outro terminal:
+
+```bash
+curl http://localhost:5000/saude
+curl http://localhost:5000/ativos
+```
+
+### Rodando a API com Docker Compose
+
+Pré-requisito: Docker com Docker Compose.
+
+```bash
+docker compose up -d --build
+docker compose ps
+curl http://localhost:5000/saude
+```
+
+O container roda a API, guarda o banco no volume `dados`, reinicia sozinho se o processo parar e fica marcado como `healthy` enquanto o `/saude` responde. Para pará-lo, use `docker compose down` (o volume, e portanto os dados, é mantido). Detalhes em `docs/docker.md`.
+
+### Rodando o menu no terminal
+
+```bash
+python3 main.py
+```
+
+O programa abre um menu interativo no terminal. Basta seguir as opções numeradas para cadastrar ativos, gerenciar vulnerabilidades e salvar os dados. O menu é para uso local e não faz parte do container. Não rode o menu no mesmo banco enquanto a API estiver no ar: a API carrega os dados na memória ao iniciar e não veria as alterações feitas pelo menu.
 
 ### Menu principal
 
@@ -263,11 +330,13 @@ Dentro da opção 5 (Menu de vulnerabilidades), um submenu gerencia o catálogo 
 ### Rodando os testes
 
 ```bash
-python3 -m unittest tests/testes.py tests/test_vulnerabilidades.py tests/test_persistencia.py tests/test_repositorio.py tests/test_repositorio_sqlite.py
+python3 -m unittest discover -s tests
 python3 -m pytest tests/test_exemplos.py
-python3 -m flake8 main.py inventario
-python3 -m black --check main.py inventario
+python3 -m flake8 main.py iniciar_api.py inventario
+python3 -m black --check main.py iniciar_api.py inventario
 ```
+
+**Testes da API:** `tests/test_api.py` tem 55 testes que usam o `test_client()` do Flask, sem ligar o servidor. Cada teste cria o app com o `criar_app` e um banco SQLite em memória (`RepositorioSQLite(":memory:")`), e confere os códigos de status e os corpos JSON de todas as rotas, inclusive que dados inválidos devolvem 400 e não são gravados.
 
 **Suíte de contrato do repositório:** `tests/contrato_repositorio.py` define o `ContratoDoRepositorio`, um conjunto de 24 testes que descreve o que todo repositório precisa fazer: gravar e recarregar ativos, catálogo, vínculos e dependências entre ativos; atualizá-los, inclusive trocando o tipo de um ativo; e removê-los, tirando de todos os ativos uma vulnerabilidade removida. A mesma suíte roda nas duas implementações:
 - `tests/test_repositorio.py`: `TestRepositorioJSON`, com arquivos JSON temporários
@@ -307,7 +376,7 @@ O `RepositorioJSON` segue a mesma política, removendo os vínculos manualmente.
 | 1   | Ativos como objetos individuais (subclasses) | ✅     |
 | 2   | Persistência em banco SQL (SQLite)           | ✅     |
 | 3   | Arquitetura em camadas (S4_01)               | ✅     |
-| 4   | Execução em container Docker                 | ⏳     |
+| 4   | Execução em container Docker (24h no servidor do curso) | ⏳ A API roda no container localmente, com verificação de funcionamento e política de reinício; a execução de 24h no servidor do curso está pendente |
 | 5   | Cálculo de risco (álgebra linear)            | ✅     |
 
 > O requisito 2 era originalmente persistência em JSON; a persistência em banco SQLite foi confirmada pelo professor como válida.
