@@ -2,6 +2,7 @@ from flask import Flask, request
 from inventario.dominio.excecoes import DadoInvalidoError, PersistenciaError
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 from inventario.dominio.enums import StatusDaVuln
+from inventario.dominio.validacoes import validar_inteiro_positivo
 from inventario.servicos.ordenacao import listar_ativos_ordenados, por_id
 from inventario.servicos.riscos import AnaliseDeRisco
 from inventario.servicos.ativos import encontrar_ativo_por_id, registrar_ativo_no_inventario
@@ -100,7 +101,7 @@ def criar_app(repositorio, ativos, catalogo):
     def vincular_vulnerabilidade_ao_ativo(id_ativo):
         corpo = request.get_json(silent=True)
         try:
-            status_da_vuln = StatusDaVuln(corpo["status_tratamento"])
+            status_da_vuln = StatusDaVuln(validar_inteiro_positivo(corpo["status_tratamento"]))
             vincular_vulnerabilidade(
                 repositorio,
                 ativos,
