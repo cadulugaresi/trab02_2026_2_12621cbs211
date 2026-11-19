@@ -1,5 +1,7 @@
 import unittest
+from unittest.mock import patch
 
+from inventario.dominio.excecoes import PersistenciaError
 from inventario.interface.api import criar_app
 from inventario.persistencia.banco_sqlite import RepositorioSQLite
 
@@ -136,6 +138,63 @@ class TesteDeAtivos(TesteDaApi):
         self.assertEqual(resposta.status_code, 400)
         self.assertNotIn(2, self.ativos)
 
+    def cadastrar_notebook_com_campo_alterado(self, campo, valor):
+        corpo = criar_corpo_de_notebook()
+        corpo[campo] = valor
+        return self.cliente.post("/ativos", json=corpo)
+
+    def conferir_recusa_sem_gravacao(self, resposta, mensagem_esperada):
+        self.assertEqual(resposta.status_code, 400)
+        self.assertEqual(resposta.get_json(), {"erro": mensagem_esperada})
+        self.assertEqual(self.ativos, {})
+        self.assertEqual(self.repositorio.carregar_ativos(), {})
+
+    def test_cadastrar_ativo_com_id_em_texto_devolve_400(self):
+        resposta = self.cadastrar_notebook_com_campo_alterado("id", "abc")
+
+        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um número inteiro.")
+
+    def test_cadastrar_ativo_com_id_negativo_devolve_400(self):
+        resposta = self.cadastrar_notebook_com_campo_alterado("id", -5)
+
+        self.conferir_recusa_sem_gravacao(resposta, "Este campo não pode ser nulo ou negativo.")
+
+    def test_cadastrar_ativo_com_nome_numerico_devolve_400(self):
+        resposta = self.cadastrar_notebook_com_campo_alterado("nome", 123)
+
+        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um texto.")
+
+    def test_cadastrar_ativo_com_nome_so_com_espacos_devolve_400(self):
+        resposta = self.cadastrar_notebook_com_campo_alterado("nome", "   ")
+
+        self.conferir_recusa_sem_gravacao(resposta, "Este campo não pode ser vazio.")
+
+    def test_cadastrar_ativo_com_campo_do_tipo_em_texto_devolve_400(self):
+        resposta = self.cadastrar_notebook_com_campo_alterado("tela", "grande")
+
+        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um número.")
+
+    def test_cadastrar_ativo_com_fator_booleano_devolve_400(self):
+        resposta = self.cadastrar_notebook_com_campo_alterado("fator_exposicao", True)
+
+        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um número.")
+
+    def test_cadastrar_roteador_com_portas_fracionarias_devolve_400(self):
+        corpo = {
+            "tipo": "Roteador",
+            "id": 2,
+            "nome": "Roteador do Rafael",
+            "setor": 1,
+            "responsavel": "Rafael Torres",
+            "status": 1,
+            "portas": 8.5,
+            "velocidade": 1000,
+        }
+
+        resposta = self.cliente.post("/ativos", json=corpo)
+
+        self.conferir_recusa_sem_gravacao(resposta, "Este campo precisa ser um número inteiro.")
+
     def test_buscar_ativo_existente_devolve_200(self):
         self.cadastrar_notebook()
 
@@ -198,6 +257,53 @@ class TesteDeVulnerabilidades(TesteDaApi):
         resposta = self.cliente.post("/vulnerabilidades", json={"nome_vulnerabilidade": "X"})
 
         self.assertEqual(resposta.status_code, 400)
+
+    def test_cadastrar_vulnerabilidade_com_cvss_booleano_devolve_400(self):
+        resposta = self.cadastrar_vulnerabilidade(cvss=True)
+
+        self.assertEqual(resposta.status_code, 400)
+        self.assertEqual(resposta.get_json(), {"erro": "Este campo precisa ser um número."})
+        self.assertEqual(self.catalogo, {})
+        self.assertEqual(self.repositorio.carregar_catalogo(), {})
+
+
+class TesteDeCorposInvalidos(TesteDaApi):
+
+    def test_corpo_que_nao_e_json_devolve_400_em_json_nas_rotas_de_cadastro(self):
+        rotas_de_cadastro = ["/ativos", "/vulnerabilidades", "/ativos/2/vulnerabilidades"]
+
+        for rota in rotas_de_cadastro:
+            with self.subTest(rota=rota):
+                resposta = self.cliente.post(rota, data="Rafael Torres", content_type="text/plain")
+
+                self.assertEqual(resposta.status_code, 400)
+                self.assertIn("erro", resposta.get_json())
+
+    def test_json_malformado_devolve_400_em_json_nas_rotas_de_cadastro(self):
+        rotas_de_cadastro = ["/ativos", "/vulnerabilidades", "/ativos/2/vulnerabilidades"]
+
+        for rota in rotas_de_cadastro:
+            with self.subTest(rota=rota):
+                resposta = self.cliente.post(
+                    rota, data='{"tipo": "Notebook",', content_type="application/json"
+                )
+
+                self.assertEqual(resposta.status_code, 400)
+                self.assertIn("erro", resposta.get_json())
+
+
+class TesteDeFalhaDePersistencia(TesteDaApi):
+
+    def test_falha_do_repositorio_devolve_500_em_json(self):
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "adicionar_ativo", side_effect=falha_do_banco):
+            resposta = self.cadastrar_notebook()
+
+        self.assertEqual(resposta.status_code, 500)
+        self.assertEqual(
+            resposta.get_json(), {"erro": "Não foi possível gravar no banco de dados."}
+        )
 
 
 class TesteDeVinculos(TesteDaApi):
