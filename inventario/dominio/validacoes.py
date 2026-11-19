@@ -1,7 +1,27 @@
 from inventario.dominio.excecoes import DadoInvalidoError
 
 
+def validar_numero(valor):
+    if type(valor) is not int and type(valor) is not float:
+        raise DadoInvalidoError("Este campo precisa ser um número.")
+    return valor
+
+
+def validar_numero_positivo(valor):
+    validar_numero(valor)
+    if valor <= 0:
+        raise DadoInvalidoError("Este campo não pode ser nulo ou negativo.")
+    return valor
+
+
+def validar_inteiro_positivo(valor):
+    if type(valor) is not int:
+        raise DadoInvalidoError("Este campo precisa ser um número inteiro.")
+    return validar_numero_positivo(valor)
+
+
 def validar_cvss(cvss):
+    validar_numero(cvss)
     cvss = round(cvss, 1)
     if cvss <= 0 or cvss > 10:
         raise DadoInvalidoError("O CVSS deve estar entre 0.1 e 10.")
@@ -9,10 +29,11 @@ def validar_cvss(cvss):
 
 
 def validar_nome_responsavel(nome):
-
-    if not nome:
+    if type(nome) is not str:
+        raise DadoInvalidoError("Este campo precisa ser um texto.")
+    if not nome.strip():
         raise DadoInvalidoError("Este campo não pode ser vazio.")
-    if nome.isnumeric():
+    if nome.strip().isnumeric():
         raise DadoInvalidoError("Este campo não pode ser composto apenas por números.")
 
 
@@ -41,6 +62,7 @@ def validar_fracao_da_dependencia(soma_atual, fracao):
 
 
 def validar_fator_exposicao(fator):
+    validar_numero(fator)
     if fator <= 0 or fator > 2:
         raise DadoInvalidoError("O fator de exposição deve ser maior que 0 e no máximo 2.")
     return fator

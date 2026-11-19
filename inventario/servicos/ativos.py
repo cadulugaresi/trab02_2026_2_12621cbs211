@@ -1,11 +1,8 @@
 from inventario.dominio.excecoes import DadoInvalidoError
-from inventario.dominio.validacoes import validar_fator_exposicao, validar_nome_responsavel
 
 
 def registrar_ativo_no_inventario(repositorio, ativos, ativo):
-    validar_nome_responsavel(ativo.nome)
-    validar_nome_responsavel(ativo.responsavel)
-    validar_fator_exposicao(ativo.fator_exposicao)
+    ativo.validar_dados()
     if ativo.id in ativos:
         raise DadoInvalidoError("Já existe um ativo cadastrado com este ID.")
 

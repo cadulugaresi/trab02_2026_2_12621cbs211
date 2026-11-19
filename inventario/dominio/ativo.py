@@ -1,4 +1,10 @@
 from inventario.dominio.enums import Cor, Setor, StatusDoAtivo, Tecnologia
+from inventario.dominio.validacoes import (
+    validar_fator_exposicao,
+    validar_inteiro_positivo,
+    validar_nome_responsavel,
+    validar_numero_positivo,
+)
 
 
 class Ativo:
@@ -16,6 +22,12 @@ class Ativo:
             self.fator_exposicao = self.FATOR_EXPOSICAO_PADRAO
         else:
             self.fator_exposicao = fator_exposicao
+
+    def validar_dados(self):
+        validar_inteiro_positivo(self.id)
+        validar_nome_responsavel(self.nome)
+        validar_nome_responsavel(self.responsavel)
+        validar_fator_exposicao(self.fator_exposicao)
 
     def exibir_detalhes(self):
         return (
@@ -66,6 +78,11 @@ class Notebook(Ativo):
         self.sistema_operacional = sistema_operacional
         self.tela = tela
 
+    def validar_dados(self):
+        super().validar_dados()
+        validar_nome_responsavel(self.sistema_operacional)
+        validar_numero_positivo(self.tela)
+
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
         return (
@@ -104,6 +121,11 @@ class Roteador(Ativo):
         self.portas = portas
         self.velocidade = velocidade
 
+    def validar_dados(self):
+        super().validar_dados()
+        validar_inteiro_positivo(self.portas)
+        validar_inteiro_positivo(self.velocidade)
+
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
         return (
@@ -141,6 +163,11 @@ class Servidor(Ativo):
         super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.ram = ram
         self.armazenamento = armazenamento
+
+    def validar_dados(self):
+        super().validar_dados()
+        validar_inteiro_positivo(self.ram)
+        validar_numero_positivo(self.armazenamento)
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
