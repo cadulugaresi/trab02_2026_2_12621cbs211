@@ -398,6 +398,40 @@ class TestAtualizarAtivoNoInventario(TesteComArquivosTemporarios):
             atualizar_ativo_no_inventario(self.repositorio, self.ativos, roteador)
         self.assertNotIn(99, self.ativos)
 
+    def test_recusa_ativo_com_dados_invalidos_sem_alterar_memoria_nem_arquivo(self):
+        dicionario_antes = self.notebook.para_dicionario()
+        casos = [
+            (
+                "nome vazio",
+                Notebook(1, "", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", 15.6),
+                "Este campo não pode ser vazio.",
+            ),
+            (
+                "responsável numérico",
+                Notebook(1, "Dell", Setor.TI, "123", StatusDoAtivo.ATIVO, "Linux", 15.6),
+                "Este campo não pode ser composto apenas por números.",
+            ),
+            (
+                "tela negativa",
+                Notebook(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, "Linux", -3),
+                "Este campo não pode ser nulo ou negativo.",
+            ),
+            (
+                "troca para servidor com RAM fracionária",
+                Servidor(1, "Dell", Setor.TI, "Rafael Torres", StatusDoAtivo.ATIVO, 8.5, 4),
+                "Este campo precisa ser um número inteiro.",
+            ),
+        ]
+
+        for descricao, ativo_invalido, mensagem_esperada in casos:
+            with self.subTest(caso=descricao):
+                with self.assertRaises(DadoInvalidoError) as contexto:
+                    atualizar_ativo_no_inventario(self.repositorio, self.ativos, ativo_invalido)
+
+                self.assertEqual(str(contexto.exception), mensagem_esperada)
+                self.assertIs(self.ativos[1], self.notebook)
+                self.assertEqual(carregar_ativos()[1].para_dicionario(), dicionario_antes)
+
 
 class TestEncontrarAtivosPorNome(unittest.TestCase):
 
@@ -955,6 +989,21 @@ class TestEditarAtivo(TesteComArquivosTemporarios):
     def test_fator_invalido_na_edicao_pergunta_de_novo(self):
         self.editar_fator_do_notebook(["abc", "3", "1.4"])
         self.assertEqual(self.ativos[1].fator_exposicao, 1.4)
+
+    def test_ativo_antigo_invalido_mostra_o_erro_sem_travar_nem_salvar(self):
+        self.notebook.nome = "123"
+        salvar_ativos(self.ativos)
+        saida = io.StringIO()
+
+        with patch("builtins.input", side_effect=["1", "2", "3", "7"]):
+            with redirect_stdout(saida):
+                editar_ativo(self.repositorio, self.ativos)
+
+        self.assertIn("Este campo não pode ser composto apenas por números.", saida.getvalue())
+        self.assertIn("As alterações não foram salvas.", saida.getvalue())
+        self.assertIs(self.ativos[1], self.notebook)
+        self.assertEqual(self.notebook.status, StatusDoAtivo.ATIVO)
+        self.assertEqual(carregar_ativos()[1].status, StatusDoAtivo.ATIVO)
 
 
 class TestPedirFatorExposicao(unittest.TestCase):
