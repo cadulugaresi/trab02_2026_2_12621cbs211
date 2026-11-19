@@ -24,7 +24,10 @@ def mostrar_dependencias(ativo, ativos):
         )
 
     soma = somar_fracoes(ativo.dependencias)
-    print(f"\nSoma das frações: {soma}. Ainda cabem {round(1 - soma, 6)}.")
+    print(
+        f"\nSoma das frações: {soma}. "
+        f"A próxima fração precisa ser menor que {round(1 - soma, 6)}."
+    )
 
 
 def escolher_ativo_com_dependencias(ativos, mensagem):

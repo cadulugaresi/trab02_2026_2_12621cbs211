@@ -62,17 +62,17 @@ Matriz campo × regra × mensagem de erro para as entradas do sistema, tanto pel
 
 ### Dependências
 
-| Campo                   | Tipo  | Regra                                                            | Mensagem de erro                                                                           |
-| ----------------------- | ----- | ---------------------------------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Ativos da dependência   | —     | Os dois ativos devem existir                                     | "Ativo não encontrado."                                                                    |
-| Dependência             | —     | Um ativo não pode depender dele próprio                          | "Um ativo não pode depender dele próprio."                                                 |
-| Dependência             | —     | Não pode cadastrar a mesma dependência duas vezes                | "Este ativo já possui essa dependência."                                                   |
-| Dependência             | —     | Para remover ou atualizar, a dependência deve existir            | "Este ativo não possui essa dependência."                                                  |
-| Dependência             | —     | Na atualização, não pode trocar para um ativo do qual já depende | "Este ativo já depende do ativo N. Edite essa dependência em vez disso."                   |
-| Fração                  | float | Número finito (não texto, booleano, `NaN` nem infinito)          | "Este campo precisa ser um número." ou "Este campo precisa ser um número finito."          |
-| Fração                  | float | Maior que zero                                                   | "A fração precisa ser maior que zero."                                                     |
-| Fração                  | float | A soma das frações do ativo fica abaixo de 1                     | "A soma das frações precisa ficar abaixo de 1. Ainda cabem X." (X com três casas decimais) |
-| Fração (edição no menu) | float | Formato numérico                                                 | "Digite um número válido."                                                                 |
+| Campo                   | Tipo  | Regra                                                            | Mensagem de erro                                                                                                  |
+| ----------------------- | ----- | ---------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| Ativos da dependência   | —     | Os dois ativos devem existir                                     | "Ativo não encontrado."                                                                                           |
+| Dependência             | —     | Um ativo não pode depender dele próprio                          | "Um ativo não pode depender dele próprio."                                                                        |
+| Dependência             | —     | Não pode cadastrar a mesma dependência duas vezes                | "Este ativo já possui essa dependência."                                                                          |
+| Dependência             | —     | Para remover ou atualizar, a dependência deve existir            | "Este ativo não possui essa dependência."                                                                         |
+| Dependência             | —     | Na atualização, não pode trocar para um ativo do qual já depende | "Este ativo já depende do ativo N. Edite essa dependência em vez disso."                                          |
+| Fração                  | float | Número finito (não texto, booleano, `NaN` nem infinito)          | "Este campo precisa ser um número." ou "Este campo precisa ser um número finito."                                 |
+| Fração                  | float | Maior que zero                                                   | "A fração precisa ser maior que zero."                                                                            |
+| Fração                  | float | A soma das frações do ativo fica abaixo de 1                     | "A soma das frações precisa ficar abaixo de 1. A nova fração precisa ser menor que X." (X = 1 menos a soma atual) |
+| Fração (edição no menu) | float | Formato numérico                                                 | "Digite um número válido."                                                                                        |
 
 ### Respostas de erro da API
 

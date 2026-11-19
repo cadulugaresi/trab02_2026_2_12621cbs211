@@ -1412,7 +1412,7 @@ class TesteDasDependenciasDeUmAtivo(TesteDaApi):
         casos = [
             (
                 {"id_ativo_do_qual_depende": 3, "fracao": 0.8},
-                "A soma das frações precisa ficar abaixo de 1. Ainda cabem 0.700.",
+                "A soma das frações precisa ficar abaixo de 1. A nova fração precisa ser menor que 0.7.",
             ),
             (
                 {"id_ativo_do_qual_depende": 1, "fracao": 0.2},
@@ -1488,7 +1488,10 @@ class TesteDasDependenciasDeUmAtivo(TesteDaApi):
 
     def test_atualizar_com_regra_violada_devolve_400_sem_alterar_nada(self):
         casos = [
-            ({"fracao": 1.0}, "A soma das frações precisa ficar abaixo de 1. Ainda cabem 1.000."),
+            (
+                {"fracao": 1.0},
+                "A soma das frações precisa ficar abaixo de 1. A nova fração precisa ser menor que 1.0.",
+            ),
             ({"id_ativo_do_qual_depende": 1}, "Um ativo não pode depender dele próprio."),
         ]
 
