@@ -566,9 +566,9 @@ class TestEditarVulnerabilidade(TesteComArquivosTemporarios):
         self.assertEqual(self.catalogo[3].cvss, 5.3)
         self.assertEqual(carregar_catalogo(), {})
 
-    def test_edita_o_mesmo_objeto_do_catalogo(self):
+    def test_edicao_fica_no_catalogo(self):
         self.editar(["2", "7.5"])
-        self.assertEqual(self.catalogo[3].cvss, 7.5)  # sem precisar recolocar no catálogo
+        self.assertEqual(self.catalogo[3].cvss, 7.5)
 
     def test_ativo_vinculado_ve_a_nota_nova(self):
         notebook = criar_notebook()
