@@ -1219,6 +1219,242 @@ class TesteDosVinculosDeUmAtivo(TesteDaApi):
         )
 
 
+MENSAGEM_DE_DADOS_DA_DEPENDENCIA_INVALIDOS = "Dados da dependência incompletos ou inválidos."
+
+
+class TesteDasDependenciasDeUmAtivo(TesteDaApi):
+
+    def setUp(self):
+        super().setUp()
+        self.cadastrar_notebook(1)
+        corpo_do_ativo_2 = criar_corpo_de_notebook(2)
+        corpo_do_ativo_2["nome"] = "Notebook de backup do Rafael"
+        self.cliente.post("/ativos", json=corpo_do_ativo_2)
+        self.cadastrar_notebook(3)
+        cadastrar_dependencia(self.repositorio, self.ativos, 1, 2, 0.3)
+
+    def criar_estado_esperado(self, dependencias_do_ativo_1):
+        ativo_1 = criar_notebook_esperado(1)
+        ativo_1["dependencias"] = dependencias_do_ativo_1
+        ativo_2 = criar_notebook_esperado(2)
+        ativo_2["nome"] = "Notebook de backup do Rafael"
+        return {"ativos": {1: ativo_1, 2: ativo_2, 3: criar_notebook_esperado(3)}, "catalogo": {}}
+
+    def conferir_ativo_1(self, resposta, status_esperado, dependencias_esperadas):
+        estado_esperado = self.criar_estado_esperado(dependencias_esperadas)
+        self.assertEqual(resposta.status_code, status_esperado)
+        self.assertEqual(resposta.get_json(), estado_esperado["ativos"][1])
+        self.conferir_memoria_e_banco(estado_esperado)
+
+    def cadastrar(self, corpo):
+        return self.cliente.post("/ativos/1/dependencias", json=corpo)
+
+    def atualizar(self, corpo, id_ativo=1, id_ativo_do_qual_depende=2):
+        return self.cliente.put(
+            f"/ativos/{id_ativo}/dependencias/{id_ativo_do_qual_depende}", json=corpo
+        )
+
+    def test_listar_devolve_id_nome_e_fracao(self):
+        resposta = self.cliente.get("/ativos/1/dependencias")
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            resposta.get_json(),
+            [
+                {
+                    "id_ativo_do_qual_depende": 2,
+                    "nome_do_ativo_do_qual_depende": "Notebook de backup do Rafael",
+                    "fracao": 0.3,
+                }
+            ],
+        )
+
+    def test_listar_de_ativo_sem_dependencias_devolve_lista_vazia(self):
+        resposta = self.cliente.get("/ativos/3/dependencias")
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(resposta.get_json(), [])
+
+    def test_listar_de_ativo_inexistente_devolve_404(self):
+        resposta = self.cliente.get("/ativos/99/dependencias")
+
+        self.assertEqual(resposta.status_code, 404)
+        self.assertEqual(resposta.get_json(), {"erro": "Ativo não encontrado."})
+
+    def test_cadastrar_devolve_201_com_o_ativo_e_grava(self):
+        resposta = self.cadastrar({"id_ativo_do_qual_depende": 3, "fracao": 0.2})
+
+        self.conferir_ativo_1(
+            resposta,
+            201,
+            [
+                {"id_ativo_do_qual_depende": 2, "fracao": 0.3},
+                {"id_ativo_do_qual_depende": 3, "fracao": 0.2},
+            ],
+        )
+
+    def test_cadastrar_com_regra_violada_devolve_400_sem_alterar_nada(self):
+        casos = [
+            (
+                {"id_ativo_do_qual_depende": 3, "fracao": 0.8},
+                "A soma das frações precisa ficar abaixo de 1. Ainda cabem 0.700.",
+            ),
+            (
+                {"id_ativo_do_qual_depende": 1, "fracao": 0.2},
+                "Um ativo não pode depender dele próprio.",
+            ),
+            (
+                {"id_ativo_do_qual_depende": 2, "fracao": 0.2},
+                "Este ativo já possui essa dependência.",
+            ),
+            (
+                {"id_ativo_do_qual_depende": True, "fracao": 0.2},
+                "Este campo precisa ser um número inteiro.",
+            ),
+            ({"id_ativo_do_qual_depende": 3}, MENSAGEM_DE_DADOS_DA_DEPENDENCIA_INVALIDOS),
+        ]
+
+        for corpo, mensagem_esperada in casos:
+            with self.subTest(corpo=corpo):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.cadastrar(corpo)
+
+                self.conferir_erro_sem_alteracao(resposta, 400, mensagem_esperada, estado_antes)
+
+    def test_cadastrar_com_ativo_inexistente_devolve_404_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar({"id_ativo_do_qual_depende": 99, "fracao": 0.2})
+
+        self.conferir_erro_sem_alteracao(resposta, 404, "Ativo não encontrado.", estado_antes)
+
+    def test_cadastrar_com_corpo_que_nao_e_json_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.post(
+            "/ativos/1/dependencias", data="Rafael Torres", content_type="text/plain"
+        )
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DA_DEPENDENCIA_INVALIDOS, estado_antes
+        )
+
+    def test_falha_do_banco_ao_cadastrar_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "adicionar_dependencia", side_effect=falha_do_banco):
+            resposta = self.cadastrar({"id_ativo_do_qual_depende": 3, "fracao": 0.2})
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
+        )
+
+    def test_atualizar_so_a_fracao_mantem_o_ativo(self):
+        resposta = self.atualizar({"fracao": 0.5})
+
+        self.conferir_ativo_1(resposta, 200, [{"id_ativo_do_qual_depende": 2, "fracao": 0.5}])
+
+    def test_atualizar_so_o_ativo_mantem_a_fracao(self):
+        resposta = self.atualizar({"id_ativo_do_qual_depende": 3})
+
+        self.conferir_ativo_1(resposta, 200, [{"id_ativo_do_qual_depende": 3, "fracao": 0.3}])
+
+    def test_atualizar_o_ativo_e_a_fracao(self):
+        resposta = self.atualizar({"id_ativo_do_qual_depende": 3, "fracao": 0.5})
+
+        self.conferir_ativo_1(resposta, 200, [{"id_ativo_do_qual_depende": 3, "fracao": 0.5}])
+
+    def test_atualizar_sem_campos_mantem_tudo(self):
+        resposta = self.atualizar({})
+
+        self.conferir_ativo_1(resposta, 200, [{"id_ativo_do_qual_depende": 2, "fracao": 0.3}])
+
+    def test_atualizar_com_regra_violada_devolve_400_sem_alterar_nada(self):
+        casos = [
+            ({"fracao": 1.0}, "A soma das frações precisa ficar abaixo de 1. Ainda cabem 1.000."),
+            ({"id_ativo_do_qual_depende": 1}, "Um ativo não pode depender dele próprio."),
+        ]
+
+        for corpo, mensagem_esperada in casos:
+            with self.subTest(corpo=corpo):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.atualizar(corpo)
+
+                self.conferir_erro_sem_alteracao(resposta, 400, mensagem_esperada, estado_antes)
+
+    def test_atualizar_com_algo_inexistente_devolve_404_sem_alterar_nada(self):
+        casos = [
+            (1, 3, {"fracao": 0.2}, "Este ativo não possui essa dependência."),
+            (99, 2, {"fracao": 0.2}, "Ativo não encontrado."),
+            (1, 2, {"id_ativo_do_qual_depende": 99}, "Ativo não encontrado."),
+        ]
+
+        for id_ativo, id_ativo_do_qual_depende, corpo, mensagem_esperada in casos:
+            with self.subTest(id_ativo=id_ativo, corpo=corpo):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.atualizar(corpo, id_ativo, id_ativo_do_qual_depende)
+
+                self.conferir_erro_sem_alteracao(resposta, 404, mensagem_esperada, estado_antes)
+
+    def test_atualizar_com_corpo_que_nao_e_json_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cliente.put(
+            "/ativos/1/dependencias/2", data="Rafael Torres", content_type="text/plain"
+        )
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 400, MENSAGEM_DE_DADOS_DA_DEPENDENCIA_INVALIDOS, estado_antes
+        )
+
+    def test_falha_do_banco_ao_atualizar_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "atualizar_dependencia", side_effect=falha_do_banco):
+            resposta = self.atualizar({"fracao": 0.5})
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
+        )
+
+    def test_remover_devolve_204_e_tira_a_dependencia(self):
+        resposta = self.cliente.delete("/ativos/1/dependencias/2")
+
+        self.assertEqual(resposta.status_code, 204)
+        self.assertEqual(resposta.get_data(as_text=True), "")
+        self.conferir_memoria_e_banco(self.criar_estado_esperado([]))
+
+    def test_remover_algo_inexistente_devolve_404_sem_alterar_nada(self):
+        casos = [
+            ("/ativos/1/dependencias/3", "Este ativo não possui essa dependência."),
+            ("/ativos/99/dependencias/2", "Ativo não encontrado."),
+        ]
+
+        for rota, mensagem_esperada in casos:
+            with self.subTest(rota=rota):
+                estado_antes = self.estado_da_memoria()
+
+                resposta = self.cliente.delete(rota)
+
+                self.conferir_erro_sem_alteracao(resposta, 404, mensagem_esperada, estado_antes)
+
+    def test_falha_do_banco_ao_remover_devolve_500_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+        falha_do_banco = PersistenciaError("Não foi possível gravar no banco de dados.")
+
+        with patch.object(self.repositorio, "remover_dependencia", side_effect=falha_do_banco):
+            resposta = self.cliente.delete("/ativos/1/dependencias/2")
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 500, "Não foi possível gravar no banco de dados.", estado_antes
+        )
+
+
 class TesteDeRiscos(TesteDaApi):
 
     def test_riscos_sem_ativos_devolve_lista_vazia(self):
