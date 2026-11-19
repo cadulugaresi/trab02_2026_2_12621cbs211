@@ -20,8 +20,8 @@ def cadastrar_dependencia(
     soma_atual = somar_fracoes(ativo_que_depende.dependencias)
     validar_fracao_da_dependencia(soma_atual, fracao)
 
-    ativo_que_depende.dependencias[id_ativo_do_qual_depende] = fracao
     repositorio.adicionar_dependencia(id_ativo_que_depende, id_ativo_do_qual_depende, fracao)
+    ativo_que_depende.dependencias[id_ativo_do_qual_depende] = fracao
 
 
 def remover_dependencia(repositorio, ativos, id_ativo_que_depende, id_ativo_do_qual_depende):
@@ -29,8 +29,8 @@ def remover_dependencia(repositorio, ativos, id_ativo_que_depende, id_ativo_do_q
     obter_ativo(ativos, id_ativo_do_qual_depende)
     garantir_que_dependencia_existe(ativo_que_depende, id_ativo_do_qual_depende)
 
-    del ativo_que_depende.dependencias[id_ativo_do_qual_depende]
     repositorio.remover_dependencia(id_ativo_que_depende, id_ativo_do_qual_depende)
+    del ativo_que_depende.dependencias[id_ativo_do_qual_depende]
 
 
 def atualizar_dependencia(
@@ -59,14 +59,14 @@ def atualizar_dependencia(
     soma_sem_a_antiga = somar_fracoes(ativo_que_depende.dependencias) - fracao_antiga
     validar_fracao_da_dependencia(soma_sem_a_antiga, fracao_nova)
 
-    del ativo_que_depende.dependencias[id_ativo_do_qual_depende_antigo]
-    ativo_que_depende.dependencias[id_ativo_do_qual_depende_novo] = fracao_nova
     repositorio.atualizar_dependencia(
         id_ativo_que_depende,
         id_ativo_do_qual_depende_antigo,
         id_ativo_do_qual_depende_novo,
         fracao_nova,
     )
+    del ativo_que_depende.dependencias[id_ativo_do_qual_depende_antigo]
+    ativo_que_depende.dependencias[id_ativo_do_qual_depende_novo] = fracao_nova
 
 
 def garantir_que_dependencia_existe(ativo_que_depende, id_ativo_do_qual_depende):

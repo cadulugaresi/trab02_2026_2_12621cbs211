@@ -1,7 +1,11 @@
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.vulnerabilidade import Vulnerabilidade
 from inventario.servicos.ativos import obter_ativo
-from inventario.dominio.validacoes import validar_cvss, validar_texto_obrigatorio
+from inventario.dominio.validacoes import (
+    validar_cvss,
+    validar_inteiro_positivo,
+    validar_texto_obrigatorio,
+)
 
 
 def proximo_id(dicionario):
@@ -21,8 +25,8 @@ def registrar_vulnerabilidade_no_catalogo(repositorio, catalogo, nome_vulnerabil
     id_vulnerabilidade = proximo_id(catalogo)
 
     vulnerabilidade = Vulnerabilidade(id_vulnerabilidade, nome_vulnerabilidade, cvss)
-    catalogo[id_vulnerabilidade] = vulnerabilidade
     repositorio.adicionar_vulnerabilidade(vulnerabilidade)
+    catalogo[id_vulnerabilidade] = vulnerabilidade
 
     return vulnerabilidade
 
@@ -30,6 +34,7 @@ def registrar_vulnerabilidade_no_catalogo(repositorio, catalogo, nome_vulnerabil
 def vincular_vulnerabilidade(
     repositorio, ativos, catalogo, id_ativo, id_vulnerabilidade, status_tratamento
 ):
+    validar_inteiro_positivo(id_vulnerabilidade)
     ativo = obter_ativo(ativos, id_ativo)
 
     if id_vulnerabilidade not in catalogo:
@@ -38,8 +43,8 @@ def vincular_vulnerabilidade(
     if id_vulnerabilidade in ativo.vulnerabilidades:
         raise DadoInvalidoError("Esta vulnerabilidade já está vinculada a este ativo.")
 
-    ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
     repositorio.vincular(id_ativo, id_vulnerabilidade, status_tratamento)
+    ativo.vulnerabilidades[id_vulnerabilidade] = status_tratamento
 
 
 def desvincular_vulnerabilidade(repositorio, ativos, id_ativo, id_vulnerabilidade):
@@ -48,8 +53,8 @@ def desvincular_vulnerabilidade(repositorio, ativos, id_ativo, id_vulnerabilidad
     if id_vulnerabilidade not in ativo.vulnerabilidades:
         raise DadoInvalidoError("Esta vulnerabilidade não está vinculada a este ativo.")
 
-    del ativo.vulnerabilidades[id_vulnerabilidade]
     repositorio.desvincular(id_ativo, id_vulnerabilidade)
+    del ativo.vulnerabilidades[id_vulnerabilidade]
 
 
 def atualizar_status_vulnerabilidade(
@@ -62,25 +67,26 @@ def atualizar_status_vulnerabilidade(
             "Este ativo não possui nenhuma vulnerabilidade com este ID vinculada a ele."
         )
 
-    ativo.vulnerabilidades[id_vulnerabilidade] = novo_status
     repositorio.atualizar_status_vinculo(id_ativo, id_vulnerabilidade, novo_status)
+    ativo.vulnerabilidades[id_vulnerabilidade] = novo_status
 
 
 def excluir_vulnerabilidade_do_catalogo(repositorio, catalogo, ativos, id_vulnerabilidade):
     if id_vulnerabilidade not in catalogo:
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
 
+    repositorio.remover_vulnerabilidade(id_vulnerabilidade)
+
     for ativo in ativos.values():
         if id_vulnerabilidade in ativo.vulnerabilidades:
             del ativo.vulnerabilidades[id_vulnerabilidade]
 
     del catalogo[id_vulnerabilidade]
-    repositorio.remover_vulnerabilidade(id_vulnerabilidade)
 
 
 def atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade_atualizada):
     if vulnerabilidade_atualizada.id_vulnerabilidade not in catalogo:
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
     vulnerabilidade_atualizada.cvss = validar_cvss(vulnerabilidade_atualizada.cvss)
-    catalogo[vulnerabilidade_atualizada.id_vulnerabilidade] = vulnerabilidade_atualizada
     repositorio.atualizar_vulnerabilidade(vulnerabilidade_atualizada)
+    catalogo[vulnerabilidade_atualizada.id_vulnerabilidade] = vulnerabilidade_atualizada
