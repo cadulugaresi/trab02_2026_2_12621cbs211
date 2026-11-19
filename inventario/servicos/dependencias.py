@@ -2,6 +2,7 @@ from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.validacoes import (
     validar_dependencia_de_si_mesmo,
     validar_fracao_da_dependencia,
+    validar_inteiro_positivo,
 )
 from inventario.servicos.ativos import obter_ativo
 
@@ -9,6 +10,8 @@ from inventario.servicos.ativos import obter_ativo
 def cadastrar_dependencia(
     repositorio, ativos, id_ativo_que_depende, id_ativo_do_qual_depende, fracao
 ):
+    validar_inteiro_positivo(id_ativo_que_depende)
+    validar_inteiro_positivo(id_ativo_do_qual_depende)
     validar_dependencia_de_si_mesmo(id_ativo_que_depende, id_ativo_do_qual_depende)
 
     ativo_que_depende = obter_ativo(ativos, id_ativo_que_depende)
@@ -41,6 +44,9 @@ def atualizar_dependencia(
     id_ativo_do_qual_depende_novo,
     fracao_nova,
 ):
+    validar_inteiro_positivo(id_ativo_que_depende)
+    validar_inteiro_positivo(id_ativo_do_qual_depende_antigo)
+    validar_inteiro_positivo(id_ativo_do_qual_depende_novo)
     validar_dependencia_de_si_mesmo(id_ativo_que_depende, id_ativo_do_qual_depende_novo)
 
     ativo_que_depende = obter_ativo(ativos, id_ativo_que_depende)

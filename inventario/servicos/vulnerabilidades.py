@@ -87,6 +87,7 @@ def excluir_vulnerabilidade_do_catalogo(repositorio, catalogo, ativos, id_vulner
 def atualizar_vulnerabilidade_no_catalogo(repositorio, catalogo, vulnerabilidade_atualizada):
     if vulnerabilidade_atualizada.id_vulnerabilidade not in catalogo:
         raise DadoInvalidoError("Vulnerabilidade não encontrada no catálogo.")
+    validar_texto_obrigatorio(vulnerabilidade_atualizada.nome_vulnerabilidade)
     vulnerabilidade_atualizada.cvss = validar_cvss(vulnerabilidade_atualizada.cvss)
     repositorio.atualizar_vulnerabilidade(vulnerabilidade_atualizada)
     catalogo[vulnerabilidade_atualizada.id_vulnerabilidade] = vulnerabilidade_atualizada
