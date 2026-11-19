@@ -8,13 +8,14 @@ WORKDIR /app
 
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
-COPY main.py .
+COPY iniciar_api.py .
 COPY inventario/ inventario/
 
 USER inventario
 
 WORKDIR /app/dados
 
-HEALTHCHECK CMD python3 -c "import sqlite3; sqlite3.connect('inventario.db').execute('SELECT 1')"
+HEALTHCHECK CMD python3 -c "import urllib.request; urllib.request.urlopen('http://localhost:5000/saude')"
 
-CMD ["python3", "/app/main.py"]
+EXPOSE 5000
+CMD ["python3", "/app/iniciar_api.py"]

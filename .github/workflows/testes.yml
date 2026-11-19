@@ -21,16 +21,16 @@ jobs:
 
       - name: Instalar dependências
         run: |
-          pip install pytest flake8 coverage numpy
+          python3 -m pip install -r requirements.txt pytest flake8 coverage
 
       - name: Rodar flake8 (linting)
         run: |
-          flake8 main.py inventario
+          python3 -m flake8 main.py iniciar_api.py inventario
 
       - name: Rodar testes com unittest
         run: |
-          python -m unittest tests/testes.py tests/test_vulnerabilidades.py tests/test_persistencia.py tests/test_repositorio.py tests/test_repositorio_sqlite.py tests/test_dependencias.py tests/test_risco.py
+          python3 -m unittest discover -s tests
 
       - name: Rodar testes com pytest
         run: |
-          pytest tests/test_exemplos.py -v
+          python3 -m pytest tests/test_exemplos.py -v

@@ -1,3 +1,5 @@
+import copy
+
 from inventario.dominio.ativo import (
     Impressora,
     Notebook,
@@ -113,15 +115,17 @@ def editar_ativo(repositorio, ativos):
     if ativo_encontrado is None:
         return
 
+    ativo_em_edicao = copy.copy(ativo_encontrado)
+
     print("\n=== Dados atuais do ativo ===\n")
     print(
-        f"ID: {ativo_encontrado.id}\n"
-        f"Nome: {ativo_encontrado.nome}\n"
-        f"Responsável: {ativo_encontrado.responsavel}\n"
-        f"Tipo: {type(ativo_encontrado).__name__}\n"
-        f"Setor: {ativo_encontrado.setor.name}\n"
-        f"Status: {ativo_encontrado.status.name}\n"
-        f"Fator de exposição: {ativo_encontrado.fator_exposicao}"
+        f"ID: {ativo_em_edicao.id}\n"
+        f"Nome: {ativo_em_edicao.nome}\n"
+        f"Responsável: {ativo_em_edicao.responsavel}\n"
+        f"Tipo: {type(ativo_em_edicao).__name__}\n"
+        f"Setor: {ativo_em_edicao.setor.name}\n"
+        f"Status: {ativo_em_edicao.status.name}\n"
+        f"Fator de exposição: {ativo_em_edicao.fator_exposicao}"
     )
 
     while True:
@@ -140,45 +144,45 @@ def editar_ativo(repositorio, ativos):
 
         if opcao == "1":
             novo_responsavel = pedir_info("Digite o novo nome do responsável pelo ativo: ")
-            ativo_encontrado.responsavel = novo_responsavel
+            ativo_em_edicao.responsavel = novo_responsavel
             print("Responsável atualizado com sucesso.")
             print(f"Novo responsável: {novo_responsavel}.")
 
         elif opcao == "2":
             novo_status = pedir_status("Digite o novo status do ativo: ")
-            ativo_encontrado.status = novo_status
+            ativo_em_edicao.status = novo_status
             print("Status do ativo atualizado com sucesso.")
             print(f"Status atual: {novo_status.name}.")
 
         elif opcao == "3":
             novo_setor = pedir_setor("Digite o novo setor do ativo: ")
-            ativo_encontrado.setor = novo_setor
+            ativo_em_edicao.setor = novo_setor
             print("Setor do ativo atualizado com sucesso.")
             print(f"Setor atual: {novo_setor.name}.")
 
         elif opcao == "4":
 
-            if isinstance(ativo_encontrado, Notebook):
-                ativo_encontrado.sistema_operacional = pedir_info("Novo SO: ")
-                ativo_encontrado.tela = pedir_float("Nova tela: ")
+            if isinstance(ativo_em_edicao, Notebook):
+                ativo_em_edicao.sistema_operacional = pedir_info("Novo SO: ")
+                ativo_em_edicao.tela = pedir_float("Nova tela: ")
 
-            elif isinstance(ativo_encontrado, Roteador):
-                ativo_encontrado.portas = pedir_int("Nova quantidade de portas: ")
-                ativo_encontrado.velocidade = pedir_int("Nova velocidade em MB: ")
+            elif isinstance(ativo_em_edicao, Roteador):
+                ativo_em_edicao.portas = pedir_int("Nova quantidade de portas: ")
+                ativo_em_edicao.velocidade = pedir_int("Nova velocidade em MB: ")
 
-            elif isinstance(ativo_encontrado, Servidor):
-                ativo_encontrado.ram = pedir_int("Digite a quantidade de RAM do Servidor em GB: ")
-                ativo_encontrado.armazenamento = pedir_float(
+            elif isinstance(ativo_em_edicao, Servidor):
+                ativo_em_edicao.ram = pedir_int("Digite a quantidade de RAM do Servidor em GB: ")
+                ativo_em_edicao.armazenamento = pedir_float(
                     "Digite a quantidade de armazenamento do Servidor em T: "
                 )
 
-            elif isinstance(ativo_encontrado, Impressora):
-                ativo_encontrado.cor = pedir_cor()
-                ativo_encontrado.tecnologia = pedir_tecnologia()
+            elif isinstance(ativo_em_edicao, Impressora):
+                ativo_em_edicao.cor = pedir_cor()
+                ativo_em_edicao.tecnologia = pedir_tecnologia()
 
             print("Detalhes específicos atualizados com sucesso!")
             print("Ativo atualizado:")
-            print(ativo_encontrado.exibir_detalhes())
+            print(ativo_em_edicao.exibir_detalhes())
 
         elif opcao == "5":
 
@@ -187,49 +191,49 @@ def editar_ativo(repositorio, ativos):
             if novo_tipo is Notebook:
                 so, tela = cadastro_notebook()
                 novo_ativo = Notebook(
-                    ativo_encontrado.id,
-                    ativo_encontrado.nome,
-                    ativo_encontrado.setor,
-                    ativo_encontrado.responsavel,
-                    ativo_encontrado.status,
+                    ativo_em_edicao.id,
+                    ativo_em_edicao.nome,
+                    ativo_em_edicao.setor,
+                    ativo_em_edicao.responsavel,
+                    ativo_em_edicao.status,
                     so,
                     tela,
                 )
             elif novo_tipo is Roteador:
                 portas, velocidade = cadastro_roteador()
                 novo_ativo = Roteador(
-                    ativo_encontrado.id,
-                    ativo_encontrado.nome,
-                    ativo_encontrado.setor,
-                    ativo_encontrado.responsavel,
-                    ativo_encontrado.status,
+                    ativo_em_edicao.id,
+                    ativo_em_edicao.nome,
+                    ativo_em_edicao.setor,
+                    ativo_em_edicao.responsavel,
+                    ativo_em_edicao.status,
                     portas,
                     velocidade,
                 )
             elif novo_tipo is Servidor:
                 ram, armazenamento = cadastro_servidor()
                 novo_ativo = Servidor(
-                    ativo_encontrado.id,
-                    ativo_encontrado.nome,
-                    ativo_encontrado.setor,
-                    ativo_encontrado.responsavel,
-                    ativo_encontrado.status,
+                    ativo_em_edicao.id,
+                    ativo_em_edicao.nome,
+                    ativo_em_edicao.setor,
+                    ativo_em_edicao.responsavel,
+                    ativo_em_edicao.status,
                     ram,
                     armazenamento,
                 )
             elif novo_tipo is Impressora:
                 cor, tecnologia = cadastro_impressora()
                 novo_ativo = Impressora(
-                    ativo_encontrado.id,
-                    ativo_encontrado.nome,
-                    ativo_encontrado.setor,
-                    ativo_encontrado.responsavel,
-                    ativo_encontrado.status,
+                    ativo_em_edicao.id,
+                    ativo_em_edicao.nome,
+                    ativo_em_edicao.setor,
+                    ativo_em_edicao.responsavel,
+                    ativo_em_edicao.status,
                     cor,
                     tecnologia,
                 )
 
-            ativo_encontrado = novo_ativo
+            ativo_em_edicao = novo_ativo
             print("Tipo do ativo atualizado com sucesso!")
             print(f"Tipo atual: {type(novo_ativo).__name__}.")
             print(
@@ -238,12 +242,12 @@ def editar_ativo(repositorio, ativos):
             )
 
         elif opcao == "6":
-            ativo_encontrado.fator_exposicao = pedir_fator_exposicao("Novo fator de exposição: ")
+            ativo_em_edicao.fator_exposicao = pedir_fator_exposicao("Novo fator de exposição: ")
             print("Fator de exposição atualizado com sucesso.")
-            print(f"Fator de exposição atual: {ativo_encontrado.fator_exposicao}.")
+            print(f"Fator de exposição atual: {ativo_em_edicao.fator_exposicao}.")
 
         elif opcao == "7":
-            atualizar_ativo_no_inventario(repositorio, ativos, ativo_encontrado)
+            atualizar_ativo_no_inventario(repositorio, ativos, ativo_em_edicao)
             print("Voltando...")
             break
 

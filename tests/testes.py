@@ -1,5 +1,7 @@
+import io
 import os
 import unittest
+from contextlib import redirect_stdout
 from inventario.dominio.enums import (
     Cor,
     Setor,
@@ -42,7 +44,15 @@ from inventario.servicos.ativos import (
     registrar_ativo_no_inventario,
     remover_ativo_do_inventario,
 )
-from inventario.dominio.validacoes import validar_fator_exposicao, validar_nome_responsavel
+from inventario.dominio.validacoes import (
+    validar_cvss,
+    validar_fator_exposicao,
+    validar_fracao_da_dependencia,
+    validar_inteiro_positivo,
+    validar_numero,
+    validar_numero_positivo,
+    validar_texto_obrigatorio,
+)
 from inventario.interface.conversao_das_opcoes_do_menu import (
     validar_cor,
     validar_setor,
@@ -52,6 +62,10 @@ from inventario.interface.conversao_das_opcoes_do_menu import (
 )
 from tests.apoio import TesteComArquivosTemporarios
 from unittest.mock import patch
+
+MENSAGEM_DE_NUMERO_GRANDE_DEMAIS = (
+    "Este número é grande demais. O máximo aceito é 9223372036854775807."
+)
 
 
 # Exibir detalhes
@@ -180,18 +194,18 @@ class TestValidarTech(unittest.TestCase):
             validar_tecnologia("3")
 
 
-class TestValidarNomeResponsavel(unittest.TestCase):
+class TestValidarTextoObrigatorio(unittest.TestCase):
 
-    def test_nome_valido_nao_levanta_erro(self):
-        validar_nome_responsavel("Cadu")
+    def test_texto_valido_nao_levanta_erro(self):
+        validar_texto_obrigatorio("Cadu")
 
-    def test_nome_numerico_levanta_erro(self):
+    def test_texto_numerico_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            validar_nome_responsavel("123")
+            validar_texto_obrigatorio("123")
 
-    def test_nome_vazio_levanta_erro(self):
+    def test_texto_vazio_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
-            validar_nome_responsavel("")
+            validar_texto_obrigatorio("")
 
 
 class TestValidarFatorExposicao(unittest.TestCase):
@@ -213,6 +227,76 @@ class TestValidarFatorExposicao(unittest.TestCase):
     def test_fator_acima_de_dois_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
             validar_fator_exposicao(2.1)
+
+
+class TestValidacoesNumericas(unittest.TestCase):
+
+    def setUp(self):
+        self.valores_nao_finitos = [float("nan"), float("inf"), float("-inf")]
+
+    def conferir_recusa(self, validacao, valor, mensagem_esperada):
+        with self.assertRaises(DadoInvalidoError) as contexto:
+            validacao(valor)
+        self.assertEqual(str(contexto.exception), mensagem_esperada)
+
+    def test_numero_inteiro_e_fracionario_sao_devolvidos(self):
+        self.assertEqual(validar_numero(3), 3)
+        self.assertEqual(validar_numero(2.5), 2.5)
+
+    def test_booleano_e_texto_nao_sao_numeros(self):
+        for valor in [True, "3"]:
+            with self.subTest(valor=valor):
+                self.conferir_recusa(validar_numero, valor, "Este campo precisa ser um número.")
+
+    def test_valores_nao_finitos_sao_recusados_pelo_validar_numero(self):
+        for valor in self.valores_nao_finitos:
+            with self.subTest(valor=valor):
+                self.conferir_recusa(
+                    validar_numero, valor, "Este campo precisa ser um número finito."
+                )
+
+    def test_valores_nao_finitos_sao_recusados_pelo_validar_numero_positivo(self):
+        for valor in self.valores_nao_finitos:
+            with self.subTest(valor=valor):
+                self.conferir_recusa(
+                    validar_numero_positivo, valor, "Este campo precisa ser um número finito."
+                )
+
+    def test_valores_nao_finitos_sao_recusados_pelo_validar_cvss(self):
+        for valor in self.valores_nao_finitos:
+            with self.subTest(valor=valor):
+                self.conferir_recusa(
+                    validar_cvss, valor, "Este campo precisa ser um número finito."
+                )
+
+    def test_valores_nao_finitos_sao_recusados_pelo_validar_fator_exposicao(self):
+        for valor in self.valores_nao_finitos:
+            with self.subTest(valor=valor):
+                self.conferir_recusa(
+                    validar_fator_exposicao, valor, "Este campo precisa ser um número finito."
+                )
+
+    def test_valores_nao_finitos_sao_recusados_na_fracao_da_dependencia(self):
+        for valor in self.valores_nao_finitos:
+            with self.subTest(valor=valor):
+                with self.assertRaises(DadoInvalidoError) as contexto:
+                    validar_fracao_da_dependencia(0, valor)
+                self.assertEqual(
+                    str(contexto.exception), "Este campo precisa ser um número finito."
+                )
+
+    def test_maior_inteiro_aceito_e_devolvido(self):
+        maior_inteiro_aceito = 2**63 - 1
+
+        for validacao in [validar_numero, validar_numero_positivo, validar_inteiro_positivo]:
+            with self.subTest(validacao=validacao.__name__):
+                self.assertEqual(validacao(maior_inteiro_aceito), maior_inteiro_aceito)
+
+    def test_inteiro_acima_do_limite_e_recusado_sem_estourar(self):
+        for validacao in [validar_numero, validar_numero_positivo, validar_inteiro_positivo]:
+            for valor in [2**63, 10**400]:
+                with self.subTest(validacao=validacao.__name__, digitos=len(str(valor))):
+                    self.conferir_recusa(validacao, valor, MENSAGEM_DE_NUMERO_GRANDE_DEMAIS)
 
 
 # Funções encontrar ativo ------------------------
@@ -469,6 +553,14 @@ class TestPersistencia(TesteComArquivosTemporarios):
 # Testes de Input --------------------------------
 
 
+def responder_e_capturar_saida(funcao_que_pergunta, respostas):
+    saida = io.StringIO()
+    with patch("builtins.input", side_effect=respostas):
+        with redirect_stdout(saida):
+            valor_devolvido = funcao_que_pergunta("Digite: ")
+    return valor_devolvido, saida.getvalue()
+
+
 class TestPedirInt(unittest.TestCase):
 
     def test_retorna_inteiro_valido(self):
@@ -483,6 +575,32 @@ class TestPedirInt(unittest.TestCase):
         with patch("builtins.input", side_effect=["abc", "7"]):
             self.assertEqual(pedir_int("Digite: "), 7)
 
+    def test_zero_e_negativo_mostram_a_mensagem_do_dominio(self):
+        for resposta_invalida in ["0", "-3"]:
+            with self.subTest(resposta=resposta_invalida):
+                valor, saida = responder_e_capturar_saida(pedir_int, [resposta_invalida, "5"])
+
+                self.assertEqual(valor, 5)
+                self.assertEqual(saida, "Este campo não pode ser nulo ou negativo.\n")
+
+    def test_campo_vazio_mostra_a_mensagem_e_pergunta_de_novo(self):
+        valor, saida = responder_e_capturar_saida(pedir_int, ["", "5"])
+
+        self.assertEqual(valor, 5)
+        self.assertEqual(saida, "Este campo não pode ser vazio.\n")
+
+    def test_numero_fracionario_nao_e_aceito_como_inteiro(self):
+        valor, saida = responder_e_capturar_saida(pedir_int, ["3.5", "5"])
+
+        self.assertEqual(valor, 5)
+        self.assertEqual(saida, "Digite um número válido\n")
+
+    def test_numero_acima_do_limite_mostra_o_maximo_e_pergunta_de_novo(self):
+        valor, saida = responder_e_capturar_saida(pedir_int, ["9223372036854775808", "5"])
+
+        self.assertEqual(valor, 5)
+        self.assertEqual(saida, MENSAGEM_DE_NUMERO_GRANDE_DEMAIS + "\n")
+
 
 class TestPedirFloat(unittest.TestCase):
 
@@ -493,6 +611,34 @@ class TestPedirFloat(unittest.TestCase):
     def test_rejeita_zero_e_aceita_depois(self):
         with patch("builtins.input", side_effect=["0", "2.5"]):
             self.assertEqual(pedir_float("Digite: "), 2.5)
+
+    def test_valores_nao_finitos_digitados_sao_recusados(self):
+        for resposta_invalida in ["nan", "NaN", "inf", "-inf", "Infinity"]:
+            with self.subTest(resposta=resposta_invalida):
+                valor, saida = responder_e_capturar_saida(pedir_float, [resposta_invalida, "2.5"])
+
+                self.assertEqual(valor, 2.5)
+                self.assertEqual(saida, "Este campo precisa ser um número finito.\n")
+
+    def test_zero_e_negativo_mostram_a_mensagem_do_dominio(self):
+        for resposta_invalida in ["0", "-1,5"]:
+            with self.subTest(resposta=resposta_invalida):
+                valor, saida = responder_e_capturar_saida(pedir_float, [resposta_invalida, "2.5"])
+
+                self.assertEqual(valor, 2.5)
+                self.assertEqual(saida, "Este campo não pode ser nulo ou negativo.\n")
+
+    def test_campo_vazio_mostra_a_mensagem_e_pergunta_de_novo(self):
+        valor, saida = responder_e_capturar_saida(pedir_float, ["", "2.5"])
+
+        self.assertEqual(valor, 2.5)
+        self.assertEqual(saida, "Este campo não pode ser vazio.\n")
+
+    def test_texto_mostra_que_o_numero_e_invalido(self):
+        valor, saida = responder_e_capturar_saida(pedir_float, ["abc", "2.5"])
+
+        self.assertEqual(valor, 2.5)
+        self.assertEqual(saida, "Digite um número válido\n")
 
 
 class TestPedirInfo(unittest.TestCase):

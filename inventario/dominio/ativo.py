@@ -1,4 +1,10 @@
 from inventario.dominio.enums import Cor, Setor, StatusDoAtivo, Tecnologia
+from inventario.dominio.validacoes import (
+    validar_fator_exposicao,
+    validar_inteiro_positivo,
+    validar_texto_obrigatorio,
+    validar_numero_positivo,
+)
 
 
 class Ativo:
@@ -16,6 +22,12 @@ class Ativo:
             self.fator_exposicao = self.FATOR_EXPOSICAO_PADRAO
         else:
             self.fator_exposicao = fator_exposicao
+
+    def validar_dados(self):
+        validar_inteiro_positivo(self.id)
+        validar_texto_obrigatorio(self.nome)
+        validar_texto_obrigatorio(self.responsavel)
+        validar_fator_exposicao(self.fator_exposicao)
 
     def exibir_detalhes(self):
         return (
@@ -66,6 +78,11 @@ class Notebook(Ativo):
         self.sistema_operacional = sistema_operacional
         self.tela = tela
 
+    def validar_dados(self):
+        super().validar_dados()
+        validar_texto_obrigatorio(self.sistema_operacional)
+        validar_numero_positivo(self.tela)
+
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
         return (
@@ -85,9 +102,9 @@ class Notebook(Ativo):
         return cls(
             dicionario_do_ativo["id"],
             dicionario_do_ativo["nome"],
-            Setor(dicionario_do_ativo["setor"]),
+            Setor(validar_inteiro_positivo(dicionario_do_ativo["setor"])),
             dicionario_do_ativo["responsavel"],
-            StatusDoAtivo(dicionario_do_ativo["status"]),
+            StatusDoAtivo(validar_inteiro_positivo(dicionario_do_ativo["status"])),
             dicionario_do_ativo["sistema_operacional"],
             dicionario_do_ativo["tela"],
             dicionario_do_ativo.get("fator_exposicao"),
@@ -103,6 +120,11 @@ class Roteador(Ativo):
         super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.portas = portas
         self.velocidade = velocidade
+
+    def validar_dados(self):
+        super().validar_dados()
+        validar_inteiro_positivo(self.portas)
+        validar_inteiro_positivo(self.velocidade)
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
@@ -123,9 +145,9 @@ class Roteador(Ativo):
         return cls(
             dicionario_do_ativo["id"],
             dicionario_do_ativo["nome"],
-            Setor(dicionario_do_ativo["setor"]),
+            Setor(validar_inteiro_positivo(dicionario_do_ativo["setor"])),
             dicionario_do_ativo["responsavel"],
-            StatusDoAtivo(dicionario_do_ativo["status"]),
+            StatusDoAtivo(validar_inteiro_positivo(dicionario_do_ativo["status"])),
             dicionario_do_ativo["portas"],
             dicionario_do_ativo["velocidade"],
             dicionario_do_ativo.get("fator_exposicao"),
@@ -141,6 +163,11 @@ class Servidor(Ativo):
         super().__init__(id, nome, setor, responsavel, status, fator_exposicao)
         self.ram = ram
         self.armazenamento = armazenamento
+
+    def validar_dados(self):
+        super().validar_dados()
+        validar_inteiro_positivo(self.ram)
+        validar_numero_positivo(self.armazenamento)
 
     def exibir_detalhes(self):
         detalhes_base = super().exibir_detalhes()
@@ -161,9 +188,9 @@ class Servidor(Ativo):
         return cls(
             dicionario_do_ativo["id"],
             dicionario_do_ativo["nome"],
-            Setor(dicionario_do_ativo["setor"]),
+            Setor(validar_inteiro_positivo(dicionario_do_ativo["setor"])),
             dicionario_do_ativo["responsavel"],
-            StatusDoAtivo(dicionario_do_ativo["status"]),
+            StatusDoAtivo(validar_inteiro_positivo(dicionario_do_ativo["status"])),
             dicionario_do_ativo["ram"],
             dicionario_do_ativo["armazenamento"],
             dicionario_do_ativo.get("fator_exposicao"),
@@ -193,11 +220,11 @@ class Impressora(Ativo):
         return cls(
             dicionario_do_ativo["id"],
             dicionario_do_ativo["nome"],
-            Setor(dicionario_do_ativo["setor"]),
+            Setor(validar_inteiro_positivo(dicionario_do_ativo["setor"])),
             dicionario_do_ativo["responsavel"],
-            StatusDoAtivo(dicionario_do_ativo["status"]),
-            Cor(dicionario_do_ativo["cor"]),
-            Tecnologia(dicionario_do_ativo["tecnologia"]),
+            StatusDoAtivo(validar_inteiro_positivo(dicionario_do_ativo["status"])),
+            Cor(validar_inteiro_positivo(dicionario_do_ativo["cor"])),
+            Tecnologia(validar_inteiro_positivo(dicionario_do_ativo["tecnologia"])),
             dicionario_do_ativo.get("fator_exposicao"),
         )
 

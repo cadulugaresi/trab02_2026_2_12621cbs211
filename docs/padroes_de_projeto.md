@@ -14,7 +14,7 @@ O Trabalho 2 usa três padrões de projeto: Factory, para recriar cada ativo na 
 ativo = MAPA_DE_TIPOS[tipo].de_dicionario(dados_do_ativo)
 ```
 
-A mesma fábrica é usada pelo `RepositorioJSON` e pelo `RepositorioSQLite`, e as opções de tipo do menu (`TIPOS_DE_ATIVOS`) também são geradas a partir dela. Um tipo novo entra com a subclasse e uma linha no mapa.
+A mesma fábrica é usada pelo `RepositorioJSON`, pelo `RepositorioSQLite` e pela rota `POST /ativos` da API, que monta o ativo a partir do JSON recebido (`MAPA_DE_TIPOS[corpo["tipo"]].de_dicionario(corpo)`). As opções de tipo do menu (`TIPOS_DE_ATIVOS`) também são geradas a partir dela. Um tipo novo entra com a subclasse e uma linha no mapa.
 
 ## 🫧 Repository
 
@@ -44,12 +44,12 @@ O mapa `CRITERIOS_DE_ORDENACAO` reúne as estratégias disponíveis, e o menu mo
 
 O Singleton garantiria uma única conexão com o banco, acessível de qualquer lugar do programa. Ele não foi adotado porque:
 
-- **o programa já cria um único repositório**, no `main.py`, e o injeta nas outras camadas. A unicidade existe sem precisar de uma classe que a imponha;
+- **o programa já cria um único repositório** no ponto de entrada (`main.py` para o menu, `iniciar_api.py` para a API) e o injeta nas outras camadas. A unicidade existe sem precisar de uma classe que a imponha;
 - **um acesso global esconderia a dependência**: os serviços passariam a buscar a conexão sozinhos, voltando ao problema que a injeção de dependência resolveu (S4_02);
-- **os testes precisam de vários repositórios**: a suíte de contrato cria um repositório novo, apontando para um banco temporário, para conferir o que foi gravado. Um Singleton impediria isso ou exigiria reiniciá-lo entre os testes.
+- **os testes precisam de vários repositórios**: a suíte de contrato cria um repositório novo, apontando para um banco temporário, para conferir o que foi gravado, e cada teste da API cria o seu próprio banco SQLite em memória. Um Singleton impediria isso ou exigiria reiniciá-lo entre os testes.
 
-Com a API do S4_05, o acesso ao banco vai acontecer em requisições diferentes, e a forma de criar a conexão será decidida nessa etapa.
+Com a API do S4_05, a decisão se manteve: o `iniciar_api.py` cria um único `RepositorioSQLite` na partida do servidor e o injeta em `criar_app`, e todas as requisições usam esse mesmo repositório.
 
 ## ✨ Quando não usar um padrão
 
-Durante o S4_03 foi cogitada uma fábrica de repositórios, que escolheria entre JSON e SQLite a partir de uma variável de ambiente. Ela foi descartada: o programa usa só o SQLite, e a fábrica acrescentaria configuração e código sem resolver nenhum problema real. A troca de implementação continua sendo uma linha no `main.py`. Se um dia o programa precisar escolher o armazenamento por configuração (por exemplo, no container), a fábrica pode ser criada nesse momento.
+Durante o S4_03 foi cogitada uma fábrica de repositórios, que escolheria entre JSON e SQLite a partir de uma variável de ambiente. Ela foi descartada: o programa usa só o SQLite, e a fábrica acrescentaria configuração e código sem resolver nenhum problema real. A troca de implementação continua sendo uma linha em cada ponto de entrada (`main.py` e `iniciar_api.py`). Se um dia o programa precisar escolher o armazenamento por configuração (por exemplo, no container), a fábrica pode ser criada nesse momento.

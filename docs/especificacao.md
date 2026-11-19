@@ -136,7 +136,7 @@ O sistema é organizado em quatro camadas, cada uma em um pacote de `inventario/
 - Classes: `Ativo`, `Notebook`, `Servidor`, `Roteador`, `Impressora`, `Vulnerabilidade` (com `para_dicionario()` e `de_dicionario()`)
 - Enums: `Setor`, `StatusDoAtivo`, `StatusDaVuln`, `NivelDaVulnerabilidade`, `Cor`, `Tecnologia`
 - Exceção: `DadoInvalidoError`
-- Regras de validação: `validar_nome_responsavel(nome)`, `validar_cvss(cvss)`
+- Regras de validação: `validar_texto_obrigatorio(texto)`, `validar_cvss(cvss)`
 
 ### 9.2. Serviços (`inventario/servicos/`)
 
@@ -184,7 +184,7 @@ Critérios completos em `docs/criterios_aceitacao.md`.
 
 | História                | Requisitos          | Regras                     | Cenários            | Testes                                                                         |
 | ----------------------- | ------------------- | -------------------------- | ------------------- | ------------------------------------------------------------------------------ |
-| HU-01 (Cadastrar ativo) | RF-01, RF-02        | RN-01, RN-02               | CA-01 a CA-04       | `TestCadastrarAtivo`, `TestValidarNomeResponsavel`                             |
+| HU-01 (Cadastrar ativo) | RF-01, RF-02        | RN-01, RN-02               | CA-01 a CA-04       | `TestCadastrarAtivo`, `TestValidarTextoObrigatorio`                            |
 | HU-02 (Consultar ativo) | RF-04, RF-05        | —                          | CA-05 a CA-08       | `TestEncontrarAtivoPorId`, `TestEncontrarAtivosPorNome`                        |
 | HU-03 (Atualizar ativo) | RF-06               | RN-02, RN-08               | CA-09 a CA-11       | `TestEditarAtivo`, `TestAtualizarAtivoNoInventario`                            |
 | HU-04 (Remover ativo)   | RF-07               | RN-03                      | CA-12 a CA-15       | `TestExcluirAtivo`, `TestRemoverAtivoDoInventario`                             |

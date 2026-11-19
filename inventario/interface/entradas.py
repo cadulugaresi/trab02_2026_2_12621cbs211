@@ -1,8 +1,10 @@
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.validacoes import (
     validar_cvss,
-    validar_nome_responsavel,
     validar_fator_exposicao,
+    validar_inteiro_positivo,
+    validar_numero_positivo,
+    validar_texto_obrigatorio,
 )
 from inventario.interface.conversao_das_opcoes_do_menu import (
     TIPOS_DE_ATIVOS,
@@ -23,7 +25,7 @@ def pedir_info(mensagem):
         info = input(mensagem).strip()
 
         try:
-            validar_nome_responsavel(info)
+            validar_texto_obrigatorio(info)
             return info
         except DadoInvalidoError as erro:
             print(erro)
@@ -93,14 +95,9 @@ def pedir_float(mensagem):
             numero = input(mensagem).strip().replace(",", ".")
 
             if not numero:
-                raise DadoInvalidoError("Este campo não pode ser vazio. Tente novamente.")
+                raise DadoInvalidoError("Este campo não pode ser vazio.")
 
-            if float(numero) <= 0:
-                raise DadoInvalidoError(
-                    "Este campo não pode ser nulo ou negativo. Tente novamente."
-                )
-
-            return float(numero)
+            return validar_numero_positivo(float(numero))
 
         except ValueError:
             print("Digite um número válido")
@@ -116,14 +113,9 @@ def pedir_int(mensagem):
             numero_int = input(mensagem).strip()
 
             if not numero_int:
-                raise DadoInvalidoError("Este campo não pode ser vazio. Tente novamente.")
+                raise DadoInvalidoError("Este campo não pode ser vazio.")
 
-            if int(numero_int) <= 0:
-                raise DadoInvalidoError(
-                    "Este campo não pode ser nulo ou negativo. Tente novamente."
-                )
-
-            return int(numero_int)
+            return validar_inteiro_positivo(int(numero_int))
 
         except ValueError:
             print("Digite um número válido")
