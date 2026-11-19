@@ -336,7 +336,7 @@ python3 -m flake8 main.py iniciar_api.py inventario
 python3 -m black --check main.py iniciar_api.py inventario
 ```
 
-**API tests:** `tests/test_api.py` has 50 tests that use Flask's `test_client()`, without starting the server. Each test creates the app with `criar_app` and an in-memory SQLite database (`RepositorioSQLite(":memory:")`), and checks the status codes and JSON bodies of every route, including that invalid data returns 400 and is not saved.
+**API tests:** `tests/test_api.py` has 55 tests that use Flask's `test_client()`, without starting the server. Each test creates the app with `criar_app` and an in-memory SQLite database (`RepositorioSQLite(":memory:")`), and checks the status codes and JSON bodies of every route, including that invalid data returns 400 and is not saved.
 
 **Repository contract suite:** `tests/contrato_repositorio.py` defines `ContratoDoRepositorio`, a set of 24 tests describing what any repository must do: save and reload assets, the catalog, the links, and the dependencies between assets; update them, including changing an asset's type; and remove them, taking a removed vulnerability out of every asset. The same suite runs on both implementations:
 - `tests/test_repositorio.py`: `TestRepositorioJSON`, using temporary JSON files
