@@ -20,6 +20,18 @@ export function fecharCamada(camada) {
   atualizarBloqueioDaPagina();
 }
 
+export function fecharCamadasFlutuantes() {
+  const camadasFlutuantes = [];
+  for (const camada of pilhaDeCamadas) {
+    if (!camada.bloqueiaAPagina) {
+      camadasFlutuantes.push(camada);
+    }
+  }
+  for (const camada of camadasFlutuantes) {
+    camada.pedirFechamento();
+  }
+}
+
 export function devolverFoco(camada) {
   const focoAnterior = camada.focoAnterior;
   if (focoAnterior && focoAnterior.isConnected && !focoAnterior.closest("[inert]")) {

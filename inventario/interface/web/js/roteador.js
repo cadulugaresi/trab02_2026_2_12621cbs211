@@ -1,3 +1,4 @@
+import { fecharCamadasFlutuantes } from "./camadas.js";
 import { fecharJanela } from "./componentes/janela.js";
 import { criarElemento } from "./elementos.js";
 
@@ -41,6 +42,7 @@ export function atualizarTelaAtual() {
 }
 
 function tratarMudancaDeEndereco() {
+  fecharCamadasFlutuantes();
   const endereco = lerEnderecoAtual();
   const { caminho, busca } = separarEndereco(endereco);
   const { rota, parametros } = encontrarRota(caminho);
