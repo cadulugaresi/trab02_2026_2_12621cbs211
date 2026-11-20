@@ -1,3 +1,5 @@
+import { buscarNaFila } from "./conexao.js";
+
 const PASTA_DOS_ICONES = "/web/icones";
 
 const ARQUIVOS_DOS_ICONES = {
@@ -49,7 +51,7 @@ export function criarIcone(nome, classeExtra = "") {
 
 async function carregarIcone(nome, arquivo) {
   try {
-    const resposta = await fetch(`${PASTA_DOS_ICONES}/${arquivo}.svg`);
+    const resposta = await buscarNaFila(`${PASTA_DOS_ICONES}/${arquivo}.svg`);
     const texto = await resposta.text();
     const documento = new DOMParser().parseFromString(texto, "image/svg+xml");
     const svg = documento.documentElement;

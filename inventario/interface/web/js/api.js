@@ -1,5 +1,8 @@
+import { buscarNaFila, ehErroDeDemora } from "./conexao.js";
+
 const MENSAGEM_SEM_CONEXAO =
   "Não foi possível falar com o servidor. Confira se a API está rodando e tente de novo.";
+const MENSAGEM_DE_DEMORA = "O servidor demorou demais para responder. Tente de novo.";
 
 export class ErroDaApi extends Error {
   constructor(mensagem, status) {
@@ -18,9 +21,9 @@ async function requisitar(metodo, caminho, corpo) {
 
   let resposta;
   try {
-    resposta = await fetch(caminho, opcoes);
-  } catch {
-    throw new ErroDaApi(MENSAGEM_SEM_CONEXAO, 0);
+    resposta = await buscarNaFila(caminho, opcoes);
+  } catch (erro) {
+    throw new ErroDaApi(ehErroDeDemora(erro) ? MENSAGEM_DE_DEMORA : MENSAGEM_SEM_CONEXAO, 0);
   }
 
   if (resposta.status === 204) {
