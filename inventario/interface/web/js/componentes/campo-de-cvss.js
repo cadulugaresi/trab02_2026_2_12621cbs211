@@ -48,7 +48,11 @@ export function criarCampoDeCvss({ valor = null, aoMudar }) {
     }
 
     const foraDaFaixa = !campoVazio && !dentroDaFaixa;
-    campo.toggleAttribute("aria-invalid", foraDaFaixa);
+    if (foraDaFaixa) {
+      campo.setAttribute("aria-invalid", "true");
+    } else {
+      campo.removeAttribute("aria-invalid");
+    }
     if (textoDeAjuda !== null) {
       mostrarAjuda(
         textoDeAjuda,
