@@ -1,0 +1,111 @@
+.botao {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-2);
+  height: var(--altura-do-botao);
+  padding: 0 var(--espaco-5);
+  border: 0;
+  border-radius: var(--raio-pilula);
+  font-size: var(--tamanho-corpo);
+  font-weight: var(--peso-medio);
+  line-height: 1;
+  white-space: nowrap;
+  text-decoration: none;
+  cursor: pointer;
+  user-select: none;
+  transition: transform var(--duracao-de-pressao) var(--curva-de-saida);
+}
+
+.botao:active:not(:disabled) {
+  transform: scale(var(--escala-ao-pressionar));
+}
+
+.botao:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.botao[aria-busy="true"] {
+  opacity: 0.7;
+  cursor: progress;
+}
+
+.botao-principal {
+  background: var(--tinta);
+  color: var(--sobre-tinta);
+}
+
+.botao-secundario {
+  background: var(--superficie);
+  color: var(--tinta);
+  box-shadow: inset 0 0 0 1px var(--contorno);
+}
+
+.botao-perigo {
+  background: var(--perigo);
+  color: var(--sobre-tinta);
+}
+
+.botao-pequeno {
+  height: var(--altura-do-botao-pequeno);
+  padding: 0 var(--espaco-4);
+  font-size: var(--tamanho-controle);
+}
+
+.botao-pequeno .icone {
+  width: 16px;
+  height: 16px;
+}
+
+.botao-icone {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--tinta);
+}
+
+.botao-link {
+  height: auto;
+  padding: var(--espaco-1) 0;
+  gap: var(--espaco-1);
+  border-radius: 0;
+  background: none;
+  color: var(--tinta);
+  font-size: var(--tamanho-controle);
+}
+
+.botao-link .icone {
+  width: 16px;
+  height: 16px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .botao-principal:hover:not(:disabled) {
+    background: var(--tinta-realcada);
+  }
+
+  .botao-secundario:hover:not(:disabled),
+  .botao-icone:hover:not(:disabled) {
+    background: var(--campo);
+  }
+
+  .botao-perigo:hover:not(:disabled) {
+    background: var(--perigo-realcado);
+  }
+
+  .botao-link:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .botao-icone {
+    width: 44px;
+    height: 44px;
+  }
+}

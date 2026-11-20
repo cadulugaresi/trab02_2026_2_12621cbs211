@@ -1,0 +1,13 @@
+@import url("base.css");
+@import url("componentes/botoes.css");
+@import url("componentes/segmentado.css");
+@import url("componentes/contador.css");
+@import url("componentes/campos.css");
+@import url("componentes/flutuantes.css");
+@import url("componentes/campo-de-cvss.css");
+@import url("componentes/pilulas-de-status.css");
+@import url("componentes/janela.css");
+@import url("componentes/avisos.css");
+@import url("navegacao.css");
+@import url("telas/telas.css");
+@import url("telas/componentes.css");

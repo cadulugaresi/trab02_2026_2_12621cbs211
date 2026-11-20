@@ -1,0 +1,135 @@
+@font-face {
+  font-family: "InterVariable";
+  font-style: normal;
+  font-weight: 100 900;
+  font-display: swap;
+  src: url("../fontes/InterVariable.woff2") format("woff2");
+}
+
+:root {
+  --fundo: #FBFBFA;
+  --superficie: #FFFFFF;
+  --campo: #F1F1EF;
+  --tinta: #0A0A0A;
+  --texto-secundario: #6E6D69;
+  --texto-apagado: #A3A29D;
+  --linha: rgba(0, 0, 0, 0.08);
+  --contorno: rgba(0, 0, 0, 0.14);
+  --sombra-flutuante: 0 18px 48px rgba(0, 0, 0, 0.12), 0 4px 12px rgba(0, 0, 0, 0.06);
+  --sombra-cartao-do-segmentado: 0 1px 2px rgba(0, 0, 0, 0.1), 0 3px 8px rgba(0, 0, 0, 0.05);
+  --sombra-do-botao-flutuante: 0 10px 28px rgba(0, 0, 0, 0.18), 0 2px 6px rgba(0, 0, 0, 0.1);
+  --veu: rgba(255, 255, 255, 0.55);
+  --veu-desfoque: blur(8px);
+
+  --sobre-tinta: #FFFFFF;
+  --tinta-realcada: #2B2B2A;
+  --foco: #0A0A0A;
+  --selecao-fundo: #0A0A0A;
+  --selecao-texto: #FFFFFF;
+
+  --nivel-baixo: #2F5A0E;
+  --nivel-medio: #7A4A06;
+  --nivel-alto: #8A3510;
+  --nivel-critico: #7A1414;
+
+  --estado-verde: #3B7A17;
+  --estado-amarelo: #C98A0B;
+  --estado-vermelho: #B42318;
+  --estado-cinza: #8A8A85;
+
+  --perigo: #B42318;
+  --perigo-realcado: #9A1D14;
+  --erro-fundo: #7A1414;
+  --erro-texto: #FFFFFF;
+
+  --fonte: "InterVariable", "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
+  --peso-fino: 200;
+  --peso-leve: 300;
+  --peso-normal: 400;
+  --peso-medio: 500;
+  --tamanho-saudacao: 44px;
+  --tamanho-titulo-de-tela: 32px;
+  --tamanho-titulo-de-janela: 28px;
+  --tamanho-titulo-de-secao: 20px;
+  --tamanho-corpo: 15px;
+  --tamanho-controle: 14px;
+  --tamanho-apoio: 13px;
+  --tamanho-legenda: 12px;
+  --tamanho-numero-do-contador: 28px;
+  --altura-de-linha: 1.5;
+  --espacamento-de-titulo-grande: -0.02em;
+  --espacamento-de-titulo: -0.01em;
+
+  --espaco-1: 4px;
+  --espaco-2: 8px;
+  --espaco-3: 12px;
+  --espaco-4: 16px;
+  --espaco-5: 20px;
+  --espaco-6: 24px;
+  --espaco-7: 32px;
+  --espaco-8: 40px;
+  --espaco-9: 48px;
+  --espaco-10: 64px;
+  --espaco-11: 96px;
+
+  --raio-pilula: 999px;
+  --raio-faixa-do-segmentado: 12px;
+  --raio-cartao-do-segmentado: 9px;
+  --raio-opcao: 10px;
+  --raio-bloco: 14px;
+  --raio-flutuante: 18px;
+  --raio-painel: 22px;
+  --raio-janela: 24px;
+
+  --altura-do-campo: 44px;
+  --altura-do-botao: 44px;
+  --altura-do-botao-pequeno: 36px;
+  --altura-do-segmentado: 36px;
+  --altura-da-troca-de-modo: 40px;
+  --altura-do-contador: 58px;
+  --altura-do-cadastrar: 52px;
+  --largura-da-faixa: 72px;
+  --largura-do-painel: 280px;
+  --largura-da-janela: 720px;
+  --largura-do-conteudo: 1120px;
+  --tamanho-da-bolinha: 8px;
+  --tamanho-do-icone: 20px;
+  --traco-do-icone: 1.5;
+  --traco-do-icone-fino: 1.25;
+
+  --curva-de-saida: cubic-bezier(0.23, 1, 0.32, 1);
+  --curva-de-movimento: cubic-bezier(0.77, 0, 0.175, 1);
+  --duracao-de-pressao: 160ms;
+  --duracao-de-menu: 200ms;
+  --duracao-de-janela: 220ms;
+  --duracao-do-segmentado: 270ms;
+  --duracao-de-aviso: 280ms;
+  --duracao-do-mapa: 500ms;
+  --duracao-da-contagem: 450ms;
+  --escala-ao-pressionar: 0.97;
+  --escala-do-sinal-ao-pressionar: 0.9;
+  --escala-de-menu-fechado: 0.95;
+  --escala-de-janela-fechada: 0.97;
+  --deslocamento-de-aviso-fechado: 16px;
+
+  --camada-faixa: 10;
+  --camada-inferior: 20;
+  --camada-painel: 30;
+  --camada-janela: 40;
+  --camada-flutuante: 50;
+  --camada-dica: 60;
+  --camada-avisos: 70;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --duracao-do-segmentado: 0ms;
+    --duracao-do-mapa: 0ms;
+    --duracao-da-contagem: 0ms;
+    --escala-ao-pressionar: 1;
+    --escala-do-sinal-ao-pressionar: 1;
+    --escala-de-menu-fechado: 1;
+    --escala-de-janela-fechada: 1;
+    --deslocamento-de-aviso-fechado: 0px;
+  }
+}

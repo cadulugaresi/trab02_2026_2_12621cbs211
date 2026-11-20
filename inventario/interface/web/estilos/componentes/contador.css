@@ -1,0 +1,83 @@
+.contador-com-unidade {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-3);
+}
+
+.contador {
+  display: inline-flex;
+  align-items: center;
+  justify-content: space-between;
+  min-width: 176px;
+  height: var(--altura-do-contador);
+  padding: 0 var(--espaco-2);
+  border-radius: var(--raio-pilula);
+  background: var(--tinta);
+  color: var(--sobre-tinta);
+}
+
+.contador:has(:focus-visible) {
+  outline: 2px solid var(--foco);
+  outline-offset: 3px;
+}
+
+.contador-sinal {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  transition: transform var(--duracao-de-pressao) var(--curva-de-saida);
+}
+
+.contador-sinal:focus-visible {
+  outline: none;
+}
+
+.contador-sinal:active:not(:disabled) {
+  transform: scale(var(--escala-do-sinal-ao-pressionar));
+}
+
+.contador-sinal:disabled {
+  opacity: 0.35;
+  cursor: not-allowed;
+}
+
+.contador-sinal .icone {
+  width: 22px;
+  height: 22px;
+  stroke-width: var(--traco-do-icone-fino);
+}
+
+.contador-numero {
+  min-width: 2ch;
+  margin: 0 var(--espaco-1);
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  caret-color: currentColor;
+  font-size: var(--tamanho-numero-do-contador);
+  font-weight: var(--peso-leve);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  text-align: center;
+}
+
+.contador-numero:focus-visible {
+  outline: none;
+}
+
+.contador-numero::selection {
+  background: rgba(255, 255, 255, 0.28);
+  color: var(--sobre-tinta);
+}
+
+.contador-unidade {
+  color: var(--texto-secundario);
+}

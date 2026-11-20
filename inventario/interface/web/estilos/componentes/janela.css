@@ -1,0 +1,106 @@
+.janela-camada {
+  position: fixed;
+  inset: 0;
+  z-index: var(--camada-janela);
+  display: grid;
+  place-items: center;
+  padding: var(--espaco-7);
+}
+
+.janela {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  width: min(var(--largura-da-janela), 100%);
+  max-height: min(86vh, 920px);
+  background: var(--superficie);
+  border-radius: var(--raio-janela);
+  box-shadow: var(--sombra-flutuante);
+  opacity: 0;
+  transform: scale(var(--escala-de-janela-fechada));
+  transition:
+    opacity var(--duracao-de-janela) var(--curva-de-saida),
+    transform var(--duracao-de-janela) var(--curva-de-saida);
+}
+
+.janela-camada[data-visivel] .janela {
+  opacity: 1;
+  transform: none;
+}
+
+.janela:focus-visible {
+  outline: none;
+}
+
+.janela-topo {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+  padding: var(--espaco-7) var(--espaco-6) var(--espaco-2) var(--espaco-7);
+}
+
+.janela-botao-voltar {
+  margin: 0 0 0 calc(var(--espaco-3) * -1);
+}
+
+.janela-titulos {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-1);
+  padding-top: 2px;
+}
+
+.janela-titulo {
+  font-size: var(--tamanho-titulo-de-janela);
+  font-weight: var(--peso-leve);
+  letter-spacing: var(--espacamento-de-titulo);
+  line-height: 1.2;
+  overflow-wrap: break-word;
+}
+
+.janela-acoes {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  flex: none;
+}
+
+.janela-corpo {
+  overflow-y: auto;
+  padding: var(--espaco-5) var(--espaco-7) var(--espaco-7);
+  overscroll-behavior: contain;
+}
+
+@media (max-width: 767.98px) {
+  .janela-camada {
+    padding: 0;
+  }
+
+  .janela {
+    width: 100%;
+    height: 100%;
+    max-height: none;
+    border-radius: 0;
+  }
+
+  .janela-topo {
+    flex-wrap: wrap;
+    row-gap: var(--espaco-4);
+    padding: var(--espaco-4) var(--espaco-3) var(--espaco-2) var(--espaco-5);
+  }
+
+  .janela-acoes {
+    margin-left: auto;
+  }
+
+  .janela-titulos {
+    order: 1;
+    flex-basis: 100%;
+  }
+
+  .janela-corpo {
+    padding: var(--espaco-4) var(--espaco-5) var(--espaco-8);
+  }
+}

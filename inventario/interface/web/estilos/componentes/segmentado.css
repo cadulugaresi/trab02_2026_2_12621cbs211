@@ -1,0 +1,117 @@
+.segmentado {
+  --folga-do-segmentado: 3px;
+  --raio-do-cartao: var(--raio-cartao-do-segmentado);
+  position: relative;
+  isolation: isolate;
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  width: 100%;
+  padding: var(--folga-do-segmentado);
+  border-radius: var(--raio-faixa-do-segmentado);
+  background: var(--campo);
+  font-size: var(--tamanho-controle);
+  user-select: none;
+}
+
+.segmentado:has(.segmentado-entrada:focus-visible) {
+  outline: 2px solid var(--foco);
+  outline-offset: 2px;
+}
+
+.segmentado-opcao {
+  position: relative;
+  z-index: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-2);
+  min-width: 0;
+  height: var(--altura-do-segmentado);
+  padding: 0 var(--espaco-3);
+  color: var(--texto-secundario);
+  white-space: nowrap;
+  cursor: pointer;
+}
+
+.segmentado-opcao > span,
+.segmentado-camada-escolhida > span > span {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.segmentado-opcao .icone,
+.segmentado-camada-escolhida .icone {
+  width: 16px;
+  height: 16px;
+}
+
+.segmentado-entrada {
+  position: absolute;
+  inset: 0;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+.segmentado-cartao {
+  position: absolute;
+  z-index: 1;
+  top: var(--folga-do-segmentado);
+  bottom: var(--folga-do-segmentado);
+  left: var(--folga-do-segmentado);
+  width: calc((100% - 2 * var(--folga-do-segmentado)) / var(--quantidade-de-opcoes));
+  border-radius: var(--raio-do-cartao);
+  background: var(--superficie);
+  box-shadow: var(--sombra-cartao-do-segmentado);
+  pointer-events: none;
+  transition: transform var(--duracao-do-segmentado) var(--curva-de-movimento);
+}
+
+.segmentado-camada-escolhida {
+  position: absolute;
+  z-index: 2;
+  inset: var(--folga-do-segmentado);
+  display: grid;
+  grid-auto-flow: column;
+  grid-auto-columns: 1fr;
+  color: var(--tinta);
+  font-weight: var(--peso-medio);
+  pointer-events: none;
+  transition: clip-path var(--duracao-do-segmentado) var(--curva-de-movimento);
+}
+
+.segmentado-camada-escolhida > span {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--espaco-2);
+  min-width: 0;
+  padding: 0 var(--espaco-3);
+  white-space: nowrap;
+}
+
+.segmentado-troca-de-modo {
+  --raio-do-cartao: var(--raio-pilula);
+  border-radius: var(--raio-pilula);
+}
+
+.segmentado-troca-de-modo .segmentado-opcao {
+  height: var(--altura-da-troca-de-modo);
+}
+
+.segmentado-troca-de-modo .segmentado-cartao {
+  background: var(--tinta);
+  box-shadow: none;
+}
+
+.segmentado-troca-de-modo .segmentado-camada-escolhida {
+  color: var(--sobre-tinta);
+}
+
+@media (max-width: 767.98px) {
+  .segmentado-opcao {
+    height: 44px;
+  }
+}
