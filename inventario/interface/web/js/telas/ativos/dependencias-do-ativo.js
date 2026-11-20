@@ -1,5 +1,6 @@
 import { cadastrarDependencia, listarAtivos, removerDependencia } from "../../api.js";
 import { mostrarAvisoDeSucesso } from "../../componentes/aviso-de-sucesso.js";
+import { abrirBalaoDeExclusao } from "../../componentes/balao-de-exclusao.js";
 import { criarBotao, liberarBotao, marcarBotaoComoOcupado } from "../../componentes/botoes.js";
 import { criarLinhaDeCampo, mostrarAjuda } from "../../componentes/campos.js";
 import { criarControleDeslizante } from "../../componentes/controle-deslizante.js";
@@ -98,27 +99,31 @@ function criarItemDeDependencia(vizinho, ativoQuePodeRemover, acoes) {
     }),
   ]);
   if (ativoQuePodeRemover !== null) {
-    item.append(criarBotaoDeRemover(ativoQuePodeRemover, vizinho.ativo, acoes));
+    item.append(criarBotaoDeRemover(ativoQuePodeRemover, vizinho, acoes));
   }
   return item;
 }
 
-function criarBotaoDeRemover(ativo, ativoDoQualDepende, acoes) {
+function criarBotaoDeRemover(ativo, vizinho, acoes) {
   const botao = criarBotao({
     variacao: "icone",
     icone: "fechar",
-    rotuloAcessivel: `Remover a dependência de ${ativoDoQualDepende.nome}`,
+    rotuloAcessivel: `Remover a dependência de ${vizinho.ativo.nome}`,
   });
-  botao.addEventListener("click", async () => {
-    botao.disabled = true;
-    try {
-      await removerDependencia(ativo.id, ativoDoQualDepende.id);
-      mostrarAvisoDeSucesso("Dependência removida");
-      await acoes.recarregar();
-    } catch (erro) {
-      botao.disabled = false;
-      acoes.mostrarFalha(erro);
-    }
+  const fracao = formatarFracao(vizinho.fracao);
+  botao.addEventListener("click", () => {
+    abrirBalaoDeExclusao({
+      ancora: botao,
+      pergunta: `Remover a dependência de ${vizinho.ativo.nome}?`,
+      explicacao: `${ativo.nome} deixará de depender deste ativo, e a fração ${fracao} será perdida.`,
+      textoDoBotaoDeConfirmar: "Remover",
+      textoEnquantoConfirma: "Removendo…",
+      aoConfirmar: async () => {
+        await removerDependencia(ativo.id, vizinho.ativo.id);
+        mostrarAvisoDeSucesso("Dependência removida");
+        await acoes.recarregar();
+      },
+    });
   });
   return botao;
 }
