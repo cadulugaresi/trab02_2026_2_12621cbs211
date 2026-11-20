@@ -1,0 +1,54 @@
+.pilulas-de-filtro {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+}
+
+.pilula-de-filtro {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  height: var(--altura-do-botao-pequeno);
+  padding: 0 14px;
+  border: 0;
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--contorno);
+  color: var(--tinta);
+  font-size: var(--tamanho-controle);
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform var(--duracao-de-pressao) var(--curva-de-saida);
+}
+
+.pilula-de-filtro:active {
+  transform: scale(var(--escala-ao-pressionar));
+}
+
+.pilula-de-filtro .icone {
+  width: 17px;
+  height: 17px;
+}
+
+.pilulas-de-filtro-preenchida .pilula-de-filtro[aria-pressed="true"] {
+  background: var(--tinta);
+  color: var(--sobre-tinta);
+  box-shadow: none;
+}
+
+.pilulas-de-filtro-contorno .pilula-de-filtro[aria-pressed="true"] {
+  box-shadow: inset 0 0 0 1.5px var(--tinta);
+  font-weight: var(--peso-medio);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .pilula-de-filtro[aria-pressed="false"]:hover {
+    background: var(--campo);
+  }
+}
+
+@media (max-width: 767.98px) {
+  .pilula-de-filtro {
+    height: 44px;
+  }
+}

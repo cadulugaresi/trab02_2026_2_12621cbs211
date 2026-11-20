@@ -2,8 +2,8 @@ import { criarElemento, gerarIdentificador } from "../elementos.js";
 import { normalizarParaBusca } from "../formatos.js";
 import { criarIcone } from "../icones.js";
 import { abrirFlutuante } from "./flutuante.js";
+import { encontrarOpcao } from "../opcoes.js";
 import { calcularIndicePeloTeclado, criarItemDeOpcao, marcarItemAtivo } from "./lista-de-opcoes.js";
-import { encontrarOpcao } from "./menu-suspenso.js";
 
 export function criarMenuComBusca({
   rotulo,
@@ -48,6 +48,7 @@ export function criarMenuComBusca({
   function escolher(item) {
     menuAberto.fechar();
     definirValor(item.valor);
+    gatilho.dispatchEvent(new Event("change", { bubbles: true }));
     if (aoMudar) {
       aoMudar(item.valor, item);
     }

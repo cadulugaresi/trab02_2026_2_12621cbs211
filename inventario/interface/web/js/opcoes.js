@@ -11,6 +11,20 @@ import {
 
 let opcoesCarregando = null;
 
+export function encontrarOpcao(opcoes, valor) {
+  for (const opcao of opcoes) {
+    if (opcao.valor === valor) {
+      return opcao;
+    }
+  }
+  return undefined;
+}
+
+export function rotuloDaOpcao(opcoes, valor) {
+  const opcao = encontrarOpcao(opcoes, valor);
+  return opcao ? opcao.rotulo : String(valor);
+}
+
 export function carregarOpcoes() {
   if (opcoesCarregando === null) {
     opcoesCarregando = buscarOpcoes()

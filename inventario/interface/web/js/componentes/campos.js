@@ -1,4 +1,5 @@
 import { criarElemento, gerarIdentificador } from "../elementos.js";
+import { lerNumeroDigitado } from "../formatos.js";
 import { criarBotaoDeAjuda } from "./ajuda.js";
 
 export function criarCampoDeTexto({
@@ -20,6 +21,45 @@ export function criarCampoDeTexto({
   });
   campo.value = valor;
   return campo;
+}
+
+export function criarCampoDeNumero({ nome, valor = null, unidade, inteiro = false, textoDeExemplo }) {
+  const campo = criarElemento("input", {
+    type: "text",
+    classe: "campo campo-de-numero",
+    id: gerarIdentificador("numero"),
+    name: nome,
+    inputmode: inteiro ? "numeric" : "decimal",
+    placeholder: textoDeExemplo,
+    autocomplete: "off",
+    maxlength: "15",
+  });
+  const elemento = unidade
+    ? criarElemento("div", { classe: "campo-com-unidade" }, [
+        campo,
+        criarElemento("span", { classe: "unidade-do-campo", texto: unidade }),
+      ])
+    : campo;
+
+  function definirValor(novoValor) {
+    campo.value = novoValor === null ? "" : String(novoValor).replace(".", ",");
+  }
+
+  function obterValor() {
+    const numero = lerNumeroDigitado(campo.value);
+    if (numero === null || (inteiro && !Number.isInteger(numero))) {
+      return null;
+    }
+    return numero;
+  }
+
+  campo.addEventListener("input", () => {
+    const caracteresAceitos = inteiro ? /\D/g : /[^\d.,]/g;
+    campo.value = campo.value.replace(caracteresAceitos, "");
+  });
+
+  definirValor(valor);
+  return { elemento, campo, obterValor, definirValor };
 }
 
 export function criarLinhaDeCampo({

@@ -1,5 +1,6 @@
 import { criarElemento, gerarIdentificador } from "../elementos.js";
 import { criarIcone } from "../icones.js";
+import { encontrarOpcao } from "../opcoes.js";
 import { abrirListaDeOpcoes } from "./lista-de-opcoes.js";
 
 export function criarMenuSuspenso({ rotulo, opcoes = [], valor = null, textoQuandoVazio, aoMudar }) {
@@ -50,6 +51,7 @@ export function criarMenuSuspenso({ rotulo, opcoes = [], valor = null, textoQuan
       valorEscolhido: valorAtual,
       aoEscolher: (opcao) => {
         definirValor(opcao.valor);
+        gatilho.dispatchEvent(new Event("change", { bubbles: true }));
         if (aoMudar) {
           aoMudar(opcao.valor, opcao);
         }
@@ -74,13 +76,4 @@ export function criarMenuSuspenso({ rotulo, opcoes = [], valor = null, textoQuan
 
   definirValor(valorAtual);
   return { elemento: gatilho, obterValor: () => valorAtual, definirValor, definirOpcoes };
-}
-
-export function encontrarOpcao(opcoes, valor) {
-  for (const opcao of opcoes) {
-    if (opcao.valor === valor) {
-      return opcao;
-    }
-  }
-  return undefined;
 }

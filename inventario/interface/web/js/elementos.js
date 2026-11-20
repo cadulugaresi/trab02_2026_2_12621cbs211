@@ -7,6 +7,19 @@ export function criarElemento(etiqueta, propriedades = {}, filhos = []) {
   return elemento;
 }
 
+export function criarElementoSvg(etiqueta, atributos = {}, filhos = []) {
+  const elemento = document.createElementNS("http://www.w3.org/2000/svg", etiqueta);
+  for (const [nome, valor] of Object.entries(atributos)) {
+    if (nome === "texto") {
+      elemento.textContent = valor;
+    } else {
+      elemento.setAttribute(nome, valor);
+    }
+  }
+  adicionarFilhos(elemento, filhos);
+  return elemento;
+}
+
 export function adicionarFilhos(elemento, filhos) {
   for (const filho of filhos) {
     if (filho === null || filho === undefined || filho === false) {

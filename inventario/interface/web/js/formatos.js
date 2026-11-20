@@ -23,6 +23,10 @@ export function formatarRisco(valor) {
   return FORMATO_DE_DUAS_CASAS.format(valor);
 }
 
+export function formatarFracao(fracao) {
+  return FORMATO_DE_DUAS_CASAS.format(fracao);
+}
+
 export function formatarNumero(valor) {
   return FORMATO_DE_ATE_DUAS_CASAS.format(valor);
 }

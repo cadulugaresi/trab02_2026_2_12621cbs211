@@ -172,6 +172,12 @@ a {
   background: var(--nivel-critico);
 }
 
+.esqueleto {
+  display: block;
+  border-radius: var(--raio-opcao);
+  background: var(--campo);
+}
+
 .veu {
   position: absolute;
   inset: 0;

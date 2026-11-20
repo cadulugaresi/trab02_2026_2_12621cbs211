@@ -51,6 +51,24 @@
   outline-offset: 0;
 }
 
+.campo-com-unidade {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+}
+
+.campo-com-unidade .campo {
+  width: 140px;
+}
+
+.campo-de-numero {
+  font-variant-numeric: tabular-nums;
+}
+
+.unidade-do-campo {
+  color: var(--texto-secundario);
+}
+
 .campo-gatilho {
   display: flex;
   align-items: center;

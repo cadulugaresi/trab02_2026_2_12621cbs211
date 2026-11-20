@@ -1,7 +1,7 @@
 import { criarElemento } from "../elementos.js";
 import { criarIcone } from "../icones.js";
+import { encontrarOpcao } from "../opcoes.js";
 import { abrirListaDeOpcoes } from "./lista-de-opcoes.js";
-import { encontrarOpcao } from "./menu-suspenso.js";
 
 export function criarPilulaDeStatus({ rotulo, cor }) {
   return criarElemento("span", { classe: "pilula-de-status" }, [
