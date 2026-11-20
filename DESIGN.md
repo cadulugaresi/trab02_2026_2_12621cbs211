@@ -1,6 +1,6 @@
 # DESIGN.md — Tema macOS/iOS
 
-Decisões tomadas com o Cadu em rodadas de perguntas e referências. As imagens citadas estão em `docs/referencias-frontend/`. Quando este arquivo e uma referência discordarem, vale este arquivo.
+Decisões tomadas com o Cadu em rodadas de perguntas e referências. As imagens citadas estão em `docs/referencias/`. Quando este arquivo e uma referência discordarem, vale este arquivo.
 
 ## 1. Clima
 
@@ -59,7 +59,14 @@ Erro da API: fundo `#7A1414`, texto branco.
 
 ## 4. Ícones
 
-Linha fina, traço uniforme, sem quadrado de fundo (r3-01). Usar um único conjunto (por exemplo, Tabler Icons ou Lucide, com os SVGs copiados para dentro do projeto). Tipos: notebook, servidor, roteador e impressora, cada um com um ícone fixo.
+Linha fina, traço uniforme, sem quadrado de fundo (r3-01). Conjunto único: Lucide, com os SVGs copiados para dentro do projeto. Tipos: notebook, servidor, roteador e impressora, cada um com um ícone fixo.
+
+Ícones do menu, escolhidos pelo que cada tela faz:
+- **Início:** mostrador (`gauge`)
+- **Ativos:** monitor e celular (`monitor-smartphone`)
+- **Vulnerabilidades:** inseto (`bug`)
+- **Vínculos:** cabo (`cable`)
+- **Ranking de riscos:** lista numerada (`list-ordered`)
 
 ## 5. Componentes-assinatura
 
@@ -72,8 +79,9 @@ As duas variações têm todas as opções com a mesma largura, ocupando quase t
   - na opção escolhida, texto `--tinta` peso 500; nas outras, texto `--texto-secundario`
 - **Troca de modo** (Lista | Mapa, Por ativo | Por vulnerabilidade):
   - faixa `--campo` em pílula e cartão **preto** em pílula
-  - na opção escolhida, texto **branco** e ícone; o texto nunca some sob o cartão: ele fica por cima, em branco
-  - nas outras, texto e ícone em cinza (r7-01)
+  - só texto, sem ícone antes da palavra
+  - na opção escolhida, texto **branco**; o texto nunca some sob o cartão: ele fica por cima, em branco
+  - nas outras, texto em cinza (r7-01)
 
 O GIF de segmentado aninhado ("Free / Premium") foi testado e rejeitado.
 
@@ -126,10 +134,11 @@ Usado para portas e RAM (r6-01):
 ### Desktop
 
 - **Faixa de ícones:** sempre visível à esquerda, branca, com uma linha preta vertical marcando a tela ativa (r3-01).
-- **Painel lateral:** a faixa abre um painel com os nomes das telas. O fundo da página fica atrás do `--veu`. Não há contadores.
+- **Painel lateral:** a faixa abre um painel com os nomes das telas. O painel cobre a faixa e começa junto da borda esquerda da tela, sem espaço reservado para a faixa. O fundo da página fica atrás do `--veu`. Não há contadores.
 - **Cadastrar:**
   - pílula preta flutuando embaixo, no centro da tela, com um "+" num círculo branco
   - ao clicar, abre um balão que sai do botão, com "Novo ativo" e "Nova vulnerabilidade"
+  - some nas telas de formulário (Novo ativo, Editar ativo, Nova vulnerabilidade e Editar vulnerabilidade), que já têm Salvar e Cancelar no topo
   - cada opção leva à tela de cadastro dela
 
 ### Celular
@@ -195,11 +204,14 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 
 **Detalhes do ativo:**
 - **Topo:** nome grande; tipo, setor e responsável pequenos embaixo.
-- **Risco:** três números soltos (próprio, herdado e efetivo), em peso leve.
+- **Ficha:** logo abaixo, numa linha pequena em cinza, a pílula de status do ativo, o fator de exposição e os campos do tipo (ex.: "32 GB de RAM", "4 TB de armazenamento").
+- **Risco:** três números soltos (próprio, herdado e efetivo), em peso leve, cada um com o seu rótulo centralizado embaixo. Trocar o status de um vínculo ou desvincular recalcula os números ao vivo (seção 8).
 - **Vulnerabilidades vinculadas:** bolinha e nome do nível, nome, CVSS e pílula de status de tratamento, que pode ser trocada ali mesmo. Cada uma tem um "x" para desvincular.
 - **Dependências:**
-  - **Listas:** "Depende de" e "Dependem dele", com mini mapa só dos vizinhos.
+  - **Mini mapa:** só dos vizinhos. Quem depende do ativo fica à esquerda e os ativos dos quais ele depende ficam à direita, com as setas indo da esquerda para a direita. Clicar num vizinho abre os detalhes dele na mesma janela, com a seta de voltar.
+  - **Listas:** "Dependem dele" à esquerda e "Depende de" à direita, na mesma ordem do mini mapa, cada item com o ícone do tipo, o nome e a fração.
   - **Adicionar:** o botão "Adicionar dependência" abre uma linha ali mesmo, com o menu com busca do ativo, o controle deslizante da fração e o aviso "A fração precisa ser menor que 0,3" (o valor restante é calculado).
+  - **Remover:** cada item de "Depende de" tem um "x" para remover a dependência, igual ao desvincular das vulnerabilidades. A fração não é editada na janela.
 
 **Detalhes da vulnerabilidade:**
 - **Topo:** nome grande; CVSS e nível em destaque.
@@ -238,13 +250,17 @@ São telas normais, não janelas.
   - **Campo de número comum:** velocidade, tela e armazenamento.
 - **Fator de exposição:** controle deslizante de 0 a 2, começando no padrão do tipo (o valor vem de `/opcoes`), com o número ao lado.
 - **Setor e status:** menu que abre embaixo do campo.
-- **Validação:** o formulário evita erros antes de enviar (`required`, faixas de valor, opções vindas de `/opcoes`). O erro da API aparece na faixa vermelha (5.7).
+- **ID do ativo:** no Novo ativo, campo vazio e obrigatório, preenchido pelo usuário (número inteiro maior que zero), sem sugestão pronta. Se o ID já existir, a mensagem da API aparece na faixa vermelha e o campo fica em destaque. No Editar, o ID aparece só como texto, embaixo do título.
+- **Validação:** o formulário evita erros antes de enviar (`required`, faixas de valor, opções vindas de `/opcoes`), com as mesmas mensagens do domínio. Cada campo com erro mostra a mensagem embaixo dele, e o erro some assim que o campo é alterado. O erro da API aparece na faixa vermelha (5.7).
 - **Editar:** usa a mesma tela, já preenchida. Ao trocar o tipo, o fator volta ao padrão do tipo novo, que é a mesma regra do menu do terminal.
+- **Depois de salvar:** volta para a lista de ativos com a janela de detalhes do ativo salvo aberta por cima, e o aviso de sucesso sobe ("Ativo cadastrado" ou "Ativo atualizado").
+- **Cancelar:** volta para a tela anterior (a lista ou a janela do ativo).
 
 ## 8. Animação
 
 Valores das skills emil-design-eng e animate:
-- **Quando animar:** só em resposta a uma ação, ou seja, ao abrir o balão do Cadastrar, os menus suspensos, as janelas e o menu lateral, ao mover o cartão do segmentado, ao puxar o mapa para o centro e ao mostrar o aviso de sucesso.
+- **Quando animar:** só em resposta a uma ação, ou seja, ao abrir o balão do Cadastrar, os menus suspensos, as janelas e o menu lateral, ao mover o cartão do segmentado, ao puxar o mapa para o centro, ao mostrar o aviso de sucesso e ao recontar os números de risco.
+- **Números de risco ao vivo:** quando o status de um vínculo muda ou uma vulnerabilidade é desvinculada, os números de risco contam rapidinho até o valor novo, subindo ou descendo (~450ms, saída suave, algarismos tabulares). Ao abrir a tela ou a janela, o número já aparece pronto, sem contar a partir do zero. Com `prefers-reduced-motion`, o número só troca.
 - **Balões e menus suspensos:**
   - **Origem:** saem do botão que os abriu (`transform-origin` no botão).
   - **Movimento:** de `scale(0.95)` com `opacity: 0` até o tamanho normal, em 150–250ms, com `cubic-bezier(0.23, 1, 0.32, 1)`.
