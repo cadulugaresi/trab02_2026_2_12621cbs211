@@ -32,8 +32,13 @@ export function criarNumeroAnimado({ valor, formatar, classe }) {
     quadroAgendado = requestAnimationFrame(desenharQuadro);
   }
 
+  function mostrarTexto(texto) {
+    cancelAnimationFrame(quadroAgendado);
+    elemento.textContent = texto;
+  }
+
   mostrar(valor);
-  return { elemento, animarAte };
+  return { elemento, animarAte, mostrarTexto };
 }
 
 function lerDuracaoDaContagem() {

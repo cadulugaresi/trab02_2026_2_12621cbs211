@@ -207,6 +207,10 @@
   gap: var(--espaco-3);
 }
 
+.area-inferior[data-sem-cadastrar] .botao-cadastrar {
+  display: none;
+}
+
 .circulo-do-mais {
   display: grid;
   place-items: center;

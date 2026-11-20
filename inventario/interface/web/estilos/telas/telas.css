@@ -10,6 +10,40 @@
   font-size: var(--tamanho-corpo);
 }
 
+.cabecalho-com-acoes {
+  flex-direction: row;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--espaco-6);
+}
+
+.cabecalho-de-tela-textos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  min-width: 0;
+}
+
+.estado-vazio {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+  padding: var(--espaco-9) 0;
+}
+
+.estado-vazio-titulo {
+  font-size: var(--tamanho-titulo-de-secao);
+  font-weight: var(--peso-medio);
+}
+
+.estado-vazio .texto-de-apoio {
+  max-width: 52ch;
+  font-size: var(--tamanho-corpo);
+  margin-bottom: var(--espaco-2);
+}
+
 .tela-provisoria {
   display: flex;
   flex-direction: column;

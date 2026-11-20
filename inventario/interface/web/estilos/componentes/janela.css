@@ -73,6 +73,19 @@
   overscroll-behavior: contain;
 }
 
+.secao-da-janela + .secao-da-janela {
+  margin-top: var(--espaco-8);
+}
+
+.secao-da-janela-titulo {
+  margin-bottom: var(--espaco-3);
+}
+
+.secao-da-janela-vazia {
+  padding: var(--espaco-4) 0;
+  border-top: 1px solid var(--linha);
+}
+
 @media (max-width: 767.98px) {
   .janela-camada {
     padding: 0;

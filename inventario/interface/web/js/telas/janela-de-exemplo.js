@@ -3,13 +3,11 @@ import { abrirBalaoDeExclusao } from "../componentes/balao-de-exclusao.js";
 import { criarBotao } from "../componentes/botoes.js";
 import { criarFaixaDeErro } from "../componentes/faixa-de-erro.js";
 import { abrirJanela } from "../componentes/janela.js";
-import { criarNumeroAnimado } from "../componentes/numero-animado.js";
-import { criarPilulaDeStatusTrocavel } from "../componentes/pilula-de-status.js";
+import { criarLinhaDeVinculo } from "../componentes/linha-de-vinculo.js";
+import { criarNumerosDeRisco } from "../componentes/numeros-de-risco.js";
 import { criarElemento } from "../elementos.js";
-import { formatarCvss, formatarRisco } from "../formatos.js";
 import { carregarOpcoes } from "../opcoes.js";
 import { navegarPara } from "../roteador.js";
-import { NIVEIS_DE_GRAVIDADE } from "../rotulos.js";
 
 const ATIVO_DE_EXEMPLO = {
   id: 3,
@@ -25,11 +23,9 @@ const ATIVO_DE_EXEMPLO = {
 
 export function abrirJanelaDeExemplo(parametros, { pedirFechamento }) {
   const vinculos = copiarVinculosDoExemplo();
-  const riscos = criarNumerosDeRisco(
-    calcularRiscoProprio(vinculos, null),
-    ATIVO_DE_EXEMPLO.riscoHerdado,
-  );
-  const corpo = criarElemento("div", {}, [riscos.elemento]);
+  const riscos = criarNumerosDeRisco(calcularRiscos(vinculos, null));
+  const faixa = criarFaixaDeErro();
+  const corpo = criarElemento("div", {}, [faixa.elemento, riscos.elemento]);
 
   abrirJanela({
     titulo: ATIVO_DE_EXEMPLO.nome,
@@ -42,19 +38,10 @@ export function abrirJanelaDeExemplo(parametros, { pedirFechamento }) {
   carregarOpcoes()
     .then((opcoes) => {
       const valorDeCorrigida = encontrarValorDeCorrigida(opcoes.statusDeTratamento);
-      function recalcularRiscos() {
-        riscos.animarAte(
-          calcularRiscoProprio(vinculos, valorDeCorrigida),
-          ATIVO_DE_EXEMPLO.riscoHerdado,
-        );
-      }
+      const recalcularRiscos = () => riscos.animarAte(calcularRiscos(vinculos, valorDeCorrigida));
       corpo.append(criarListaDeVinculos(vinculos, opcoes.statusDeTratamento, recalcularRiscos));
     })
-    .catch((erro) => {
-      const faixa = criarFaixaDeErro();
-      corpo.append(faixa.elemento);
-      faixa.mostrar(erro.message);
-    });
+    .catch((erro) => faixa.mostrar(erro.message));
 }
 
 function copiarVinculosDoExemplo() {
@@ -74,14 +61,16 @@ function encontrarValorDeCorrigida(opcoesDeStatus) {
   return null;
 }
 
-function calcularRiscoProprio(vinculos, valorDeCorrigida) {
+function calcularRiscos(vinculos, valorDeCorrigida) {
   let somaDosCvss = 0;
   for (const vinculo of vinculos) {
     if (vinculo.statusDeTratamento !== valorDeCorrigida) {
       somaDosCvss += vinculo.cvss;
     }
   }
-  return Math.round(somaDosCvss * ATIVO_DE_EXEMPLO.fatorDeExposicao * 100) / 100;
+  const proprio = Math.round(somaDosCvss * ATIVO_DE_EXEMPLO.fatorDeExposicao * 100) / 100;
+  const herdado = ATIVO_DE_EXEMPLO.riscoHerdado;
+  return { proprio, herdado, efetivo: proprio + herdado };
 }
 
 function criarAcoesDaJanela(pedirFechamento) {
@@ -113,93 +102,36 @@ function criarAcoesDaJanela(pedirFechamento) {
   return [botaoDeEditar, botaoDeExcluir];
 }
 
-function criarNumerosDeRisco(riscoProprio, riscoHerdado) {
-  const proprio = criarNumeroDeRisco("Risco próprio", riscoProprio);
-  const herdado = criarNumeroDeRisco("Risco herdado", riscoHerdado);
-  const efetivo = criarNumeroDeRisco("Risco efetivo", riscoProprio + riscoHerdado);
-  const elemento = criarElemento("div", { classe: "numeros-de-risco" }, [
-    proprio.elemento,
-    herdado.elemento,
-    efetivo.elemento,
-  ]);
-
-  function animarAte(novoRiscoProprio, novoRiscoHerdado) {
-    proprio.numero.animarAte(novoRiscoProprio);
-    herdado.numero.animarAte(novoRiscoHerdado);
-    efetivo.numero.animarAte(novoRiscoProprio + novoRiscoHerdado);
-  }
-
-  return { elemento, animarAte };
-}
-
-function criarNumeroDeRisco(rotulo, valorInicial) {
-  const numero = criarNumeroAnimado({
-    valor: valorInicial,
-    formatar: formatarRisco,
-    classe: "numero-de-risco-valor",
-  });
-  const elemento = criarElemento("div", { classe: "numero-de-risco" }, [
-    numero.elemento,
-    criarElemento("span", { classe: "legenda", texto: rotulo }),
-  ]);
-  return { elemento, numero };
-}
-
 function criarListaDeVinculos(vinculos, opcoesDeStatus, recalcularRiscos) {
   const lista = criarElemento("ul");
   for (const vinculo of vinculos) {
-    lista.append(criarLinhaDeVinculo(vinculo, vinculos, opcoesDeStatus, recalcularRiscos));
+    lista.append(
+      criarLinhaDeVinculo({
+        nome: vinculo.nome,
+        cvss: vinculo.cvss,
+        nivel: vinculo.nivel,
+        opcoesDeStatus: opcoesDeStatus,
+        statusDeTratamento: vinculo.statusDeTratamento,
+        aoMudarStatus: (novoStatus) => {
+          vinculo.statusDeTratamento = novoStatus;
+          recalcularRiscos();
+        },
+        aoDesvincular: () => {
+          vinculos.splice(vinculos.indexOf(vinculo), 1);
+          recalcularRiscos();
+          mostrarAvisoDeSucesso("Vulnerabilidade desvinculada");
+        },
+        aoFalhar: () => {},
+      }),
+    );
   }
-  return criarElemento("section", {}, [
+  return criarElemento("section", { classe: "secao-da-janela" }, [
     criarElemento("h3", {
-      classe: "titulo-de-secao lista-de-vinculos-titulo",
+      classe: "titulo-de-secao secao-da-janela-titulo",
       texto: "Vulnerabilidades vinculadas",
     }),
     lista,
   ]);
-}
-
-function criarLinhaDeVinculo(vinculo, vinculos, opcoesDeStatus, recalcularRiscos) {
-  const pilula = criarPilulaDeStatusTrocavel({
-    rotulo: `Status de ${vinculo.nome}`,
-    opcoes: opcoesDeStatus,
-    valor: vinculo.statusDeTratamento,
-    aoMudar: (novoStatus) => {
-      vinculo.statusDeTratamento = novoStatus;
-      recalcularRiscos();
-    },
-  });
-  const linha = criarElemento("li", { classe: "linha-de-vinculo" });
-  const botaoDeDesvincular = criarBotao({
-    variacao: "icone",
-    icone: "fechar",
-    rotuloAcessivel: `Desvincular ${vinculo.nome}`,
-    aoClicar: () => {
-      vinculos.splice(vinculos.indexOf(vinculo), 1);
-      linha.remove();
-      recalcularRiscos();
-      mostrarAvisoDeSucesso("Vulnerabilidade desvinculada");
-    },
-  });
-
-  linha.append(
-    criarElemento("span", { classe: "linha-de-vinculo-nivel" }, [
-      criarElemento("span", { classe: "bolinha", "data-nivel": vinculo.nivel }),
-      criarElemento("span", {
-        classe: "nome-do-nivel",
-        "data-nivel": vinculo.nivel,
-        texto: NIVEIS_DE_GRAVIDADE[vinculo.nivel].rotulo,
-      }),
-    ]),
-    criarElemento("span", { classe: "linha-de-vinculo-nome", texto: vinculo.nome }),
-    criarElemento("span", {
-      classe: "linha-de-vinculo-cvss",
-      texto: `CVSS ${formatarCvss(vinculo.cvss)}`,
-    }),
-    pilula.elemento,
-    botaoDeDesvincular,
-  );
-  return linha;
 }
 
 function esperar(milissegundos) {

@@ -1,30 +1,50 @@
+import {
+  montarTelaDeEditarAtivo,
+  montarTelaDeNovoAtivo,
+} from "./telas/ativos/formulario-de-ativo.js";
+import { abrirJanelaDoAtivo } from "./telas/ativos/janela-do-ativo.js";
+import { montarTelaDeAtivos } from "./telas/ativos/lista-de-ativos.js";
 import { montarTelaDeComponentes } from "./telas/componentes.js";
 import { abrirJanelaDeExemplo } from "./telas/janela-de-exemplo.js";
 import { criarTelaProvisoria, montarTelaNaoEncontrada } from "./telas/provisoria.js";
 
 export const ROTAS = [
-  { caminho: "/", titulo: "Início", montar: criarTelaProvisoria("Início", 4) },
-  { caminho: "/ativos", titulo: "Ativos", montar: criarTelaProvisoria("Ativos", 2) },
-  { caminho: "/ativos/mapa", titulo: "Mapa", montar: criarTelaProvisoria("Mapa dos ativos", 4) },
-  { caminho: "/ativos/novo", titulo: "Novo ativo", montar: criarTelaProvisoria("Novo ativo", 2) },
   {
-    caminho: "/ativos/:id",
-    titulo: "Ativo",
-    montar: criarTelaProvisoria("Detalhes do ativo", 2),
+    caminho: "/",
+    titulo: "Início",
+    serveDeFundo: true,
+    montar: criarTelaProvisoria("Início", 4),
   },
+  { caminho: "/ativos", titulo: "Ativos", serveDeFundo: true, montar: montarTelaDeAtivos },
+  {
+    caminho: "/ativos/mapa",
+    titulo: "Mapa",
+    serveDeFundo: true,
+    montar: criarTelaProvisoria("Mapa dos ativos", 4),
+  },
+  {
+    caminho: "/ativos/novo",
+    titulo: "Novo ativo",
+    escondeCadastrar: true,
+    montar: montarTelaDeNovoAtivo,
+  },
+  { caminho: "/ativos/:id", fundo: "/ativos", janela: abrirJanelaDoAtivo },
   {
     caminho: "/ativos/:id/editar",
     titulo: "Editar ativo",
-    montar: criarTelaProvisoria("Editar ativo", 2),
+    escondeCadastrar: true,
+    montar: montarTelaDeEditarAtivo,
   },
   {
     caminho: "/vulnerabilidades",
     titulo: "Vulnerabilidades",
+    serveDeFundo: true,
     montar: criarTelaProvisoria("Vulnerabilidades", 3),
   },
   {
     caminho: "/vulnerabilidades/novo",
     titulo: "Nova vulnerabilidade",
+    escondeCadastrar: true,
     montar: criarTelaProvisoria("Nova vulnerabilidade", 3),
   },
   {
@@ -35,11 +55,27 @@ export const ROTAS = [
   {
     caminho: "/vulnerabilidades/:id/editar",
     titulo: "Editar vulnerabilidade",
+    escondeCadastrar: true,
     montar: criarTelaProvisoria("Editar vulnerabilidade", 3),
   },
-  { caminho: "/vinculos", titulo: "Vínculos", montar: criarTelaProvisoria("Vínculos", 3) },
-  { caminho: "/ranking", titulo: "Ranking", montar: criarTelaProvisoria("Ranking de riscos", 4) },
-  { caminho: "/componentes", titulo: "Componentes", montar: montarTelaDeComponentes },
+  {
+    caminho: "/vinculos",
+    titulo: "Vínculos",
+    serveDeFundo: true,
+    montar: criarTelaProvisoria("Vínculos", 3),
+  },
+  {
+    caminho: "/ranking",
+    titulo: "Ranking",
+    serveDeFundo: true,
+    montar: criarTelaProvisoria("Ranking de riscos", 4),
+  },
+  {
+    caminho: "/componentes",
+    titulo: "Componentes",
+    serveDeFundo: true,
+    montar: montarTelaDeComponentes,
+  },
   { caminho: "/componentes/janela", fundo: "/componentes", janela: abrirJanelaDeExemplo },
 ];
 

@@ -8,6 +8,7 @@ let telaMontada = null;
 let enderecosDaJanela = [];
 let janelaAbriuSobreUmaTela = false;
 let ehAPrimeiraNavegacao = true;
+let navegacoesDentroDoSistema = 0;
 
 export function iniciarRoteador({ rotas, rotaNaoEncontrada, aoTrocarDeTela }) {
   rotasConhecidas = rotas;
@@ -19,6 +20,18 @@ export function iniciarRoteador({ rotas, rotaNaoEncontrada, aoTrocarDeTela }) {
 
 export function navegarPara(endereco) {
   location.hash = `#${endereco}`;
+}
+
+export function trocarEnderecoPor(endereco) {
+  location.replace(`#${endereco}`);
+}
+
+export function voltarOuIrPara(endereco) {
+  if (navegacoesDentroDoSistema > 0) {
+    history.back();
+    return;
+  }
+  trocarEnderecoPor(endereco);
 }
 
 export function atualizarTelaAtual() {
@@ -37,6 +50,9 @@ function tratarMudancaDeEndereco() {
   } else {
     sairDaJanela();
     mostrarTela(endereco, rota, parametros, busca);
+  }
+  if (!ehAPrimeiraNavegacao) {
+    navegacoesDentroDoSistema += 1;
   }
   ehAPrimeiraNavegacao = false;
 }
@@ -116,12 +132,13 @@ function mostrarTela(endereco, rota, parametros, busca) {
   const controleDaTela = rota.montar(tela, { parametros, busca }) ?? {};
   telaMontada = {
     endereco: endereco,
+    serveDeFundo: rota.serveDeFundo === true,
     desmontar: controleDaTela.desmontar,
     atualizar: controleDaTela.atualizar,
   };
 
   document.title = `${rota.titulo} · Inventário`;
-  avisarTrocaDeTela(separarEndereco(endereco).caminho);
+  avisarTrocaDeTela(separarEndereco(endereco).caminho, rota);
   window.scrollTo(0, 0);
   if (!ehAPrimeiraNavegacao) {
     conteudo.focus({ preventScroll: true });
@@ -129,10 +146,11 @@ function mostrarTela(endereco, rota, parametros, busca) {
 }
 
 function mostrarRotaDeJanela(endereco, rota, parametros) {
-  if (telaMontada === null) {
+  if (telaMontada === null || !telaMontada.serveDeFundo) {
     const rotaDoFundo = encontrarRota(rota.fundo);
     mostrarTela(rota.fundo, rotaDoFundo.rota, rotaDoFundo.parametros, new URLSearchParams());
     janelaAbriuSobreUmaTela = false;
+    enderecosDaJanela = [];
   } else if (enderecosDaJanela.length === 0) {
     janelaAbriuSobreUmaTela = true;
   }
@@ -141,6 +159,7 @@ function mostrarRotaDeJanela(endereco, rota, parametros) {
   rota.janela(parametros, {
     pedirFechamento: fecharJanelaPeloEndereco,
     voltar: enderecosDaJanela.length > 1 ? () => history.back() : undefined,
+    continuaAberta: () => lerEnderecoAtual() === endereco,
   });
 }
 

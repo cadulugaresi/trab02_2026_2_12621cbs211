@@ -27,11 +27,14 @@ export function montarNavegacao() {
   montarAreaInferior();
 }
 
-export function marcarTelaAtiva(caminho) {
+export function marcarTelaAtiva(caminho, rota) {
   caminhoDaTelaAtual = caminho;
   for (const link of linksDasTelas) {
     marcarLink(link, caminho);
   }
+  document
+    .getElementById("area-inferior")
+    .toggleAttribute("data-sem-cadastrar", rota.escondeCadastrar === true);
 }
 
 function marcarLink(link, caminho) {
