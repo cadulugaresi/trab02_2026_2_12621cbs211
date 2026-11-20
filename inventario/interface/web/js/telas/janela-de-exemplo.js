@@ -6,7 +6,7 @@ import { abrirJanela } from "../componentes/janela.js";
 import { criarLinhaDeVinculo } from "../componentes/linha-de-vinculo.js";
 import { criarNumerosDeRisco } from "../componentes/numeros-de-risco.js";
 import { criarElemento } from "../elementos.js";
-import { carregarOpcoes } from "../opcoes.js";
+import { carregarOpcoes, encontrarValorPeloNome } from "../opcoes.js";
 import { navegarPara } from "../roteador.js";
 
 const ATIVO_DE_EXEMPLO = {
@@ -37,7 +37,7 @@ export function abrirJanelaDeExemplo(parametros, { pedirFechamento }) {
 
   carregarOpcoes()
     .then((opcoes) => {
-      const valorDeCorrigida = encontrarValorDeCorrigida(opcoes.statusDeTratamento);
+      const valorDeCorrigida = encontrarValorPeloNome(opcoes.statusDeTratamento, "CORRIGIDA");
       const recalcularRiscos = () => riscos.animarAte(calcularRiscos(vinculos, valorDeCorrigida));
       corpo.append(criarListaDeVinculos(vinculos, opcoes.statusDeTratamento, recalcularRiscos));
     })
@@ -50,15 +50,6 @@ function copiarVinculosDoExemplo() {
     vinculos.push({ ...vulnerabilidade });
   }
   return vinculos;
-}
-
-function encontrarValorDeCorrigida(opcoesDeStatus) {
-  for (const opcao of opcoesDeStatus) {
-    if (opcao.nome === "CORRIGIDA") {
-      return opcao.valor;
-    }
-  }
-  return null;
 }
 
 function calcularRiscos(vinculos, valorDeCorrigida) {
@@ -112,6 +103,7 @@ function criarListaDeVinculos(vinculos, opcoesDeStatus, recalcularRiscos) {
         nivel: vinculo.nivel,
         opcoesDeStatus: opcoesDeStatus,
         statusDeTratamento: vinculo.statusDeTratamento,
+        perguntaDoDesvinculo: `Desvincular ${vinculo.nome} de ${ATIVO_DE_EXEMPLO.nome}?`,
         aoMudarStatus: (novoStatus) => {
           vinculo.statusDeTratamento = novoStatus;
           recalcularRiscos();

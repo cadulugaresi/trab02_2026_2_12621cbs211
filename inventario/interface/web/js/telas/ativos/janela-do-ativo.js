@@ -23,15 +23,11 @@ import {
   descreverCamposDoTipo,
   indexarAtivosPorId,
 } from "./apresentacao-do-ativo.js";
+import { abrirJanelaCarregando, abrirJanelaDeErro } from "../janela-carregando.js";
 import { criarSecaoDeDependencias } from "./dependencias-do-ativo.js";
 
 export function abrirJanelaDoAtivo({ id }, controles) {
-  abrirJanela({
-    titulo: "Carregando ativo…",
-    corpo: criarEsqueletoDaJanela(),
-    aoPedirFechamento: controles.pedirFechamento,
-    aoVoltar: controles.voltar,
-  });
+  abrirJanelaCarregando("Carregando ativo…", controles);
 
   carregarDadosDoAtivo(id)
     .then((dados) => {
@@ -41,7 +37,13 @@ export function abrirJanelaDoAtivo({ id }, controles) {
     })
     .catch((erro) => {
       if (controles.continuaAberta()) {
-        mostrarErroAoAbrir(erro, id, controles);
+        abrirJanelaDeErro({
+          erro: erro,
+          tituloQuandoNaoExiste: "Ativo não encontrado",
+          tituloQuandoFalha: "Não foi possível abrir o ativo",
+          aoTentarDeNovo: () => abrirJanelaDoAtivo({ id }, controles),
+          controles: controles,
+        });
       }
     });
 }
@@ -55,28 +57,6 @@ async function carregarDadosDoAtivo(idAtivo) {
   const riscos = await buscarRiscosDoAtivo(idAtivo);
   const ativosPorId = indexarAtivosPorId(ativos);
   return { opcoes, ativosPorId, ativo: ativosPorId.get(idAtivo), vulnerabilidades, riscos };
-}
-
-function mostrarErroAoAbrir(erro, idAtivo, controles) {
-  const ativoNaoExiste = erro.status === 404;
-  const faixa = criarFaixaDeErro();
-  const corpo = criarElemento("div", { classe: "erro-da-janela" }, [faixa.elemento]);
-  if (!ativoNaoExiste) {
-    corpo.append(
-      criarBotao({
-        texto: "Tentar de novo",
-        variacao: "secundario",
-        aoClicar: () => abrirJanelaDoAtivo({ id: idAtivo }, controles),
-      }),
-    );
-  }
-  abrirJanela({
-    titulo: ativoNaoExiste ? "Ativo não encontrado" : "Não foi possível abrir o ativo",
-    corpo: corpo,
-    aoPedirFechamento: controles.pedirFechamento,
-    aoVoltar: controles.voltar,
-  });
-  faixa.mostrar(erro.message);
 }
 
 function mostrarAtivo({ opcoes, ativosPorId, ativo, vulnerabilidades, riscos }, controles) {
@@ -154,11 +134,23 @@ function criarSecaoDeVulnerabilidades({
   mostrarFalha,
 }) {
   const lista = criarElemento("ul", { classe: "lista-de-vinculos" });
-  const textoQuandoVazia = criarElemento("p", {
-    classe: "texto-de-apoio secao-da-janela-vazia",
-    texto: "Nenhuma vulnerabilidade vinculada a este ativo.",
-    hidden: vulnerabilidades.length > 0,
-  });
+  const textoQuandoVazia = criarElemento(
+    "div",
+    { classe: "secao-da-janela-vazia", hidden: vulnerabilidades.length > 0 },
+    [
+      criarElemento("p", {
+        classe: "texto-de-apoio",
+        texto: "Nenhuma vulnerabilidade vinculada a este ativo.",
+      }),
+      criarBotao({
+        texto: "Vincular vulnerabilidade",
+        variacao: "secundario",
+        icone: "mais",
+        pequeno: true,
+        aoClicar: () => navegarPara(`/vinculos?ativo=${ativo.id}`),
+      }),
+    ],
+  );
 
   for (const vulnerabilidade of vulnerabilidades) {
     lista.append(
@@ -166,8 +158,10 @@ function criarSecaoDeVulnerabilidades({
         nome: vulnerabilidade.nome_vulnerabilidade,
         cvss: vulnerabilidade.cvss,
         nivel: vulnerabilidade.nivel,
+        enderecoDoNome: `/vulnerabilidades/${vulnerabilidade.id_vulnerabilidade}`,
         opcoesDeStatus: opcoes.statusDeTratamento,
         statusDeTratamento: vulnerabilidade.status_tratamento,
+        perguntaDoDesvinculo: `Desvincular ${vulnerabilidade.nome_vulnerabilidade} de ${ativo.nome}?`,
         aoMudarStatus: async (novoStatus) => {
           await atualizarStatusDoVinculo(ativo.id, vulnerabilidade.id_vulnerabilidade, novoStatus);
           atualizarRiscos();
@@ -224,10 +218,3 @@ function criarAcoesDoAtivo(ativo, controles) {
   return [botaoDeEditar, botaoDeExcluir];
 }
 
-function criarEsqueletoDaJanela() {
-  return criarElemento("div", { classe: "esqueleto-da-janela", "aria-hidden": "true" }, [
-    criarElemento("span", { classe: "esqueleto esqueleto-numeros" }),
-    criarElemento("span", { classe: "esqueleto esqueleto-texto" }),
-    criarElemento("span", { classe: "esqueleto esqueleto-texto" }),
-  ]);
-}

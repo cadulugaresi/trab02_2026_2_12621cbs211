@@ -1,0 +1,95 @@
+.lista-de-vulnerabilidades > li + li {
+  border-top: 1px solid var(--linha);
+}
+
+.linha-de-vulnerabilidade {
+  display: grid;
+  grid-template-columns: 88px minmax(0, 1fr) auto 18px;
+  align-items: center;
+  gap: var(--espaco-4);
+  min-height: 72px;
+  margin: 0 calc(var(--espaco-3) * -1);
+  padding: var(--espaco-3);
+  border-radius: var(--raio-bloco);
+  color: var(--tinta);
+  text-decoration: none;
+}
+
+.linha-de-vulnerabilidade-cvss {
+  color: var(--texto-secundario);
+  font-size: var(--tamanho-apoio);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .linha-de-vulnerabilidade:hover {
+    background: var(--campo);
+  }
+
+  .linha-de-vulnerabilidade:hover .linha-de-ativo-seta {
+    color: var(--tinta);
+  }
+}
+
+.destaque-do-cvss {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-6);
+  margin-bottom: var(--espaco-8);
+}
+
+.destaque-do-nivel {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  margin-bottom: 20px;
+  font-size: 17px;
+}
+
+.destaque-do-nivel .bolinha {
+  width: 10px;
+  height: 10px;
+}
+
+.item-de-afetado {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--espaco-3);
+  min-height: 52px;
+  border-top: 1px solid var(--linha);
+}
+
+.lista-de-afetados-apagada .item-de-dependencia-nome,
+.lista-de-afetados-apagada .item-de-dependencia-nome .icone,
+.lista-de-afetados-apagada .pilula-de-status {
+  color: var(--texto-apagado);
+}
+
+.lista-de-afetados-apagada .bolinha {
+  opacity: 0.5;
+}
+
+@media (max-width: 767.98px) {
+  .linha-de-vulnerabilidade {
+    grid-template-columns: minmax(0, 1fr) 18px;
+  }
+
+  .linha-de-vulnerabilidade .linha-de-vinculo-nivel {
+    grid-row: 2;
+  }
+
+  .linha-de-vulnerabilidade .linha-de-ativo-textos {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .linha-de-vulnerabilidade .linha-de-vulnerabilidade-cvss {
+    grid-row: 3;
+  }
+
+  .linha-de-vulnerabilidade .linha-de-ativo-seta {
+    grid-column: 2;
+    grid-row: 1;
+  }
+}

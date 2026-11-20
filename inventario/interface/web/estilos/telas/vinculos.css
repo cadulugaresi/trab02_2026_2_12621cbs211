@@ -1,0 +1,105 @@
+.troca-de-agrupamento {
+  width: 340px;
+}
+
+.criacao-de-vinculo {
+  display: grid;
+  grid-template-columns: minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 0.8fr) auto;
+  align-items: start;
+  gap: var(--espaco-4);
+  margin-bottom: var(--espaco-8);
+  padding: var(--espaco-6) 0;
+  border-top: 1px solid var(--linha);
+  border-bottom: 1px solid var(--linha);
+}
+
+.criacao-de-vinculo-botao {
+  padding-top: calc(24px + var(--espaco-2));
+}
+
+.criacao-de-vinculo-aviso {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+  margin-bottom: var(--espaco-8);
+  padding: var(--espaco-6) 0;
+  border-top: 1px solid var(--linha);
+  border-bottom: 1px solid var(--linha);
+}
+
+.criacao-de-vinculo-aviso-botoes {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--espaco-2);
+}
+
+.grupos-de-vinculos {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-8);
+}
+
+.cabecalho-do-grupo {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--espaco-4);
+  margin-bottom: var(--espaco-2);
+}
+
+.cabecalho-do-grupo-titulo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  min-width: 0;
+  font-size: 17px;
+  font-weight: var(--peso-medio);
+}
+
+.cabecalho-do-grupo-titulo a {
+  overflow: hidden;
+  color: var(--tinta);
+  text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.cabecalho-do-grupo-titulo .icone {
+  color: var(--texto-secundario);
+}
+
+.cabecalho-do-grupo .legenda {
+  flex: none;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .cabecalho-do-grupo-titulo a:hover {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .troca-de-agrupamento {
+    width: 100%;
+  }
+
+  .criacao-de-vinculo {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .criacao-de-vinculo-botao {
+    padding-top: 0;
+  }
+
+  .criacao-de-vinculo-botao .botao {
+    width: 100%;
+  }
+
+  .cabecalho-do-grupo {
+    flex-direction: column;
+    gap: var(--espaco-1);
+  }
+}

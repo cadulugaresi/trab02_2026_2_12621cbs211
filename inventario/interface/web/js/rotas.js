@@ -7,6 +7,13 @@ import { montarTelaDeAtivos } from "./telas/ativos/lista-de-ativos.js";
 import { montarTelaDeComponentes } from "./telas/componentes.js";
 import { abrirJanelaDeExemplo } from "./telas/janela-de-exemplo.js";
 import { criarTelaProvisoria, montarTelaNaoEncontrada } from "./telas/provisoria.js";
+import { montarTelaDeVinculos } from "./telas/vinculos/tela-de-vinculos.js";
+import {
+  montarTelaDeEditarVulnerabilidade,
+  montarTelaDeNovaVulnerabilidade,
+} from "./telas/vulnerabilidades/formulario-de-vulnerabilidade.js";
+import { abrirJanelaDaVulnerabilidade } from "./telas/vulnerabilidades/janela-da-vulnerabilidade.js";
+import { montarTelaDeVulnerabilidades } from "./telas/vulnerabilidades/lista-de-vulnerabilidades.js";
 
 export const ROTAS = [
   {
@@ -39,30 +46,30 @@ export const ROTAS = [
     caminho: "/vulnerabilidades",
     titulo: "Vulnerabilidades",
     serveDeFundo: true,
-    montar: criarTelaProvisoria("Vulnerabilidades", 3),
+    montar: montarTelaDeVulnerabilidades,
   },
   {
     caminho: "/vulnerabilidades/novo",
     titulo: "Nova vulnerabilidade",
     escondeCadastrar: true,
-    montar: criarTelaProvisoria("Nova vulnerabilidade", 3),
+    montar: montarTelaDeNovaVulnerabilidade,
   },
   {
     caminho: "/vulnerabilidades/:id",
-    titulo: "Vulnerabilidade",
-    montar: criarTelaProvisoria("Detalhes da vulnerabilidade", 3),
+    fundo: "/vulnerabilidades",
+    janela: abrirJanelaDaVulnerabilidade,
   },
   {
     caminho: "/vulnerabilidades/:id/editar",
     titulo: "Editar vulnerabilidade",
     escondeCadastrar: true,
-    montar: criarTelaProvisoria("Editar vulnerabilidade", 3),
+    montar: montarTelaDeEditarVulnerabilidade,
   },
   {
     caminho: "/vinculos",
     titulo: "Vínculos",
     serveDeFundo: true,
-    montar: criarTelaProvisoria("Vínculos", 3),
+    montar: montarTelaDeVinculos,
   },
   {
     caminho: "/ranking",

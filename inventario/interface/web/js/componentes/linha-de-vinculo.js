@@ -1,6 +1,8 @@
 import { criarElemento } from "../elementos.js";
 import { formatarCvss } from "../formatos.js";
+import { criarIcone } from "../icones.js";
 import { NIVEIS_DE_GRAVIDADE } from "../rotulos.js";
+import { abrirBalaoDeExclusao } from "./balao-de-exclusao.js";
 import { criarBotao } from "./botoes.js";
 import { criarPilulaDeStatusTrocavel } from "./pilula-de-status.js";
 
@@ -8,14 +10,19 @@ export function criarLinhaDeVinculo({
   nome,
   cvss,
   nivel,
+  iconeDoAtivo,
   opcoesDeStatus,
   statusDeTratamento,
   enderecoDoNome,
+  perguntaDoDesvinculo,
   aoMudarStatus,
   aoDesvincular,
   aoFalhar,
 }) {
-  const linha = criarElemento("li", { classe: "linha-de-vinculo" });
+  const mostraUmAtivo = iconeDoAtivo !== undefined;
+  const linha = criarElemento("li", {
+    classe: mostraUmAtivo ? "linha-de-vinculo linha-de-vinculo-de-ativo" : "linha-de-vinculo",
+  });
   const pilula = criarPilulaDeStatusTrocavel({
     rotulo: `Status de ${nome}`,
     opcoes: opcoesDeStatus,
@@ -29,32 +36,48 @@ export function criarLinhaDeVinculo({
     rotuloAcessivel: `Desvincular ${nome}`,
   });
 
-  botaoDeDesvincular.addEventListener("click", async () => {
-    botaoDeDesvincular.disabled = true;
-    try {
-      await aoDesvincular();
-      linha.remove();
-    } catch (erro) {
-      botaoDeDesvincular.disabled = false;
-      aoFalhar(erro);
-    }
+  botaoDeDesvincular.addEventListener("click", () => {
+    abrirBalaoDeExclusao({
+      ancora: botaoDeDesvincular,
+      pergunta: perguntaDoDesvinculo,
+      explicacao: "O status de tratamento deste vínculo será perdido.",
+      textoDoBotaoDeConfirmar: "Desvincular",
+      textoEnquantoConfirma: "Desvinculando…",
+      aoConfirmar: async () => {
+        await aoDesvincular();
+        linha.remove();
+      },
+    });
   });
 
-  linha.append(
-    criarElemento("span", { classe: "linha-de-vinculo-nivel" }, [
-      criarElemento("span", { classe: "bolinha", "data-nivel": nivel }),
+  if (mostraUmAtivo) {
+    linha.append(
+      criarIcone(iconeDoAtivo, "linha-de-vinculo-icone"),
+      criarNomeDoVinculo(nome, enderecoDoNome),
+    );
+  } else {
+    linha.append(
+      criarNivelDoVinculo(nivel),
+      criarNomeDoVinculo(nome, enderecoDoNome),
       criarElemento("span", {
-        classe: "nome-do-nivel",
-        "data-nivel": nivel,
-        texto: NIVEIS_DE_GRAVIDADE[nivel].rotulo,
+        classe: "linha-de-vinculo-cvss",
+        texto: `CVSS ${formatarCvss(cvss)}`,
       }),
-    ]),
-    criarNomeDoVinculo(nome, enderecoDoNome),
-    criarElemento("span", { classe: "linha-de-vinculo-cvss", texto: `CVSS ${formatarCvss(cvss)}` }),
-    pilula.elemento,
-    botaoDeDesvincular,
-  );
+    );
+  }
+  linha.append(pilula.elemento, botaoDeDesvincular);
   return linha;
+}
+
+function criarNivelDoVinculo(nivel) {
+  return criarElemento("span", { classe: "linha-de-vinculo-nivel" }, [
+    criarElemento("span", { classe: "bolinha", "data-nivel": nivel }),
+    criarElemento("span", {
+      classe: "nome-do-nivel",
+      "data-nivel": nivel,
+      texto: NIVEIS_DE_GRAVIDADE[nivel].rotulo,
+    }),
+  ]);
 }
 
 function criarNomeDoVinculo(nome, enderecoDoNome) {
