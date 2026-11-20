@@ -1,21 +1,31 @@
 import { buscarAtivo, cadastrarAtivo, editarAtivo } from "../../api.js";
 import { mostrarAvisoDeSucesso } from "../../componentes/aviso-de-sucesso.js";
-import { criarBotao, liberarBotao, marcarBotaoComoOcupado } from "../../componentes/botoes.js";
+import { liberarBotao, marcarBotaoComoOcupado } from "../../componentes/botoes.js";
 import {
   criarCampoDeNumero,
   criarCampoDeTexto,
-  criarLinhaDeCampo,
+  criarLinhaComValidacao,
   mostrarAjuda,
 } from "../../componentes/campos.js";
 import { criarContador } from "../../componentes/contador.js";
 import { criarControleDeslizante } from "../../componentes/controle-deslizante.js";
-import { criarFaixaDeErro } from "../../componentes/faixa-de-erro.js";
 import { criarMenuSuspenso } from "../../componentes/menu-suspenso.js";
 import { criarElemento, gerarIdentificador } from "../../elementos.js";
 import { formatarNumero } from "../../formatos.js";
 import { criarIcone } from "../../icones.js";
 import { carregarOpcoes, encontrarOpcao } from "../../opcoes.js";
-import { trocarEnderecoPor, voltarOuIrPara } from "../../roteador.js";
+import { trocarEnderecoPor } from "../../roteador.js";
+import {
+  validarEscolha,
+  validarInteiroPositivo,
+  validarNumeroPositivo,
+  validarTextoObrigatorio,
+} from "../../validacoes.js";
+import {
+  criarEstruturaDoFormulario,
+  criarGrupoDoFormulario,
+  mostrarErrosNasLinhas,
+} from "../estrutura-do-formulario.js";
 import { rotuloDoTipo } from "./apresentacao-do-ativo.js";
 
 const MENOR_FATOR = 0.1;
@@ -38,55 +48,31 @@ export function montarTelaDeEditarAtivo(tela, { parametros }) {
 
 function montarFormularioDeAtivo(tela, idEmEdicao) {
   const ehEdicao = idEmEdicao !== null;
-  const enderecoDeVolta = ehEdicao ? `/ativos/${idEmEdicao}` : "/ativos";
-  const faixa = criarFaixaDeErro();
-  const subtitulo = criarElemento("p", { classe: "texto-de-apoio" });
-  const areaDosCampos = criarElemento("div", { classe: "campos-do-formulario" });
-  const botaoDeSalvar = criarBotao({ texto: "Salvar ativo" });
-  botaoDeSalvar.type = "submit";
-  botaoDeSalvar.disabled = true;
-
-  const formulario = criarElemento("form", { classe: "formulario-de-ajustes", novalidate: true }, [
-    criarElemento("header", { classe: "cabecalho-do-formulario" }, [
-      criarElemento("div", { classe: "cabecalho-de-tela-textos" }, [
-        criarElemento("h1", {
-          classe: "titulo-de-tela",
-          texto: ehEdicao ? "Editar ativo" : "Novo ativo",
-        }),
-        subtitulo,
-      ]),
-      criarElemento("div", { classe: "cabecalho-do-formulario-botoes" }, [
-        criarBotao({
-          texto: "Cancelar",
-          variacao: "secundario",
-          aoClicar: () => voltarOuIrPara(enderecoDeVolta),
-        }),
-        botaoDeSalvar,
-      ]),
-    ]),
-    faixa.elemento,
-    areaDosCampos,
-  ]);
-  tela.append(formulario);
+  const estrutura = criarEstruturaDoFormulario({
+    titulo: ehEdicao ? "Editar ativo" : "Novo ativo",
+    textoDoBotao: "Salvar ativo",
+    enderecoDeVolta: ehEdicao ? `/ativos/${idEmEdicao}` : "/ativos",
+  });
+  tela.append(estrutura.formulario);
 
   Promise.all([carregarOpcoes(), ehEdicao ? buscarAtivo(idEmEdicao) : null])
     .then(([opcoes, ativo]) => {
       const campos = criarCampos(opcoes, ativo);
-      areaDosCampos.append(campos.elemento);
-      subtitulo.textContent = ehEdicao
+      estrutura.areaDosCampos.append(campos.elemento);
+      estrutura.subtitulo.textContent = ehEdicao
         ? `ID ${ativo.id} · ${ativo.nome}`
         : "Escolha o tipo e preencha os dados do ativo";
-      botaoDeSalvar.disabled = false;
-      formulario.addEventListener("submit", (evento) => {
+      estrutura.botaoDeSalvar.disabled = false;
+      estrutura.formulario.addEventListener("submit", (evento) => {
         evento.preventDefault();
-        salvar(campos, idEmEdicao, faixa, botaoDeSalvar);
+        salvar(campos, idEmEdicao, estrutura);
       });
     })
-    .catch((erro) => faixa.mostrar(erro.message));
+    .catch((erro) => estrutura.faixa.mostrar(erro.message));
 }
 
-async function salvar(campos, idEmEdicao, faixa, botaoDeSalvar) {
-  faixa.esconder();
+async function salvar(campos, idEmEdicao, estrutura) {
+  estrutura.faixa.esconder();
   campos.limparErros();
   const erros = campos.validar();
   if (erros.length > 0) {
@@ -94,9 +80,9 @@ async function salvar(campos, idEmEdicao, faixa, botaoDeSalvar) {
     return;
   }
 
-  const dadosDoAtivo = campos.montarDadosParaAApi();
-  marcarBotaoComoOcupado(botaoDeSalvar, "Salvando…");
+  marcarBotaoComoOcupado(estrutura.botaoDeSalvar, "Salvando…");
   try {
+    const dadosDoAtivo = campos.montarDadosParaAApi();
     const ativoSalvo =
       idEmEdicao === null
         ? await cadastrarAtivo(dadosDoAtivo)
@@ -104,8 +90,8 @@ async function salvar(campos, idEmEdicao, faixa, botaoDeSalvar) {
     mostrarAvisoDeSucesso(idEmEdicao === null ? "Ativo cadastrado" : "Ativo atualizado");
     trocarEnderecoPor(`/ativos/${ativoSalvo.id}`);
   } catch (erro) {
-    liberarBotao(botaoDeSalvar);
-    faixa.mostrar(erro.message);
+    liberarBotao(estrutura.botaoDeSalvar);
+    estrutura.faixa.mostrar(erro.message);
     if (erro.message === MENSAGEM_DE_ID_REPETIDO) {
       campos.mostrarErros([{ campo: "id", mensagem: "Escolha outro ID" }]);
     }
@@ -153,15 +139,15 @@ function criarCampos(opcoes, ativo) {
     }
   }
 
-  const gruposDeIdentificacao = ehEdicao
+  const linhasDeIdentificacao = ehEdicao
     ? [linhas.nome.elemento, linhas.responsavel.elemento]
     : [linhas.id.elemento, linhas.nome.elemento, linhas.responsavel.elemento];
 
   const elemento = criarElemento("div", {}, [
-    criarGrupo("Tipo", [escolhaDeTipo.elemento, escolhaDeTipo.textoDeAjuda]),
-    criarGrupo("Identificação", gruposDeIdentificacao),
-    criarGrupo("Situação", [linhas.setor.elemento, linhas.status.elemento]),
-    criarGrupo("Exposição", [linhas.fator.elemento]),
+    criarGrupoDoFormulario("Tipo", [escolhaDeTipo.elemento, escolhaDeTipo.textoDeAjuda]),
+    criarGrupoDoFormulario("Identificação", linhasDeIdentificacao),
+    criarGrupoDoFormulario("Situação", [linhas.setor.elemento, linhas.status.elemento]),
+    criarGrupoDoFormulario("Exposição", [linhas.fator.elemento]),
     grupoDosDetalhes,
   ]);
 
@@ -187,22 +173,26 @@ function criarCampos(opcoes, ativo) {
   }
 
   function mostrarErros(erros) {
+    const errosDosCampos = [];
     for (const erro of erros) {
       if (erro.campo === "tipo") {
         mostrarAjuda(escolhaDeTipo.textoDeAjuda, erro.mensagem, true);
-        continue;
+      } else {
+        errosDosCampos.push(erro);
       }
-      linhas[erro.campo].alvo.setAttribute("aria-invalid", "true");
-      mostrarAjuda(linhas[erro.campo].textoDeAjuda, erro.mensagem, true);
     }
-    focarPrimeiroErro(erros, linhas, escolhaDeTipo);
+    if (errosDosCampos.length > 0) {
+      mostrarErrosNasLinhas(errosDosCampos, linhas);
+    }
+    if (erros[0].campo === "tipo") {
+      escolhaDeTipo.elemento.querySelector("input").focus();
+    }
   }
 
   function limparErros() {
     mostrarAjuda(escolhaDeTipo.textoDeAjuda, "");
     for (const linha of Object.values(linhas)) {
-      linha.alvo.removeAttribute("aria-invalid");
-      mostrarAjuda(linha.textoDeAjuda, linha.ajudaPadrao);
+      linha.limparErro();
     }
     mostrarAjudaDoFator();
   }
@@ -228,29 +218,20 @@ function criarCampos(opcoes, ativo) {
 
 function criarControles(opcoes, ativo) {
   const valores = ativo ?? {};
-  const nome = criarCampoDeTexto({
-    nome: "nome",
-    valor: valores.nome ?? "",
-    textoDeExemplo: "Ex.: Notebook do Rafael",
-    tamanhoMaximo: 80,
-  });
-  const responsavel = criarCampoDeTexto({
-    nome: "responsavel",
-    valor: valores.responsavel ?? "",
-    textoDeExemplo: "Ex.: Rafael Torres",
-    tamanhoMaximo: 80,
-  });
-  const sistemaOperacional = criarCampoDeTexto({
-    nome: "sistema_operacional",
-    valor: valores.sistema_operacional ?? "",
-    textoDeExemplo: "Ex.: Linux",
-    tamanhoMaximo: 60,
-  });
-
   return {
     id: criarCampoDeNumero({ nome: "id", inteiro: true, textoDeExemplo: "Ex.: 7" }),
-    nome: nome,
-    responsavel: responsavel,
+    nome: criarCampoDeTexto({
+      nome: "nome",
+      valor: valores.nome ?? "",
+      textoDeExemplo: "Ex.: Notebook do Rafael",
+      tamanhoMaximo: 80,
+    }),
+    responsavel: criarCampoDeTexto({
+      nome: "responsavel",
+      valor: valores.responsavel ?? "",
+      textoDeExemplo: "Ex.: Rafael Torres",
+      tamanhoMaximo: 80,
+    }),
     setor: criarMenuSuspenso({
       rotulo: "Setor",
       opcoes: opcoes.setores,
@@ -270,7 +251,12 @@ function criarControles(opcoes, ativo) {
       valor: valores.fator_exposicao ?? 1,
       formatar: formatarNumero,
     }),
-    sistemaOperacional: sistemaOperacional,
+    sistemaOperacional: criarCampoDeTexto({
+      nome: "sistema_operacional",
+      valor: valores.sistema_operacional ?? "",
+      textoDeExemplo: "Ex.: Linux",
+      tamanhoMaximo: 60,
+    }),
     tela: criarCampoDeNumero({ nome: "tela", valor: valores.tela ?? null, unidade: "polegadas" }),
     ram: criarContador({ rotulo: "Memória RAM", valor: valores.ram ?? 8, unidade: "GB" }),
     armazenamento: criarCampoDeNumero({
@@ -302,71 +288,54 @@ function criarControles(opcoes, ativo) {
 
 function criarLinhas(controles, ehEdicao) {
   const linhas = {
-    nome: criarLinha("Nome", controles.nome, controles.nome, "Como o ativo aparece nas listas"),
-    responsavel: criarLinha("Responsável", controles.responsavel, controles.responsavel, ""),
-    setor: criarLinha("Setor", controles.setor.elemento, controles.setor.elemento, ""),
-    status: criarLinha("Status", controles.status.elemento, controles.status.elemento, ""),
-    fator: criarLinha("Fator de exposição", controles.fator.elemento, controles.fator.campo, "", {
+    nome: criarLinhaComValidacao({
+      rotulo: "Nome",
+      controle: controles.nome,
+      ajuda: "Como o ativo aparece nas listas",
+    }),
+    responsavel: criarLinhaComValidacao({ rotulo: "Responsável", controle: controles.responsavel }),
+    setor: criarLinhaComValidacao({ rotulo: "Setor", controle: controles.setor.elemento }),
+    status: criarLinhaComValidacao({ rotulo: "Status", controle: controles.status.elemento }),
+    fator: criarLinhaComValidacao({
+      rotulo: "Fator de exposição",
+      controle: controles.fator.elemento,
+      alvoDoRotulo: controles.fator.campo,
       explicacaoDoConceito:
         "O fator de exposição multiplica o risco próprio do ativo: quanto mais exposto à rede, " +
         "maior ele é. Vai de 0,1 a 2 e começa no padrão do tipo.",
     }),
-    sistemaOperacional: criarLinha(
-      "Sistema operacional",
-      controles.sistemaOperacional,
-      controles.sistemaOperacional,
-      "",
-    ),
-    tela: criarLinha("Tela", controles.tela.elemento, controles.tela.campo, ""),
-    ram: criarLinha("Memória RAM", controles.ram.elemento, controles.ram.campo, ""),
-    armazenamento: criarLinha(
-      "Armazenamento",
-      controles.armazenamento.elemento,
-      controles.armazenamento.campo,
-      "",
-    ),
-    portas: criarLinha("Portas", controles.portas.elemento, controles.portas.campo, ""),
-    velocidade: criarLinha("Velocidade", controles.velocidade.elemento, controles.velocidade.campo, ""),
-    cor: criarLinha("Cor", controles.cor.elemento, controles.cor.elemento, ""),
-    tecnologia: criarLinha("Tecnologia", controles.tecnologia.elemento, controles.tecnologia.elemento, ""),
+    sistemaOperacional: criarLinhaComValidacao({
+      rotulo: "Sistema operacional",
+      controle: controles.sistemaOperacional,
+    }),
+    tela: criarLinhaDeControleComposto("Tela", controles.tela),
+    ram: criarLinhaDeControleComposto("Memória RAM", controles.ram),
+    armazenamento: criarLinhaDeControleComposto("Armazenamento", controles.armazenamento),
+    portas: criarLinhaDeControleComposto("Portas", controles.portas),
+    velocidade: criarLinhaDeControleComposto("Velocidade", controles.velocidade),
+    cor: criarLinhaComValidacao({ rotulo: "Cor", controle: controles.cor.elemento }),
+    tecnologia: criarLinhaComValidacao({
+      rotulo: "Tecnologia",
+      controle: controles.tecnologia.elemento,
+    }),
   };
   if (!ehEdicao) {
-    linhas.id = criarLinha(
-      "ID",
-      controles.id.elemento,
-      controles.id.campo,
-      "Número inteiro que identifica o ativo",
-    );
+    linhas.id = criarLinhaComValidacao({
+      rotulo: "ID",
+      controle: controles.id.elemento,
+      alvoDoRotulo: controles.id.campo,
+      ajuda: "Número inteiro que identifica o ativo",
+    });
   }
   return linhas;
 }
 
-function criarLinha(rotulo, controle, alvo, ajudaPadrao, extras = {}) {
-  const linha = criarLinhaDeCampo({
+function criarLinhaDeControleComposto(rotulo, controleComposto) {
+  return criarLinhaComValidacao({
     rotulo: rotulo,
-    controle: controle,
-    alvoDoRotulo: alvo,
-    ajuda: ajudaPadrao,
-    explicacaoDoConceito: extras.explicacaoDoConceito,
+    controle: controleComposto.elemento,
+    alvoDoRotulo: controleComposto.campo,
   });
-
-  function tirarErroDoCampo() {
-    if (alvo.getAttribute("aria-invalid") === "true") {
-      alvo.removeAttribute("aria-invalid");
-      mostrarAjuda(linha.textoDeAjuda, ajudaPadrao);
-    }
-  }
-
-  linha.elemento.addEventListener("input", tirarErroDoCampo);
-  linha.elemento.addEventListener("change", tirarErroDoCampo);
-  return { ...linha, alvo, ajudaPadrao };
-}
-
-function criarGrupo(titulo, filhos) {
-  return criarElemento("section", { classe: "grupo-de-ajustes" }, [
-    criarElemento("h2", { classe: "titulo-de-secao", texto: titulo }),
-    ...filhos,
-  ]);
 }
 
 function criarEscolhaDeTipo(tipos, tipoInicial, aoEscolher) {
@@ -430,40 +399,4 @@ function montarCamposDoTipo(tipo, controles) {
     return { portas: controles.portas.obterValor(), velocidade: controles.velocidade.obterValor() };
   }
   return { cor: controles.cor.obterValor(), tecnologia: controles.tecnologia.obterValor() };
-}
-
-function validarTextoObrigatorio(erros, campo, texto) {
-  const textoLimpo = texto.trim();
-  if (textoLimpo === "") {
-    erros.push({ campo, mensagem: "Este campo não pode ser vazio" });
-  } else if (/^\d+$/.test(textoLimpo)) {
-    erros.push({ campo, mensagem: "Este campo não pode ser composto apenas por números" });
-  }
-}
-
-function validarEscolha(erros, campo, valor) {
-  if (valor === null) {
-    erros.push({ campo, mensagem: "Escolha uma opção" });
-  }
-}
-
-function validarNumeroPositivo(erros, campo, numero) {
-  if (numero === null || numero <= 0) {
-    erros.push({ campo, mensagem: "Digite um número maior que zero" });
-  }
-}
-
-function validarInteiroPositivo(erros, campo, numero) {
-  if (numero === null || numero <= 0) {
-    erros.push({ campo, mensagem: "Digite um número inteiro maior que zero" });
-  }
-}
-
-function focarPrimeiroErro(erros, linhas, escolhaDeTipo) {
-  const primeiroErro = erros[0];
-  if (primeiroErro.campo === "tipo") {
-    escolhaDeTipo.elemento.querySelector("input").focus();
-    return;
-  }
-  linhas[primeiroErro.campo].alvo.focus();
 }

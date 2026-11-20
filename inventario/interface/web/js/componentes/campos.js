@@ -85,6 +85,52 @@ export function criarLinhaDeCampo({
   return { elemento: linha, textoDeAjuda };
 }
 
+export function criarLinhaComValidacao({
+  rotulo,
+  controle,
+  alvoDoRotulo = controle,
+  ajuda = "",
+  explicacaoDoConceito,
+}) {
+  const linha = criarLinhaDeCampo({
+    rotulo,
+    controle,
+    alvoDoRotulo,
+    ajuda,
+    explicacaoDoConceito,
+  });
+
+  let temErroDoFormulario = false;
+
+  function mostrarErro(mensagem) {
+    temErroDoFormulario = true;
+    alvoDoRotulo.setAttribute("aria-invalid", "true");
+    mostrarAjuda(linha.textoDeAjuda, mensagem, true);
+  }
+
+  function limparErro() {
+    temErroDoFormulario = false;
+    alvoDoRotulo.removeAttribute("aria-invalid");
+    mostrarAjuda(linha.textoDeAjuda, ajuda);
+  }
+
+  function limparErroSeExistir() {
+    if (temErroDoFormulario) {
+      limparErro();
+    }
+  }
+
+  linha.elemento.addEventListener("input", limparErroSeExistir, true);
+  linha.elemento.addEventListener("change", limparErroSeExistir, true);
+  return {
+    elemento: linha.elemento,
+    textoDeAjuda: linha.textoDeAjuda,
+    alvo: alvoDoRotulo,
+    mostrarErro,
+    limparErro,
+  };
+}
+
 export function mostrarAjuda(textoDeAjuda, mensagem, ehErro = false) {
   textoDeAjuda.textContent = mensagem;
   textoDeAjuda.hidden = mensagem === "";

@@ -1,5 +1,4 @@
 import { listarAtivos } from "../../api.js";
-import { criarBotao } from "../../componentes/botoes.js";
 import { criarFaixaDeErro } from "../../componentes/faixa-de-erro.js";
 import { criarPilulaDeStatus } from "../../componentes/pilula-de-status.js";
 import { criarPilulasDeFiltro } from "../../componentes/pilulas-de-filtro.js";
@@ -8,6 +7,11 @@ import { criarElemento } from "../../elementos.js";
 import { criarIcone } from "../../icones.js";
 import { carregarOpcoes, encontrarOpcao } from "../../opcoes.js";
 import { navegarPara } from "../../roteador.js";
+import {
+  criarEstadoVazio,
+  descreverQuantidade,
+  mostrarEsqueletoNaLista,
+} from "../estados-da-lista.js";
 import { descreverAtivo, iconeDoTipo } from "./apresentacao-do-ativo.js";
 
 const ESPERA_DA_BUSCA = 250;
@@ -28,7 +32,7 @@ export function montarTelaDeAtivos(tela) {
     areaDosFiltros,
     lista,
   );
-  mostrarEsqueleto(lista);
+  mostrarEsqueletoNaLista(lista);
 
   async function consultar() {
     if (opcoes === null) {
@@ -65,7 +69,7 @@ export function montarTelaDeAtivos(tela) {
     contagem.textContent = descreverContagem(ativos.length, existeFiltroAtivo(filtros));
     lista.replaceChildren();
     if (ativos.length === 0) {
-      lista.append(criarEstadoVazio(existeFiltroAtivo(filtros), limparFiltros));
+      lista.append(criarEstadoDaListaVazia(existeFiltroAtivo(filtros), limparFiltros));
       return;
     }
     for (const ativo of ativos) {
@@ -216,40 +220,23 @@ function criarLinhaDeAtivo(ativo, opcoes) {
   return criarElemento("li", {}, [link]);
 }
 
-function criarEstadoVazio(comFiltros, limparFiltros) {
+function criarEstadoDaListaVazia(comFiltros, limparFiltros) {
   if (comFiltros) {
-    return criarElemento("li", { classe: "estado-vazio" }, [
-      criarElemento("p", { classe: "estado-vazio-titulo", texto: "Nenhum ativo com esses filtros" }),
-      criarElemento("p", {
-        classe: "texto-de-apoio",
-        texto: "Tente outro nome ou tire um dos filtros.",
-      }),
-      criarBotao({ texto: "Limpar filtros", variacao: "secundario", aoClicar: limparFiltros }),
-    ]);
+    return criarEstadoVazio({
+      titulo: "Nenhum ativo com esses filtros",
+      explicacao: "Tente outro nome ou tire um dos filtros.",
+      textoDoBotao: "Limpar filtros",
+      variacao: "secundario",
+      aoClicar: limparFiltros,
+    });
   }
-  return criarElemento("li", { classe: "estado-vazio" }, [
-    criarElemento("p", { classe: "estado-vazio-titulo", texto: "Nenhum ativo cadastrado ainda" }),
-    criarElemento("p", {
-      classe: "texto-de-apoio",
-      texto: "Cadastre notebooks, servidores, roteadores e impressoras para acompanhar o risco de cada um.",
-    }),
-    criarBotao({
-      texto: "Cadastrar o primeiro ativo",
-      aoClicar: () => navegarPara("/ativos/novo"),
-    }),
-  ]);
-}
-
-function mostrarEsqueleto(lista) {
-  lista.replaceChildren();
-  for (let posicao = 0; posicao < 4; posicao += 1) {
-    lista.append(
-      criarElemento("li", { classe: "linha-esqueleto", "aria-hidden": "true" }, [
-        criarElemento("span", { classe: "esqueleto esqueleto-icone" }),
-        criarElemento("span", { classe: "esqueleto esqueleto-texto" }),
-      ]),
-    );
-  }
+  return criarEstadoVazio({
+    titulo: "Nenhum ativo cadastrado ainda",
+    explicacao:
+      "Cadastre notebooks, servidores, roteadores e impressoras para acompanhar o risco de cada um.",
+    textoDoBotao: "Cadastrar o primeiro ativo",
+    aoClicar: () => navegarPara("/ativos/novo"),
+  });
 }
 
 function existeFiltroAtivo(filtros) {
@@ -257,10 +244,8 @@ function existeFiltroAtivo(filtros) {
 }
 
 function descreverContagem(quantidade, comFiltros) {
-  const palavra = quantidade === 1 ? "ativo" : "ativos";
   if (comFiltros) {
-    const encontrados = quantidade === 1 ? "encontrado" : "encontrados";
-    return `${quantidade} ${palavra} ${encontrados}`;
+    return descreverQuantidade(quantidade, "ativo encontrado", "ativos encontrados");
   }
-  return `${quantidade} ${palavra}`;
+  return descreverQuantidade(quantidade, "ativo", "ativos");
 }

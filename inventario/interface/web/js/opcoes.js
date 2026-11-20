@@ -20,6 +20,15 @@ export function encontrarOpcao(opcoes, valor) {
   return undefined;
 }
 
+export function encontrarValorPeloNome(opcoes, nome) {
+  for (const opcao of opcoes) {
+    if (opcao.nome === nome) {
+      return opcao.valor;
+    }
+  }
+  return null;
+}
+
 export function rotuloDaOpcao(opcoes, valor) {
   const opcao = encontrarOpcao(opcoes, valor);
   return opcao ? opcao.rotulo : String(valor);
