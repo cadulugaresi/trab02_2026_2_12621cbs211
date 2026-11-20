@@ -126,6 +126,8 @@ Usado para portas e RAM (r6-01):
 ### 5.7 Avisos
 
 - **Excluir:** um balão sai do próprio botão Excluir: "Excluir Servidor web? Os vínculos e as dependências dele também serão removidos." Tem Cancelar e um botão Excluir vermelho (`#B42318`).
+- **Desvincular:** o "x" de um vínculo abre o mesmo balão, saindo do próprio "x": "Desvincular Log4Shell de Servidor web? O status de tratamento deste vínculo será perdido." Tem Cancelar e um botão Desvincular vermelho. Só depois de confirmar o vínculo é apagado. Vale para a janela do ativo e para a tela de Vínculos.
+- **Remover dependência:** o "x" de "Depende de" abre o mesmo balão: "Remover a dependência de Banco de dados? Servidor web deixará de depender deste ativo, e a fração 0,30 será perdida." Tem Cancelar e um botão Remover vermelho.
 - **Sucesso:** uma pílula preta sobe de baixo, perto do Cadastrar, com o texto "Ativo cadastrado", "Vulnerabilidade excluída" etc., e some sozinha em ~3s.
 - **Erro da API:** faixa `#7A1414` com texto branco no topo do formulário, mostrando a mensagem de `{"erro": ...}`. O campo relacionado, quando dá para saber qual é, fica em destaque.
 
@@ -206,12 +208,13 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 - **Topo:** nome grande; tipo, setor e responsável pequenos embaixo.
 - **Ficha:** logo abaixo, numa linha pequena em cinza, a pílula de status do ativo, o fator de exposição e os campos do tipo (ex.: "32 GB de RAM", "4 TB de armazenamento").
 - **Risco:** três números soltos (próprio, herdado e efetivo), em peso leve, cada um com o seu rótulo centralizado embaixo. Trocar o status de um vínculo ou desvincular recalcula os números ao vivo (seção 8).
-- **Vulnerabilidades vinculadas:** bolinha e nome do nível, nome, CVSS e pílula de status de tratamento, que pode ser trocada ali mesmo. Cada uma tem um "x" para desvincular.
+- **Vulnerabilidades vinculadas:** bolinha e nome do nível, nome, CVSS e pílula de status de tratamento, que pode ser trocada ali mesmo. Cada uma tem um "x" para desvincular, que pede confirmação no balão (seção 5.7). O nome é um link que abre os detalhes da vulnerabilidade na mesma janela, com a seta de voltar. Sem vulnerabilidades, aparece o botão "Vincular vulnerabilidade", que abre a tela de Vínculos com o ativo já escolhido (`/#/vinculos?ativo=<id>`).
+- **Colunas alinhadas:** o CVSS e a pílula de status ficam em colunas de largura fixa, para as pílulas se alinharem de uma linha para outra.
 - **Dependências:**
   - **Mini mapa:** só dos vizinhos. Quem depende do ativo fica à esquerda e os ativos dos quais ele depende ficam à direita, com as setas indo da esquerda para a direita. Clicar num vizinho abre os detalhes dele na mesma janela, com a seta de voltar.
   - **Listas:** "Dependem dele" à esquerda e "Depende de" à direita, na mesma ordem do mini mapa, cada item com o ícone do tipo, o nome e a fração.
   - **Adicionar:** o botão "Adicionar dependência" abre uma linha ali mesmo, com o menu com busca do ativo, o controle deslizante da fração e o aviso "A fração precisa ser menor que 0,3" (o valor restante é calculado).
-  - **Remover:** cada item de "Depende de" tem um "x" para remover a dependência, igual ao desvincular das vulnerabilidades. A fração não é editada na janela.
+  - **Remover:** cada item de "Depende de" tem um "x" para remover a dependência, que pede confirmação no balão (seção 5.7). A fração não é editada na janela.
 
 **Detalhes da vulnerabilidade:**
 - **Topo:** nome grande; CVSS e nível em destaque.
@@ -221,14 +224,19 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 
 ### 7.5 Vulnerabilidades
 
-- **Lista:** cada linha tem ID, nome, CVSS e a bolinha do nível.
+- **Lista:** cada linha tem ID, nome, CVSS e a bolinha do nível, com o nome do nível na cor dele, na ordem do ID.
 - **Clique:** abre a janela de detalhes.
+- **Formulário:** Nome e o campo de CVSS (seção 5.4). O ID é criado pelo sistema, então não há campo de ID. Depois de salvar, abre a janela da vulnerabilidade salva, igual aos ativos.
 
 ### 7.6 Vínculos
 
 - **Topo:** uma linha para criar o vínculo, com ativo (menu com busca), vulnerabilidade (menu com busca), status (menu) e o botão preto "Vincular".
 - **Agrupamento:** segmentado de troca de modo "Por ativo | Por vulnerabilidade", que abre em "Por ativo".
-- **Cada item:** bolinha de gravidade, nome, CVSS, pílula de status (troca ali mesmo) e um "x" para desvincular.
+- **Cada item:** bolinha de gravidade, nome, CVSS, pílula de status (troca ali mesmo) e um "x" para desvincular, que pede confirmação no balão (seção 5.7).
+- **Por ativo:** um grupo por ativo que tem vínculos, com o ícone e o nome do ativo no topo; dentro, as vulnerabilidades da mais grave para a menos grave.
+- **Por vulnerabilidade:** um grupo por vulnerabilidade, da mais grave para a menos grave, com a bolinha, o nome, o CVSS e a quantidade de ativos no topo; dentro, cada ativo com o ícone do tipo, o nome, a pílula de status e o "x".
+- **Validação:** ativo e vulnerabilidade são obrigatórios, e o vínculo repetido é avisado antes de chamar a API ("Esta vulnerabilidade já está vinculada a este ativo."). O status começa em Aberta.
+- **Sem ativos ou sem vulnerabilidades:** no lugar da linha de criação, aparece o aviso "Para vincular, cadastre pelo menos um ativo e uma vulnerabilidade." com os botões do que falta.
 
 ### 7.7 Ranking de riscos
 
