@@ -13,6 +13,7 @@ from inventario.interface.api.rotas_de_riscos import criar_rotas_de_riscos
 from inventario.interface.api.rotas_de_saude import criar_rotas_de_saude
 from inventario.interface.api.rotas_de_vinculos import criar_rotas_de_vinculos
 from inventario.interface.api.rotas_de_vulnerabilidades import criar_rotas_de_vulnerabilidades
+from inventario.interface.api.rotas_do_frontend import criar_rotas_do_frontend
 
 MENSAGENS_DOS_ERROS_HTTP = {
     404: "Rota não encontrada.",
@@ -48,5 +49,6 @@ def criar_app(repositorio, ativos, catalogo):
     app.register_blueprint(criar_rotas_de_vinculos(repositorio, ativos, catalogo))
     app.register_blueprint(criar_rotas_de_dependencias(repositorio, ativos))
     app.register_blueprint(criar_rotas_de_riscos(ativos, catalogo))
+    app.register_blueprint(criar_rotas_do_frontend())
 
     return app
