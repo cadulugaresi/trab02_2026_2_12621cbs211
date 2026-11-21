@@ -2,7 +2,7 @@
 
 *[Read in English](../README.md)*
 
-Aplicação em Python para cadastro e gestão de ativos de TI e suas vulnerabilidades, com análise de risco baseada em álgebra linear. Pode ser usada por um menu de linha de comando (CLI) ou por uma API HTTP, que roda em um container Docker. Projeto de estudo do curso de Cibersegurança da UFU, com foco em boas práticas de código: nomenclatura clara, funções com responsabilidade única, arquitetura em camadas, programação orientada a objetos e tratamento de erros sem exposição de dados internos.
+Aplicação em Python para cadastro e gestão de ativos de TI e suas vulnerabilidades, com análise de risco baseada em álgebra linear. Pode ser usada por um menu de linha de comando (CLI), por uma API HTTP que roda em um container Docker ou por um frontend web servido por essa mesma API. Projeto de estudo do curso de Cibersegurança da UFU, com foco em boas práticas de código: nomenclatura clara, funções com responsabilidade única, arquitetura em camadas, programação orientada a objetos e tratamento de erros sem exposição de dados internos.
 
 ## ✨ Funcionalidades
 
@@ -87,6 +87,15 @@ curl -X POST http://localhost:5000/ativos \
   -d '{"tipo": "Notebook", "id": 10, "nome": "Notebook do Rafael", "setor": 1, "responsavel": "Rafael Torres", "status": 1, "sistema_operacional": "Linux", "tela": 14.0}'
 ```
 
+### Frontend web
+A API também serve uma aplicação web em `/`, que usa as rotas HTTP acima:
+- **Início**: saudação, as vulnerabilidades abertas mais graves, os totais, o status de tratamento dos vínculos, as vulnerabilidades críticas e altas por setor, os 5 ativos de maior risco e uma prévia do mapa dos ativos
+- **Ativos**: lista com busca, filtros (tipo, status e setor) e ordenação, ou um mapa das dependências entre os ativos, com os mesmos filtros e uma busca que mostra só as dependências do ativo encontrado
+- Telas de **Vulnerabilidades**, **Vínculos** e **Ranking de riscos**, além das janelas de detalhes e dos formulários de cadastro e edição
+- **Tecnologia**: HTML, CSS e JavaScript puros (módulos ES), sem framework, sem etapa de build e sem CDN; a fonte Inter e os ícones Lucide ficam dentro do projeto
+- **Responsivo e acessível**: layouts para computador, tablet e celular (larguras de referência de 1440, 1024, 768 e 390px), navegação por teclado com contorno de foco visível e movimento reduzido quando o sistema pede
+- **Decisões de design**: registradas no `PRODUCT.md` e no `DESIGN.md`
+
 ### Geral
 - **Persistência de dados**: os ativos, o catálogo e os vínculos são salvos em um banco SQLite (`inventario.db`), com uma tabela por tipo de ativo e a tabela associativa `vinculos` entre ativos e vulnerabilidades, e recarregados a cada execução
 - **Armazenamento substituível**: os serviços recebem um `repositorio` como parâmetro (injeção de dependência feita pelos pontos de entrada, `main.py` e `iniciar_api.py`) e não importam a persistência; o `RepositorioSQLite` é o armazenamento em uso, e o `RepositorioJSON` (arquivos JSON) é mantido como segunda implementação, que oferece as mesmas operações, o que é garantido pela suíte de testes de contrato
@@ -100,6 +109,7 @@ curl -X POST http://localhost:5000/ativos \
 - Banco de dados: SQLite (sem servidor para instalar; esquema em `inventario/persistencia/esquema.sql`)
 - Álgebra linear: `numpy` (listado no `requirements.txt`)
 - API HTTP: `flask` (listado no `requirements.txt`)
+- Frontend web: HTML, CSS e JavaScript (módulos ES), servido pelo próprio Flask, sem framework e sem etapa de build
 - Testes: `unittest` e `pytest`; padronização: `flake8` e `black`; integração contínua com GitHub Actions
 - Container: Docker e Docker Compose, rodando a API com um volume para o banco, uma política de reinício e uma verificação de funcionamento em `/saude` (detalhes em `docs/docker.md`)
 
@@ -156,6 +166,7 @@ flowchart TD
 
 - **Interface** (`inventario/interface/`): é a única camada que conversa com o mundo de fora. O menu do terminal usa `input` e `print`; a API recebe requisições HTTP e responde com JSON. Os dois leem e convertem as entradas e apresentam os resultados e as mensagens de erro.
   - `api/`: o pacote da API. O `__init__.py` tem o `criar_app(repositorio, ativos, catalogo)`, que cria o app Flask, registra os tratadores de erro (sempre em JSON) e registra um Blueprint por recurso (`rotas_de_ativos.py`, `rotas_de_vulnerabilidades.py`, `rotas_de_vinculos.py`, `rotas_de_dependencias.py`, `rotas_de_riscos.py`, `rotas_de_opcoes.py`, `rotas_de_saude.py`); o `requisicoes.py` e o `respostas.py` guardam ajudantes pequenos para ler os corpos e montar as respostas
+  - `web/`: o frontend web (HTML, CSS e JavaScript), servido pelo `api/rotas_do_frontend.py`; ele só conversa com o sistema pelas rotas HTTP da API
   - `menu.py`: `menu_principal`, `menu_listagem` e `menu_vulnerabilidades`
   - `ativos.py`: telas de cadastro, edição e exclusão de ativos (`cadastrar_ativo`, `editar_ativo`, `excluir_ativo`, `perguntar_ativo`...)
   - `vulnerabilidades.py`: telas do catálogo e dos vínculos (`cadastrar_vulnerabilidade`, `editar_vulnerabilidade`, `vincular_a_um_ativo`, `mostrar_vulnerabilidade`...)
@@ -226,8 +237,15 @@ menu_principal                         (interface)     usuário escolhe a opçã
 │   │   │   ├── rotas_de_riscos.py
 │   │   │   ├── rotas_de_opcoes.py
 │   │   │   ├── rotas_de_saude.py
+│   │   │   ├── rotas_do_frontend.py
 │   │   │   ├── requisicoes.py
 │   │   │   └── respostas.py
+│   │   ├── web/
+│   │   │   ├── index.html
+│   │   │   ├── js/
+│   │   │   ├── estilos/
+│   │   │   ├── fontes/
+│   │   │   └── icones/
 │   │   ├── menu.py
 │   │   ├── ativos.py
 │   │   ├── vulnerabilidades.py
@@ -257,6 +275,8 @@ menu_principal                         (interface)     usuário escolhe a opçã
 │   ├── test_api.py
 │   ├── test_falha_de_persistencia.py
 │   ├── test_recurso_nao_encontrado.py
+│   ├── test_rotas_do_frontend.py
+│   ├── test_servidor_com_tempo_limite.py
 │   └── test_exemplos.py
 ├── docs/
 │   ├── README.pt-br.md
@@ -267,6 +287,8 @@ menu_principal                         (interface)     usuário escolhe a opçã
 │   ├── relatorio_testes.md
 │   ├── entrega_final.md
 │   ├── solid.md
+│   ├── docker.md
+│   ├── referencias/
 │   └── exemplos/
 │       ├── exemplo_ativos.json
 │       └── exemplo_vulnerabilidades.json
@@ -274,6 +296,8 @@ menu_principal                         (interface)     usuário escolhe a opçã
 ├── .flake8
 ├── pyproject.toml
 ├── .gitignore
+├── PRODUCT.md
+├── DESIGN.md
 └── README.md
 ```
 
@@ -306,6 +330,12 @@ curl http://localhost:5000/saude
 curl http://localhost:5000/ativos
 ```
 
+### Abrindo o frontend web
+
+Com a API no ar (localmente ou com o Docker Compose), abra **http://localhost:5000** no navegador. O frontend não tem um servidor separado: o Flask entrega a página em `/` e os arquivos dela em `/web/...`, na mesma porta da API.
+
+O servidor atende uma requisição por vez (`threaded=False`, explicado no `docs/docker.md`). Os navegadores abrem conexões extras com antecedência e as deixam paradas, então o `iniciar_api.py` fecha qualquer conexão que fique parada por mais de 1 segundo; sem isso, uma única conexão parada prenderia o servidor e a página deixaria de carregar. O frontend também envia as requisições em fila, uma depois da outra, com tempo limite de 10 segundos.
+
 ### Rodando a API com Docker Compose
 
 Pré-requisito: Docker com Docker Compose.
@@ -316,7 +346,7 @@ docker compose ps
 curl http://localhost:5000/saude
 ```
 
-O container roda a API, guarda o banco no volume `dados`, reinicia sozinho se o processo parar e fica marcado como `healthy` enquanto o `/saude` responde. Para pará-lo, use `docker compose down` (o volume, e portanto os dados, é mantido). Detalhes em `docs/docker.md`.
+O container roda a API e o frontend web (http://localhost:5000), guarda o banco no volume `dados`, reinicia sozinho se o processo parar e fica marcado como `healthy` enquanto o `/saude` responde. O código, inclusive o do frontend, é copiado para a imagem quando ela é construída: depois de alterar qualquer arquivo, rode `docker compose up -d --build` de novo, senão o container continua com a versão antiga. Para pará-lo, use `docker compose down` (o volume, e portanto os dados, é mantido). Detalhes em `docs/docker.md`.
 
 ### Rodando o menu no terminal
 
