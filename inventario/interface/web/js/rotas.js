@@ -5,8 +5,11 @@ import {
 import { abrirJanelaDoAtivo } from "./telas/ativos/janela-do-ativo.js";
 import { montarTelaDeAtivos } from "./telas/ativos/lista-de-ativos.js";
 import { montarTelaDeComponentes } from "./telas/componentes.js";
+import { montarTelaDeInicio } from "./telas/inicio/tela-de-inicio.js";
 import { abrirJanelaDeExemplo } from "./telas/janela-de-exemplo.js";
-import { criarTelaProvisoria, montarTelaNaoEncontrada } from "./telas/provisoria.js";
+import { montarTelaDoMapa } from "./telas/mapa/tela-do-mapa.js";
+import { montarTelaNaoEncontrada } from "./telas/provisoria.js";
+import { montarTelaDeRanking } from "./telas/ranking/tela-de-ranking.js";
 import { montarTelaDeVinculos } from "./telas/vinculos/tela-de-vinculos.js";
 import {
   montarTelaDeEditarVulnerabilidade,
@@ -20,14 +23,14 @@ export const ROTAS = [
     caminho: "/",
     titulo: "Início",
     serveDeFundo: true,
-    montar: criarTelaProvisoria("Início", 4),
+    montar: montarTelaDeInicio,
   },
   { caminho: "/ativos", titulo: "Ativos", serveDeFundo: true, montar: montarTelaDeAtivos },
   {
     caminho: "/ativos/mapa",
     titulo: "Mapa",
     serveDeFundo: true,
-    montar: criarTelaProvisoria("Mapa dos ativos", 4),
+    montar: montarTelaDoMapa,
   },
   {
     caminho: "/ativos/novo",
@@ -75,7 +78,7 @@ export const ROTAS = [
     caminho: "/ranking",
     titulo: "Ranking",
     serveDeFundo: true,
-    montar: criarTelaProvisoria("Ranking de riscos", 4),
+    montar: montarTelaDeRanking,
   },
   {
     caminho: "/componentes",
