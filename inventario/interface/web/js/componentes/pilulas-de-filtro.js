@@ -1,7 +1,13 @@
 import { criarElemento } from "../elementos.js";
 import { criarIcone } from "../icones.js";
 
-export function criarPilulasDeFiltro({ rotulo, opcoes, variacao = "preenchida", aoMudar }) {
+export function criarPilulasDeFiltro({
+  rotulo,
+  opcoes,
+  variacao = "preenchida",
+  valorInicial = null,
+  aoMudar,
+}) {
   let valorEscolhido = null;
   const pilulas = [];
   const elemento = criarElemento("div", {
@@ -38,5 +44,6 @@ export function criarPilulasDeFiltro({ rotulo, opcoes, variacao = "preenchida", 
     }
   }
 
+  escolher(valorInicial);
   return { elemento, obterValor: () => valorEscolhido, limpar: () => escolher(null) };
 }

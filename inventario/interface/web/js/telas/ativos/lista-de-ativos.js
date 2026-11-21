@@ -1,7 +1,6 @@
 import { listarAtivos } from "../../api.js";
 import { criarFaixaDeErro } from "../../componentes/faixa-de-erro.js";
 import { criarPilulaDeStatus } from "../../componentes/pilula-de-status.js";
-import { criarPilulasDeFiltro } from "../../componentes/pilulas-de-filtro.js";
 import { criarSegmentado } from "../../componentes/segmentado.js";
 import { criarElemento } from "../../elementos.js";
 import { criarIcone } from "../../icones.js";
@@ -13,11 +12,19 @@ import {
   mostrarEsqueletoNaLista,
 } from "../estados-da-lista.js";
 import { descreverAtivo, iconeDoTipo } from "./apresentacao-do-ativo.js";
+import { criarCabecalhoDeAtivos } from "./cabecalho-de-ativos.js";
+import {
+  criarFiltrosDeAtivos,
+  criarGrupoDeFiltro,
+  existeFiltroDeAtivos,
+  lerFiltrosDeAtivos,
+} from "./filtros-de-ativos.js";
 
 const ESPERA_DA_BUSCA = 250;
 
 export function montarTelaDeAtivos(tela) {
-  const filtros = { tipo: null, status: null, nome: "", ordenar: "id" };
+  const filtros = lerFiltrosDeAtivos();
+  const estadoDaOrdenacao = { ordenar: "id" };
   const faixa = criarFaixaDeErro();
   const contagem = criarElemento("p", { classe: "texto-de-apoio", "aria-live": "polite" });
   const lista = criarElemento("ul", { classe: "lista-de-ativos", "aria-label": "Ativos" });
@@ -27,7 +34,7 @@ export function montarTelaDeAtivos(tela) {
   let temporizadorDaBusca = null;
 
   tela.append(
-    criarCabecalhoDaLista(contagem),
+    criarCabecalhoDeAtivos({ modo: "lista", contagem: contagem }),
     faixa.elemento,
     areaDosFiltros,
     lista,
@@ -46,13 +53,13 @@ export function montarTelaDeAtivos(tela) {
         tipo: filtros.tipo,
         status: filtros.status,
         nome: filtros.nome.trim(),
-        ordenar: filtros.ordenar,
+        ordenar: estadoDaOrdenacao.ordenar,
       });
       if (numeroDestaConsulta !== numeroDaConsulta) {
         return;
       }
       faixa.esconder();
-      mostrarAtivos(ativos);
+      mostrarAtivos(filtrarPorSetor(ativos, filtros.setor));
     } catch (erro) {
       if (numeroDestaConsulta === numeroDaConsulta) {
         faixa.mostrar(erro.message);
@@ -66,10 +73,10 @@ export function montarTelaDeAtivos(tela) {
   }
 
   function mostrarAtivos(ativos) {
-    contagem.textContent = descreverContagem(ativos.length, existeFiltroAtivo(filtros));
+    contagem.textContent = descreverContagem(ativos.length, existeFiltroDeAtivos(filtros));
     lista.replaceChildren();
     if (ativos.length === 0) {
-      lista.append(criarEstadoDaListaVazia(existeFiltroAtivo(filtros), limparFiltros));
+      lista.append(criarEstadoDaListaVazia(existeFiltroDeAtivos(filtros), limparFiltros));
       return;
     }
     for (const ativo of ativos) {
@@ -77,17 +84,13 @@ export function montarTelaDeAtivos(tela) {
     }
   }
 
-  function aoDigitarNaBusca(texto) {
-    filtros.nome = texto;
+  function aoDigitarNaBusca() {
     clearTimeout(temporizadorDaBusca);
     temporizadorDaBusca = setTimeout(consultar, ESPERA_DA_BUSCA);
   }
 
   const controlesDosFiltros = { limpar: () => {} };
   function limparFiltros() {
-    filtros.tipo = null;
-    filtros.status = null;
-    filtros.nome = "";
     controlesDosFiltros.limpar();
     consultar();
   }
@@ -95,7 +98,14 @@ export function montarTelaDeAtivos(tela) {
   carregarOpcoes()
     .then((opcoesCarregadas) => {
       opcoes = opcoesCarregadas;
-      const filtrosMontados = criarFiltros(opcoes, filtros, consultar, aoDigitarNaBusca);
+      const filtrosMontados = criarFiltrosDeAtivos({
+        opcoes: opcoes,
+        filtros: filtros,
+        textoDaBusca: "Buscar ativo por nome",
+        aoMudar: consultar,
+        aoDigitarNaBusca: aoDigitarNaBusca,
+        gruposExtras: [criarOrdenacao(estadoDaOrdenacao, consultar)],
+      });
       controlesDosFiltros.limpar = filtrosMontados.limpar;
       areaDosFiltros.append(filtrosMontados.elemento);
       consultar();
@@ -111,98 +121,34 @@ export function montarTelaDeAtivos(tela) {
   };
 }
 
-function criarCabecalhoDaLista(contagem) {
-  const trocaDeModo = criarSegmentado({
-    rotulo: "Modo de exibição",
-    variacao: "troca-de-modo",
-    valor: "lista",
-    opcoes: [
-      { valor: "lista", rotulo: "Lista" },
-      { valor: "mapa", rotulo: "Mapa" },
-    ],
-    aoMudar: (valor) => {
-      if (valor === "mapa") {
-        navegarPara("/ativos/mapa");
-      }
-    },
-  });
-  trocaDeModo.elemento.classList.add("troca-lista-mapa");
-
-  return criarElemento("header", { classe: "cabecalho-de-tela cabecalho-com-acoes" }, [
-    criarElemento("div", { classe: "cabecalho-de-tela-textos" }, [
-      criarElemento("h1", { classe: "titulo-de-tela", texto: "Ativos" }),
-      contagem,
-    ]),
-    trocaDeModo.elemento,
-  ]);
-}
-
-function criarFiltros(opcoes, filtros, consultar, aoDigitarNaBusca) {
-  const busca = criarElemento("input", {
-    type: "search",
-    classe: "campo campo-de-busca",
-    placeholder: "Buscar por nome",
-    "aria-label": "Buscar ativo por nome",
-    autocomplete: "off",
-    spellcheck: "false",
-  });
-  busca.addEventListener("input", () => aoDigitarNaBusca(busca.value));
-
-  const tipos = criarPilulasDeFiltro({
-    rotulo: "Filtrar por tipo",
-    variacao: "preenchida",
-    opcoes: opcoes.tipos,
-    aoMudar: (valor) => {
-      filtros.tipo = valor;
-      consultar();
-    },
-  });
-  const status = criarPilulasDeFiltro({
-    rotulo: "Filtrar por status",
-    variacao: "contorno",
-    opcoes: opcoes.statusDoAtivo,
-    aoMudar: (valor) => {
-      filtros.status = valor;
-      consultar();
-    },
-  });
+function criarOrdenacao(estadoDaOrdenacao, consultar) {
   const ordenacao = criarSegmentado({
     rotulo: "Ordenar por",
-    valor: "id",
+    valor: estadoDaOrdenacao.ordenar,
     opcoes: [
       { valor: "id", rotulo: "ID" },
       { valor: "nome", rotulo: "Nome" },
       { valor: "vulnerabilidades", rotulo: "Vulnerabilidades" },
     ],
     aoMudar: (valor) => {
-      filtros.ordenar = valor;
+      estadoDaOrdenacao.ordenar = valor;
       consultar();
     },
   });
-
-  const elemento = criarElemento("div", { classe: "filtros-da-lista-conteudo" }, [
-    criarElemento("div", { classe: "campo-de-busca-com-icone" }, [criarIcone("buscar"), busca]),
-    criarElemento("div", { classe: "grupos-de-filtro" }, [
-      criarGrupoDeFiltro("Tipo", tipos.elemento),
-      criarGrupoDeFiltro("Status", status.elemento),
-      criarGrupoDeFiltro("Ordenar por", ordenacao.elemento, "grupo-de-filtro-ordenacao"),
-    ]),
-  ]);
-
-  function limpar() {
-    busca.value = "";
-    tipos.limpar();
-    status.limpar();
-  }
-
-  return { elemento, limpar };
+  return criarGrupoDeFiltro("Ordenar por", ordenacao.elemento, "grupo-de-filtro-ordenacao");
 }
 
-function criarGrupoDeFiltro(titulo, controle, classeExtra = "") {
-  return criarElemento("div", { classe: `grupo-de-filtro ${classeExtra}`.trim() }, [
-    criarElemento("p", { classe: "legenda", texto: titulo }),
-    controle,
-  ]);
+function filtrarPorSetor(ativos, setor) {
+  if (setor === null) {
+    return ativos;
+  }
+  const ativosDoSetor = [];
+  for (const ativo of ativos) {
+    if (ativo.setor === setor) {
+      ativosDoSetor.push(ativo);
+    }
+  }
+  return ativosDoSetor;
 }
 
 function criarLinhaDeAtivo(ativo, opcoes) {
@@ -237,10 +183,6 @@ function criarEstadoDaListaVazia(comFiltros, limparFiltros) {
     textoDoBotao: "Cadastrar o primeiro ativo",
     aoClicar: () => navegarPara("/ativos/novo"),
   });
-}
-
-function existeFiltroAtivo(filtros) {
-  return filtros.tipo !== null || filtros.status !== null || filtros.nome.trim() !== "";
 }
 
 function descreverContagem(quantidade, comFiltros) {
