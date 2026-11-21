@@ -107,6 +107,12 @@
   font-size: 20px;
 }
 
+.linha-do-ranking-destaque .linha-do-ranking-nome span,
+.linha-do-ranking-destaque .linha-do-ranking-nome .icone,
+.linha-do-ranking-destaque .linha-do-ranking-valor {
+  color: var(--nivel-critico);
+}
+
 .linha-do-ranking-destaque .linha-do-ranking-nome .icone {
   width: 24px;
   height: 24px;

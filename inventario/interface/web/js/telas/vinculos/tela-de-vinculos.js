@@ -19,7 +19,10 @@ import { criarCriacaoDeVinculo } from "./criacao-de-vinculo.js";
 export function montarTelaDeVinculos(tela, { busca }) {
   const idAtivoInicial = /^\d+$/.test(busca.get("ativo") ?? "") ? Number(busca.get("ativo")) : null;
   const faixa = criarFaixaDeErro();
-  const contagem = criarElemento("p", { classe: "texto-de-apoio", "aria-live": "polite" });
+  const contagem = criarElemento("p", {
+    classe: "texto-de-apoio contagem-da-tela",
+    "aria-live": "polite",
+  });
   const areaDaCriacao = criarElemento("div", { classe: "area-da-criacao-de-vinculo" });
   const areaDosGrupos = criarElemento("ul", { classe: "grupos-de-vinculos" });
   let modo = "ativo";
@@ -105,7 +108,8 @@ export function montarTelaDeVinculos(tela, { busca }) {
     contagem.textContent = descreverQuantidade(contarVinculos(dados.ativos), "vínculo", "vínculos");
     areaDosGrupos.replaceChildren(...grupos);
     if (grupos.length === 0) {
-      areaDosGrupos.append(criarEstadoSemVinculos());
+      const podeVincular = dados.ativos.length > 0 && dados.vulnerabilidades.length > 0;
+      areaDosGrupos.append(criarEstadoSemVinculos(podeVincular));
     }
   }
 
@@ -230,13 +234,13 @@ function criarGrupo({ cabecalho, detalhe, linhas }) {
   ]);
 }
 
-function criarEstadoSemVinculos() {
+function criarEstadoSemVinculos(podeVincular) {
+  const explicacao = podeVincular
+    ? "Escolha um ativo e uma vulnerabilidade acima e clique em Vincular."
+    : "Os vínculos aparecem aqui depois que houver ativos e vulnerabilidades cadastrados.";
   return criarElemento("li", { classe: "estado-vazio" }, [
     criarElemento("p", { classe: "estado-vazio-titulo", texto: "Nenhum vínculo ainda" }),
-    criarElemento("p", {
-      classe: "texto-de-apoio",
-      texto: "Escolha um ativo e uma vulnerabilidade acima e clique em Vincular.",
-    }),
+    criarElemento("p", { classe: "texto-de-apoio", texto: explicacao }),
   ]);
 }
 

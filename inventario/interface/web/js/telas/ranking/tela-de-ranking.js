@@ -9,7 +9,10 @@ import { criarLinhaDoRanking } from "./linha-do-ranking.js";
 const QUANTIDADE_EM_DESTAQUE = 3;
 
 export function montarTelaDeRanking(tela) {
-  const contagem = criarElemento("p", { classe: "texto-de-apoio", "aria-live": "polite" });
+  const contagem = criarElemento("p", {
+    classe: "texto-de-apoio contagem-da-tela",
+    "aria-live": "polite",
+  });
   const faixa = criarFaixaDeErro();
   const destaques = criarElemento("ol", {
     classe: "ranking-destaques",
@@ -17,8 +20,9 @@ export function montarTelaDeRanking(tela) {
   });
   const restante = criarElemento("ol", { classe: "ranking-restante", start: "4" });
   const areaDoRanking = criarElemento("div", { classe: "area-do-ranking", "aria-busy": "true" });
+  const legenda = criarLegendaDoRanking();
 
-  tela.append(criarCabecalhoDoRanking(contagem), faixa.elemento, areaDoRanking);
+  tela.append(criarCabecalhoDoRanking(contagem, legenda), faixa.elemento, areaDoRanking);
 
   async function carregar() {
     areaDoRanking.setAttribute("aria-busy", "true");
@@ -39,6 +43,7 @@ export function montarTelaDeRanking(tela) {
 
   function mostrarRanking(ranking) {
     contagem.textContent = descreverQuantidade(ranking.length, "ativo", "ativos");
+    legenda.hidden = ranking.length === 0;
     if (ranking.length === 0) {
       areaDoRanking.replaceChildren(
         criarElemento("ul", {}, [
@@ -68,6 +73,7 @@ export function montarTelaDeRanking(tela) {
 
   function mostrarRankingIndisponivel(mensagem) {
     contagem.textContent = "";
+    legenda.hidden = true;
     areaDoRanking.replaceChildren(
       criarElemento("div", { classe: "estado-vazio" }, [
         criarElemento("p", {
@@ -84,22 +90,26 @@ export function montarTelaDeRanking(tela) {
   return { atualizar: carregar };
 }
 
-function criarCabecalhoDoRanking(contagem) {
+function criarCabecalhoDoRanking(contagem, legenda) {
   return criarElemento("header", { classe: "cabecalho-de-tela cabecalho-com-acoes" }, [
     criarElemento("div", { classe: "cabecalho-de-tela-textos" }, [
       criarElemento("h1", { classe: "titulo-de-tela", texto: "Ranking de riscos" }),
       contagem,
     ]),
-    criarElemento("ul", { classe: "legenda-do-ranking" }, [
-      criarElemento("li", {}, [
-        criarElemento("span", { classe: "amostra-da-barra amostra-propria" }),
-        criarElemento("span", { texto: "Risco próprio" }),
-      ]),
-      criarElemento("li", {}, [
-        criarElemento("span", { classe: "amostra-da-barra amostra-herdada" }),
-        criarElemento("span", { texto: "Risco herdado" }),
-      ]),
-      criarElemento("li", { classe: "legenda-do-ranking-total", texto: "Número: risco efetivo" }),
+    legenda,
+  ]);
+}
+
+function criarLegendaDoRanking() {
+  return criarElemento("ul", { classe: "legenda-do-ranking", hidden: true }, [
+    criarElemento("li", {}, [
+      criarElemento("span", { classe: "amostra-da-barra amostra-propria" }),
+      criarElemento("span", { texto: "Risco próprio" }),
     ]),
+    criarElemento("li", {}, [
+      criarElemento("span", { classe: "amostra-da-barra amostra-herdada" }),
+      criarElemento("span", { texto: "Risco herdado" }),
+    ]),
+    criarElemento("li", { classe: "legenda-do-ranking-total", texto: "Número: risco efetivo" }),
   ]);
 }
