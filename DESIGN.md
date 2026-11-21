@@ -53,7 +53,7 @@ Erro da API: fundo `#7A1414`, texto branco.
 - Fonte: **Inter** em todos os sistemas, com os arquivos `woff2` dentro do projeto (licença SIL OFL), com eixo de tamanho óptico (`opsz`). Não usar SF Pro: a licença da Apple não permite usá-la num site.
 - Pesos: 300 nos títulos grandes e números de destaque, 400 no corpo, 500 para ênfase e rótulos. Nada acima de 500.
 - Números de dados (tabelas, contadores, CVSS, riscos) com algarismos tabulares (`font-variant-numeric: tabular-nums`).
-- Escala: saudação 44px / 300 / `letter-spacing: -0.02em`; título de tela 32px / 300; título de seção 20px / 500; corpo 15px / 400 / `line-height: 1.5`; apoio 13px; legenda 12px.
+- Escala: saudação 52px / 300 (40px no celular), com a data e a frase do mais urgente em 18px / `letter-spacing: -0.02em`; título de tela 32px / 300; título de seção 20px / 500; corpo 15px / 400 / `line-height: 1.5`; apoio 13px; legenda 12px.
 - Números grandes (faixa da Início, riscos, ranking): peso 200–300, como o "10" fino de r6-01.
 - Frases em português, com tom simples e direto. Botões dizem a ação ("Vincular", "Salvar ativo"). Sem ponto final em rótulos e títulos.
 
@@ -157,9 +157,15 @@ Rotas com `#`: `/#/`, `/#/ativos`, `/#/ativos/mapa`, `/#/ativos/<id>`, `/#/ativo
 
 Organização de desktop inspirada em r2-01 e r2-02: título grande à esquerda, números grandes soltos e gráficos finos.
 
+- **Alinhamento:** a data, a saudação e a frase do mais urgente ficam alinhadas à esquerda, umas embaixo das outras. O resto (faixa de números, gráficos e mais urgentes) fica centralizado na página, com no máximo 1280px de largura: em notebooks comuns ele ocupa quase toda a largura e começa praticamente alinhado com a saudação.
+- **Tamanhos:** números da faixa em 66px (56px entre 768 e 1200px de largura), rótulos em 17px, títulos de seção em 26px, meia lua com até 400px de largura e porcentagem em 58px, barras dos setores com 180px de altura e 14px de largura, nomes dos setores e legendas em 17px, e linhas dos mais urgentes com nome em 18px e número em 21px. No celular, os tamanhos voltam a ser menores.
+
 1. **Data e saudação:** a data aparece pequena acima. A saudação é "Bom dia, Anakin" das 5h às 11h59, "Boa tarde, Anakin" das 12h às 17h59 e "Boa noite, Anakin" das 18h às 4h59, sempre no fuso `America/Sao_Paulo`.
 2. **Frase do mais urgente:** uma frase curta logo abaixo, com o número em destaque. Exemplo: "**3** vulnerabilidades críticas abertas".
-3. **Faixa de números:** total de ativos, vulnerabilidades abertas, críticas abertas e ativos em manutenção, com divisórias finas.
+   - **Sem críticas abertas:** a frase desce para o nível mais grave que ainda tem abertas ("**2** vulnerabilidades altas abertas") e, uma linha abaixo, aparece "Nenhuma vulnerabilidade crítica aberta".
+   - **Sem nenhuma aberta:** só "Nenhuma vulnerabilidade aberta".
+3. **Faixa de números:** total de ativos, vulnerabilidades abertas, críticas abertas e ativos em manutenção, com divisórias finas. No celular, vira uma grade de 2 por 2.
+   - **Contagem por vínculo:** as abertas e as críticas abertas contam cada vínculo (Log4Shell aberta em 3 servidores conta 3), igual à meia lua e aos setores.
 4. **Meia lua dos vínculos:**
    - **Desktop:** arco fino dividido pelos 4 status de tratamento, com a porcentagem de corrigidas no centro e uma legenda com bolinhas embaixo.
    - **Celular:** só a porcentagem de corrigidas.
@@ -168,8 +174,11 @@ Organização de desktop inspirada em r2-01 e r2-02: título grande à esquerda,
    - **Dados:** barras finas com a quantidade de vulnerabilidades críticas e altas não corrigidas em cada setor.
    - **Cores:** o pior setor em vermelho, o mais seguro em verde e os outros em cinza.
    - **Desempate:** não precisa de regra especial; com quantidades iguais, vale a ordem dos setores.
-6. **Mais urgentes:** os primeiros ativos do ranking de risco efetivo, com o link "Ver ranking". Clicar num ativo abre os detalhes dele.
-7. **Prévia do mapa:** fica num canto. Ao clicar, o mapa é puxado para o centro (ease-in-out forte, até ~500ms) e vira `/#/ativos/mapa`.
+   - **Desenho:** barras verticais finas, da maior para a menor, com o número em cima e o nome do setor embaixo.
+   - **Todos iguais:** quando todos os setores têm a mesma quantidade (por exemplo, todos com zero), nenhuma barra fica vermelha ou verde.
+6. **Mais urgentes:** os 5 primeiros ativos do ranking de risco efetivo, nas mesmas linhas compactas do Ranking (posição, nome, barra e número), com o link "Ver ranking". Clicar num ativo abre os detalhes dele por cima da Início.
+7. **Prévia do mapa:** fica solta no fundo, sem borda, no canto superior direito da página, saindo pela borda da tela e se apagando aos poucos em direção ao conteúdo (máscara de transparência, sem gradiente de cor). É um pedaço do próprio mapa, com a mesma posição das bolinhas, em 80% do tamanho e sem ícones nem nomes; mostra a parte mais cheia do mapa. Ao passar o mouse, o mapa chega 12px para a esquerda e aparece "Abrir o mapa". No celular, fica no fim da página, ocupando a largura toda. Ao clicar, o mapa é puxado para o centro (ease-in-out forte, até ~500ms) e vira `/#/ativos/mapa`: o desenho sai do lugar da prévia e cresce até o lugar dele na tela do mapa, enquanto o título e a legenda aparecem. Com `prefers-reduced-motion`, a troca é direta.
+8. **Sem ranking (409):** os números, a meia lua e os setores continuam; em "Mais urgentes" aparece a mensagem da API, e a prévia fica sem as bolinhas de notificação.
 
 Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, Em tratamento e Aceita). Aceitar não elimina o risco.
 
@@ -180,12 +189,17 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 - **Filtros:**
   - **Tipo:** pílulas com ícone e nome; a selecionada fica preenchida de preto.
   - **Status:** pílulas só com contorno, com a bolinha do status.
+  - **Setor:** pílulas só com contorno, com o nome do setor. Como a API não filtra por setor, esse filtro é aplicado no JavaScript, em cima da resposta.
+  - **Compartilhados:** a Lista e o Mapa usam os mesmos filtros (busca, tipo, status e setor). Trocar de Lista para Mapa mantém o que estiver escolhido.
   - **Ordenação:** segmentado padrão com ID | Nome | Vulnerabilidades, usando os parâmetros `ordenar=id|nome|vulnerabilidades` da API.
 - **Troca Lista | Mapa:** segmentado de troca de modo, no topo.
 - **Clique numa linha:** abre a janela de detalhes.
 
 ### 7.3 Ativos: Mapa
 
+- **Filtros:** os mesmos da Lista (tipo, status e setor), sem a ordenação. O mapa mostra só os ativos que passam nos filtros e as dependências entre eles; a contagem vira "12 de 36 ativos".
+- **Busca por nome:** mostra o ativo encontrado, com contorno preto, e todos os ativos ligados diretamente a ele (os de que ele depende e os que dependem dele), mesmo que não passem nos outros filtros, porque a busca serve para ver as dependências. Só as setas que tocam o ativo buscado aparecem.
+- **Sem resultado:** "Nenhum ativo com esses filtros" com o botão "Limpar filtros".
 - **Bolinhas e linhas:** cada bolinha é um ativo, limpa, com o ícone do tipo; as linhas são as dependências (seta de quem depende para o ativo do qual depende, com espessura leve proporcional à fração).
 - **Tamanho:** cresce com o risco efetivo, mas com tamanho mínimo e máximo próximos (por exemplo, de 36px a 64px de diâmetro). A diferença é pequena de propósito.
 - **Bolinha de notificação:** no canto superior direito de cada ativo, como no iOS. A cor vem da posição do ativo no ranking de risco efetivo, dividido em terços pela quantidade de ativos. Com `n` ativos e a posição `p` (1 = maior risco):
@@ -194,8 +208,12 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
   - **Verde:** o resto (o último terço).
   - **Empate:** ativos com o mesmo risco efetivo recebem a mesma cor, a do primeiro deles no ranking.
   - **Risco zero:** a bolinha é sempre verde, mesmo que caia num terço acima.
-- **Clique numa bolinha:** abre os detalhes do ativo.
-- **Desenho:** SVG próprio com um layout de forças simples, sem biblioteca externa.
+- **Clique numa bolinha:** abre os detalhes do ativo, por cima do mapa.
+- **Arrastar o mapa:** as bolinhas ficam fixas; o que se arrasta é o mapa todo. O mapa cresce com a quantidade de ativos (cerca de 190×190px de espaço por ativo no computador e 150×150px no celular) e, quando passa do tamanho da tela, arrastar o fundo mostra o resto. No computador o mapa cresce nas duas direções; no celular, só para os lados, e deslizar para cima ou para baixo continua rolando a página. Um arrasto que começa em cima de uma bolinha não abre o ativo. Com o teclado, focar uma bolinha fora da tela leva o mapa até ela. A dica "Arraste o fundo do mapa para ver o resto" só aparece quando dá para arrastar.
+- **Desenho:** SVG próprio com um layout de forças simples, sem biblioteca externa. O cálculo não usa sorteio, então a prévia da Início e o mapa saem iguais. As posições seguem a proporção do mapa (que depende da tela e da quantidade de ativos). As setas ficam em `--estado-cinza`, mais claras que os nomes. O desenho é centralizado sem ser esticado: um mapa cheio ocupa o espaço todo, e um grupo pequeno (como o resultado de uma busca) fica junto no meio, com cerca de 200px entre as bolinhas.
+- **Nomes:** embaixo de cada bolinha, com um contorno da cor do fundo para as setas não cortarem o texto.
+- **Legenda:** embaixo do mapa, explica o tamanho, as cores dos terços e o sentido das setas.
+- **Sem ranking (409):** aparece a mensagem da API acima do mapa, e as bolinhas ficam do mesmo tamanho e sem a bolinha de notificação.
 
 ### 7.4 Janelas de detalhes
 
@@ -243,6 +261,10 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 - **Linha:** a posição bem grande à esquerda, como peça tipográfica; o nome com o ícone do tipo; uma barra horizontal com o risco próprio em preto e o herdado em cinza (o comprimento total é o efetivo); e o número do efetivo.
 - **Destaque:** os 3 primeiros têm nome e barra maiores, e o resto da lista fica mais compacto embaixo.
 - **Escala:** a barra usa o maior risco efetivo como 100%.
+- **Legenda:** no topo, à direita: "Risco próprio" (preto), "Risco herdado" (cinza) e "Número: risco efetivo".
+- **Clique numa linha:** abre os detalhes do ativo por cima do Ranking.
+- **Celular:** a posição fica à esquerda, o nome e o número na primeira linha e a barra embaixo, ocupando a largura toda.
+- **Sem ranking (409):** a mensagem da API com o botão "Tentar de novo".
 
 ### 7.8 Formulários: Novo ativo, Nova vulnerabilidade e Editar
 
@@ -281,7 +303,7 @@ Valores das skills emil-design-eng e animate:
 ## 9. Responsivo
 
 Larguras de referência: 1440, 1024, 768 e 390px.
-- **Desktop:** a Início usa várias colunas (a meia lua ao lado das barras de setores; a prévia do mapa num canto).
+- **Desktop:** a Início usa várias colunas (a meia lua ao lado das barras de setores; a prévia do mapa solta no canto).
 - **Abaixo de 768px:** uma coluna, menu pelo botão do meio, janelas em tela cheia e meia lua só com a porcentagem.
 - **Toque:** áreas de toque com pelo menos 44px no celular.
 
