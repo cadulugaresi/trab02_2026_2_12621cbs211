@@ -177,8 +177,71 @@
   background: var(--tinta);
 }
 
+.painel-grupo {
+  width: 100%;
+  border: 0;
+  background: transparent;
+  text-align: left;
+  cursor: pointer;
+}
+
+.painel-grupo[data-tela-atual] {
+  color: var(--tinta);
+  font-weight: var(--peso-medio);
+}
+
+.painel-grupo-seta {
+  width: 16px;
+  height: 16px;
+  margin-left: auto;
+  transition: transform var(--duracao-do-submenu) var(--curva-de-saida);
+}
+
+.painel-grupo[aria-expanded="true"] .painel-grupo-seta {
+  transform: rotate(180deg);
+}
+
+.painel-subopcoes {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--duracao-do-submenu) var(--curva-de-saida);
+}
+
+.painel-grupo[aria-expanded="true"] + .painel-subopcoes {
+  grid-template-rows: 1fr;
+}
+
+.painel-subopcoes-lista {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-height: 0;
+  margin-left: 21px;
+  padding-left: var(--espaco-3);
+  overflow: hidden;
+  border-left: 1px solid var(--linha);
+}
+
+.painel-subopcao {
+  display: flex;
+  align-items: center;
+  min-height: 40px;
+  padding: 0 var(--espaco-3);
+  border-radius: 10px;
+  color: var(--texto-secundario);
+  font-size: var(--tamanho-controle);
+  text-decoration: none;
+}
+
+.painel-subopcao[aria-current="page"] {
+  background: var(--campo);
+  color: var(--tinta);
+  font-weight: var(--peso-medio);
+}
+
 @media (hover: hover) and (pointer: fine) {
-  .painel-item:hover {
+  .painel-item:hover,
+  .painel-subopcao:hover {
     color: var(--tinta);
     background: var(--campo);
   }
@@ -256,7 +319,7 @@
 
 @media (max-width: 767.98px) {
   .conteudo {
-    padding: var(--espaco-8) var(--espaco-5) 140px;
+    padding: calc(var(--espaco-8) + var(--espaco-4)) var(--espaco-5) 140px;
   }
 
   .faixa-de-navegacao {
@@ -289,7 +352,19 @@
 
   .painel-cadastrar .botao-cadastrar {
     width: 100%;
+    gap: var(--espaco-2);
+    padding: 0 var(--espaco-5);
     box-shadow: none;
+  }
+
+  .painel-cadastrar .circulo-do-mais {
+    width: 24px;
+    height: 24px;
+  }
+
+  .painel-cadastrar .circulo-do-mais .icone {
+    width: 14px;
+    height: 14px;
   }
 
   .painel-item {

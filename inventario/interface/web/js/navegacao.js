@@ -2,13 +2,30 @@ import { esconderComTransicao, mostrarComTransicao } from "./animacoes.js";
 import { abrirCamada, devolverFoco, fecharCamada } from "./camadas.js";
 import { criarBotao } from "./componentes/botoes.js";
 import { abrirFlutuante } from "./componentes/flutuante.js";
-import { criarElemento } from "./elementos.js";
+import { criarElemento, gerarIdentificador } from "./elementos.js";
 import { criarIcone } from "./icones.js";
 
 const TELAS_DA_NAVEGACAO = [
   { nome: "Início", caminho: "/", icone: "inicio" },
-  { nome: "Ativos", caminho: "/ativos", icone: "ativos" },
-  { nome: "Vulnerabilidades", caminho: "/vulnerabilidades", icone: "vulnerabilidades" },
+  {
+    nome: "Ativos",
+    caminho: "/ativos",
+    icone: "ativos",
+    subopcoes: [
+      { nome: "Lista de ativos", caminho: "/ativos", incluiDetalhes: true },
+      { nome: "Cadastrar ativo", caminho: "/ativos/novo" },
+      { nome: "Mapa de grafos", caminho: "/ativos/mapa" },
+    ],
+  },
+  {
+    nome: "Vulnerabilidades",
+    caminho: "/vulnerabilidades",
+    icone: "vulnerabilidades",
+    subopcoes: [
+      { nome: "Lista de vulnerabilidades", caminho: "/vulnerabilidades", incluiDetalhes: true },
+      { nome: "Cadastrar vulnerabilidade", caminho: "/vulnerabilidades/novo" },
+    ],
+  },
   { nome: "Vínculos", caminho: "/vinculos", icone: "vinculos" },
   { nome: "Ranking de riscos", caminho: "/ranking", icone: "ranking" },
 ];
@@ -43,6 +60,17 @@ function marcarLink(link, caminho) {
   } else {
     link.removeAttribute("aria-current");
   }
+}
+
+function ehASubopcaoAtual(caminho, subopcao) {
+  if (caminho === subopcao.caminho) {
+    return true;
+  }
+  if (!subopcao.incluiDetalhes || !caminho.startsWith(`${subopcao.caminho}/`)) {
+    return false;
+  }
+  const resto = caminho.slice(subopcao.caminho.length + 1);
+  return /^\d+$/.test(resto);
 }
 
 function pertenceATela(caminho, caminhoDaTela) {
@@ -215,17 +243,84 @@ function criarTopoDoPainel() {
 
 function criarListaDoPainel() {
   const lista = criarElemento("ul", { classe: "painel-lista" });
+  const grupos = [];
   for (const tela of TELAS_DA_NAVEGACAO) {
-    const link = criarElemento(
-      "a",
-      { classe: "painel-item", href: `#${tela.caminho}`, "data-caminho": tela.caminho },
-      [criarIcone(tela.icone), criarElemento("span", { texto: tela.nome })],
-    );
-    marcarLink(link, caminhoDaTelaAtual);
-    link.addEventListener("click", fecharPainel);
-    lista.append(criarElemento("li", {}, [link]));
+    if (tela.subopcoes === undefined) {
+      lista.append(criarElemento("li", {}, [criarLinkDoPainel(tela)]));
+      continue;
+    }
+    const grupo = criarGrupoDoPainel(tela);
+    grupo.botao.addEventListener("click", () => {
+      const vaiAbrir = !grupo.estaAberto();
+      for (const outroGrupo of grupos) {
+        outroGrupo.definirAberto(false);
+      }
+      grupo.definirAberto(vaiAbrir);
+    });
+    grupos.push(grupo);
+    lista.append(grupo.elemento);
   }
   return lista;
+}
+
+function criarLinkDoPainel(tela) {
+  const link = criarElemento(
+    "a",
+    { classe: "painel-item", href: `#${tela.caminho}`, "data-caminho": tela.caminho },
+    [criarIcone(tela.icone), criarElemento("span", { texto: tela.nome })],
+  );
+  marcarLink(link, caminhoDaTelaAtual);
+  link.addEventListener("click", fecharPainel);
+  return link;
+}
+
+function criarGrupoDoPainel(tela) {
+  const identificadorDasSubopcoes = gerarIdentificador("subopcoes");
+  const botao = criarElemento(
+    "button",
+    {
+      type: "button",
+      classe: "painel-item painel-grupo",
+      "aria-expanded": "false",
+      "aria-controls": identificadorDasSubopcoes,
+    },
+    [
+      criarIcone(tela.icone),
+      criarElemento("span", { texto: tela.nome }),
+      criarIcone("setaParaBaixo", "painel-grupo-seta"),
+    ],
+  );
+  botao.toggleAttribute("data-tela-atual", pertenceATela(caminhoDaTelaAtual, tela.caminho));
+
+  const listaDeSubopcoes = criarElemento("ul", { classe: "painel-subopcoes-lista" });
+  for (const subopcao of tela.subopcoes) {
+    const link = criarElemento("a", {
+      classe: "painel-subopcao",
+      href: `#${subopcao.caminho}`,
+      texto: subopcao.nome,
+    });
+    if (ehASubopcaoAtual(caminhoDaTelaAtual, subopcao)) {
+      link.setAttribute("aria-current", "page");
+    }
+    link.addEventListener("click", fecharPainel);
+    listaDeSubopcoes.append(criarElemento("li", {}, [link]));
+  }
+  const subopcoes = criarElemento(
+    "div",
+    { classe: "painel-subopcoes", id: identificadorDasSubopcoes },
+    [listaDeSubopcoes],
+  );
+  subopcoes.inert = true;
+
+  return {
+    elemento: criarElemento("li", {}, [botao, subopcoes]),
+    botao: botao,
+    estaAberto: () => botao.getAttribute("aria-expanded") === "true",
+    definirAberto: (aberto) => {
+      botao.setAttribute("aria-expanded", aberto ? "true" : "false");
+      subopcoes.inert = !aberto;
+    },
+  };
 }
 
 function apontarOrigemPara(painel, ancora) {

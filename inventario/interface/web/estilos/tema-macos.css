@@ -103,6 +103,7 @@
   --curva-de-movimento: cubic-bezier(0.77, 0, 0.175, 1);
   --duracao-de-pressao: 160ms;
   --duracao-de-menu: 200ms;
+  --duracao-do-submenu: 220ms;
   --duracao-de-janela: 220ms;
   --duracao-do-segmentado: 270ms;
   --duracao-de-aviso: 280ms;
@@ -126,6 +127,7 @@
 @media (prefers-reduced-motion: reduce) {
   :root {
     --duracao-do-segmentado: 0ms;
+    --duracao-do-submenu: 0ms;
     --duracao-do-mapa: 0ms;
     --duracao-da-contagem: 0ms;
     --escala-ao-pressionar: 1;
