@@ -75,26 +75,21 @@
   transition: fill var(--duracao-de-pressao) ease;
 }
 
-.mapa-notificacao {
-  fill: var(--estado-cinza);
+.mapa-marca-de-maior-risco {
+  pointer-events: none;
+}
+
+.mapa-marca-de-maior-risco circle {
+  fill: var(--nivel-critico);
   stroke: var(--fundo);
   stroke-width: 2;
 }
 
-.mapa-notificacao[data-cor="verde"] {
-  fill: var(--estado-verde);
-}
-
-.mapa-notificacao[data-cor="amarelo"] {
-  fill: var(--estado-amarelo);
-}
-
-.mapa-notificacao[data-cor="vermelho"] {
-  fill: var(--estado-vermelho);
-}
-
-.mapa-previa .mapa-notificacao {
-  stroke-width: 1;
+.mapa-marca-de-maior-risco text {
+  fill: var(--sobre-tinta);
+  font-size: 11px;
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
 }
 
 .mapa-previa .mapa-no {
@@ -134,16 +129,24 @@ a.mapa-no:focus-visible .mapa-no-fundo {
   color: var(--tinta);
 }
 
-.legenda-do-mapa-tercos {
+.legenda-do-mapa-maiores-riscos {
   display: flex;
-  flex-wrap: wrap;
-  gap: var(--espaco-2) var(--espaco-5);
-}
-
-.legenda-do-mapa-item {
-  display: inline-flex;
   align-items: center;
   gap: var(--espaco-2);
+}
+
+.amostra-da-marca-de-maior-risco {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--nivel-critico);
+  color: var(--sobre-tinta);
+  font-size: 11px;
+  font-weight: var(--peso-medio);
+  line-height: 1;
 }
 
 @media (hover: hover) and (pointer: fine) {

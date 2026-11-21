@@ -6,15 +6,14 @@ import { iconeDoTipo } from "../ativos/apresentacao-do-ativo.js";
 import { criarDefinicaoDaSeta } from "../ativos/mini-mapa.js";
 import { ligacaoAparece } from "./ativos-visiveis.js";
 import {
-  TERCOS_DO_RANKING,
-  calcularCoresDasNotificacoes,
   calcularDiametro,
+  descobrirPosicoesDosMaioresRiscos,
   indexarRankingPorId,
 } from "./riscos-do-mapa.js";
 
 const MARGENS_DO_MAPA = { lados: 64, topo: 44, base: 60 };
 const MARGENS_DO_MAPA_ESTREITO = { lados: 44, topo: 40, base: 52 };
-const RAIO_DA_NOTIFICACAO = 6;
+const RAIO_DA_MARCA_DE_MAIOR_RISCO = 9;
 const RECUO_NA_ORIGEM = 2;
 const RECUO_NO_DESTINO = 5;
 const DISTANCIA_DO_ROTULO = 18;
@@ -35,7 +34,7 @@ export function criarDesenhoDoMapa({
   const margens = estreito ? MARGENS_DO_MAPA_ESTREITO : MARGENS_DO_MAPA;
   const limiteDoRotulo = estreito ? LIMITE_DO_ROTULO_ESTREITO : LIMITE_DO_ROTULO;
   const rankingPorId = indexarRankingPorId(ranking);
-  const cores = calcularCoresDasNotificacoes(ranking);
+  const posicoesDosMaioresRiscos = descobrirPosicoesDosMaioresRiscos(ranking);
   const maiorRisco = descobrirMaiorRisco(ranking);
   const identificadorDaSeta = gerarIdentificador("seta-do-mapa");
 
@@ -73,9 +72,10 @@ export function criarDesenhoDoMapa({
     const item = rankingPorId.get(ativo.id);
     const riscoEfetivo = item ? item.risco_efetivo : 0;
     const raio = calcularDiametro(riscoEfetivo, maiorRisco) / 2;
+    const posicaoEntreOsMaiores = posicoesDosMaioresRiscos.get(ativo.id);
     const no = previa
-      ? criarNoDaPrevia(raio, cores.get(ativo.id))
-      : criarNoDoMapa(ativo, item, raio, cores.get(ativo.id), limiteDoRotulo);
+      ? criarNoDaPrevia(raio, posicaoEntreOsMaiores)
+      : criarNoDoMapa(ativo, item, raio, posicaoEntreOsMaiores, limiteDoRotulo);
     if (buscados.has(ativo.id)) {
       no.classList.add("mapa-no-buscado");
     }
@@ -129,7 +129,7 @@ function criarLigacao({ origem, destino, raioDaOrigem, raioDoDestino }) {
   });
 }
 
-function criarNoDoMapa(ativo, item, raio, cor, limiteDoRotulo) {
+function criarNoDoMapa(ativo, item, raio, posicaoEntreOsMaiores, limiteDoRotulo) {
   const tamanhoDoIcone = Math.round(raio * 0.9);
   const icone = criarIcone(iconeDoTipo(ativo.tipo), "mapa-icone");
   icone.setAttribute("x", String(-tamanhoDoIcone / 2));
@@ -142,12 +142,12 @@ function criarNoDoMapa(ativo, item, raio, cor, limiteDoRotulo) {
     {
       class: "mapa-no",
       href: `#/ativos/${ativo.id}`,
-      "aria-label": descreverNo(ativo, item, cor),
+      "aria-label": descreverNo(ativo, item),
     },
     [
       criarElementoSvg("circle", { class: "mapa-no-fundo", r: String(raio) }),
       icone,
-      criarNotificacao(raio, cor, RAIO_DA_NOTIFICACAO),
+      criarMarcaDeMaiorRisco(raio, posicaoEntreOsMaiores),
       criarElementoSvg("text", {
         class: "mapa-rotulo",
         y: String(raio + DISTANCIA_DO_ROTULO),
@@ -158,39 +158,44 @@ function criarNoDoMapa(ativo, item, raio, cor, limiteDoRotulo) {
   );
 }
 
-function criarNoDaPrevia(raio, cor) {
+function criarNoDaPrevia(raio, posicaoEntreOsMaiores) {
   return criarElementoSvg("g", { class: "mapa-no" }, [
     criarElementoSvg("circle", { class: "mapa-no-fundo", r: String(raio) }),
-    criarNotificacao(raio, cor, RAIO_DA_NOTIFICACAO),
+    criarMarcaDeMaiorRisco(raio, posicaoEntreOsMaiores),
   ]);
 }
 
-function criarNotificacao(raio, cor, raioDaNotificacao) {
-  if (cor === undefined) {
+function criarMarcaDeMaiorRisco(raio, posicaoEntreOsMaiores) {
+  if (posicaoEntreOsMaiores === undefined) {
     return null;
   }
-  return criarElementoSvg("circle", {
-    class: "mapa-notificacao",
-    "data-cor": cor,
-    cx: String(raio * SENO_DE_45_GRAUS),
-    cy: String(-raio * SENO_DE_45_GRAUS),
-    r: String(raioDaNotificacao),
-  });
+  const deslocamento = raio * SENO_DE_45_GRAUS;
+  return criarElementoSvg(
+    "g",
+    {
+      class: "mapa-marca-de-maior-risco",
+      transform: `translate(${deslocamento} ${-deslocamento})`,
+    },
+    [
+      criarElementoSvg("circle", { r: String(RAIO_DA_MARCA_DE_MAIOR_RISCO) }),
+      criarElementoSvg("text", {
+        "text-anchor": "middle",
+        "dominant-baseline": "central",
+        texto: String(posicaoEntreOsMaiores),
+      }),
+    ],
+  );
 }
 
-function descreverNo(ativo, item, cor) {
+function descreverNo(ativo, item) {
   if (item === undefined) {
     return ativo.nome;
   }
-  const partes = [
+  return [
     ativo.nome,
     `${item.posicao}º no ranking`,
     `risco efetivo ${formatarRisco(item.risco_efetivo)}`,
-  ];
-  if (cor !== undefined) {
-    partes.push(TERCOS_DO_RANKING[cor].toLowerCase());
-  }
-  return partes.join(", ");
+  ].join(", ");
 }
 
 function encurtarNome(nome, limiteDoRotulo) {

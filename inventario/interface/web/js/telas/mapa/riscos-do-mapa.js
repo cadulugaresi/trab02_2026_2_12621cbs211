@@ -1,11 +1,6 @@
 export const DIAMETRO_MINIMO = 36;
 export const DIAMETRO_MAXIMO = 64;
-
-export const TERCOS_DO_RANKING = {
-  vermelho: "Terço de maior risco",
-  amarelo: "Terço do meio",
-  verde: "Terço de menor risco",
-};
+export const QUANTIDADE_DE_MAIORES_RISCOS = 3;
 
 export function indexarRankingPorId(ranking) {
   const rankingPorId = new Map();
@@ -18,27 +13,17 @@ export function indexarRankingPorId(ranking) {
   return rankingPorId;
 }
 
-export function calcularCoresDasNotificacoes(ranking) {
-  const cores = new Map();
+export function descobrirPosicoesDosMaioresRiscos(ranking) {
+  const posicoes = new Map();
   if (ranking === null) {
-    return cores;
+    return posicoes;
   }
-  const quantidade = ranking.length;
-  const ultimaPosicaoVermelha = Math.ceil(quantidade / 3);
-  const ultimaPosicaoAmarela = Math.ceil((2 * quantidade) / 3);
-  let riscoAnterior = null;
-  let corAnterior = null;
-
   for (const item of ranking) {
-    let cor = escolherCorPelaPosicao(item.posicao, ultimaPosicaoVermelha, ultimaPosicaoAmarela);
-    if (item.risco_efetivo === riscoAnterior) {
-      cor = corAnterior;
+    if (item.posicao <= QUANTIDADE_DE_MAIORES_RISCOS && item.risco_efetivo > 0) {
+      posicoes.set(item.id, item.posicao);
     }
-    riscoAnterior = item.risco_efetivo;
-    corAnterior = cor;
-    cores.set(item.id, item.risco_efetivo === 0 ? "verde" : cor);
   }
-  return cores;
+  return posicoes;
 }
 
 export function calcularDiametro(riscoEfetivo, maiorRisco) {
@@ -46,14 +31,4 @@ export function calcularDiametro(riscoEfetivo, maiorRisco) {
     return DIAMETRO_MINIMO;
   }
   return DIAMETRO_MINIMO + (riscoEfetivo / maiorRisco) * (DIAMETRO_MAXIMO - DIAMETRO_MINIMO);
-}
-
-function escolherCorPelaPosicao(posicao, ultimaPosicaoVermelha, ultimaPosicaoAmarela) {
-  if (posicao <= ultimaPosicaoVermelha) {
-    return "vermelho";
-  }
-  if (posicao <= ultimaPosicaoAmarela) {
-    return "amarelo";
-  }
-  return "verde";
 }

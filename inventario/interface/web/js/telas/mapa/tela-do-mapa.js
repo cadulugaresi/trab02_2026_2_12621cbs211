@@ -17,14 +17,15 @@ import { criarDesenhoDoMapa } from "./desenho-do-mapa.js";
 import { animarChegadaDoMapa, receberMapaPuxado } from "./mapa-puxado.js";
 import { medirMapa, podeArrastar } from "./medidas-do-mapa.js";
 import { calcularPosicoesDoMapa } from "./posicoes-do-mapa.js";
-import { TERCOS_DO_RANKING } from "./riscos-do-mapa.js";
+import { QUANTIDADE_DE_MAIORES_RISCOS } from "./riscos-do-mapa.js";
 
 const ESPERA_AO_REDIMENSIONAR = 150;
 const ESPERA_DA_BUSCA = 250;
 const EXPLICACAO_SEM_RANKING =
-  "Por isso, as bolinhas ficam do mesmo tamanho e sem a cor do terço do ranking.";
-const EXPLICACAO_DO_TAMANHO =
-  "O tamanho da bolinha cresce com o risco efetivo. A bolinha no canto mostra em que terço do ranking o ativo está.";
+  "Por isso, as bolinhas ficam do mesmo tamanho e sem a marca dos maiores riscos.";
+const EXPLICACAO_DO_TAMANHO = "O tamanho da bolinha cresce com o risco efetivo.";
+const EXPLICACAO_DA_MARCA =
+  `Os ${QUANTIDADE_DE_MAIORES_RISCOS} maiores riscos do ranking, com a posição de cada um.`;
 const EXPLICACAO_DAS_SETAS = "As setas vão de quem depende para o ativo do qual depende.";
 const EXPLICACAO_DA_BUSCA =
   "Ao buscar um nome, o mapa mostra o ativo encontrado (com contorno preto) e só as dependências dele.";
@@ -33,7 +34,10 @@ const DICA_DE_ARRASTAR_NO_CELULAR = "Deslize o mapa para os lados para ver o res
 
 export function montarTelaDoMapa(tela) {
   const filtros = lerFiltrosDeAtivos();
-  const contagem = criarElemento("p", { classe: "texto-de-apoio", "aria-live": "polite" });
+  const contagem = criarElemento("p", {
+    classe: "texto-de-apoio contagem-da-tela",
+    "aria-live": "polite",
+  });
   const cabecalho = criarCabecalhoDeAtivos({ modo: "mapa", contagem: contagem });
   const faixa = criarFaixaDeErro();
   const areaDosFiltros = criarElemento("div", { classe: "filtros-da-lista" });
@@ -249,19 +253,17 @@ function criarMapaSemResultado(limparFiltros) {
 }
 
 function criarLegendaDoMapa(dicaDeArrastar) {
-  const itensDosTercos = [];
-  for (const [cor, rotulo] of Object.entries(TERCOS_DO_RANKING)) {
-    itensDosTercos.push(
-      criarElemento("li", { classe: "legenda-do-mapa-item" }, [
-        criarElemento("span", { classe: "bolinha", "data-cor": cor }),
-        criarElemento("span", { texto: rotulo }),
-      ]),
-    );
-  }
   return criarElemento("div", { classe: "legenda-do-mapa" }, [
     dicaDeArrastar,
     criarElemento("p", { texto: EXPLICACAO_DO_TAMANHO }),
-    criarElemento("ul", { classe: "legenda-do-mapa-tercos" }, itensDosTercos),
+    criarElemento("p", { classe: "legenda-do-mapa-maiores-riscos" }, [
+      criarElemento("span", {
+        classe: "amostra-da-marca-de-maior-risco",
+        "aria-hidden": "true",
+        texto: "1",
+      }),
+      criarElemento("span", { texto: EXPLICACAO_DA_MARCA }),
+    ]),
     criarElemento("p", { texto: EXPLICACAO_DAS_SETAS }),
     criarElemento("p", { texto: EXPLICACAO_DA_BUSCA }),
   ]);
