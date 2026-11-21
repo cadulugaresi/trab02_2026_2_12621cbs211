@@ -114,4 +114,18 @@
   .segmentado-opcao {
     height: 44px;
   }
+
+  .segmentado-opcao,
+  .segmentado-camada-escolhida > span {
+    padding: 0 var(--espaco-1);
+  }
+
+  .segmentado:not(.segmentado-troca-de-modo) {
+    font-size: var(--tamanho-apoio);
+  }
+
+  .segmentado:not(.segmentado-troca-de-modo) .segmentado-opcao,
+  .segmentado:not(.segmentado-troca-de-modo) .segmentado-camada-escolhida > span {
+    padding: 0;
+  }
 }

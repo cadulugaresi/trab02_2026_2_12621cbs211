@@ -33,6 +33,12 @@
 
 @media (max-width: 767.98px) {
   .numeros-de-risco {
-    gap: var(--espaco-7);
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: var(--espaco-3);
+  }
+
+  .numero-de-risco-valor {
+    font-size: 32px;
   }
 }

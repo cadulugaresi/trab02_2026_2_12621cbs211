@@ -75,6 +75,11 @@ a.linha-de-vinculo-nome {
     display: none;
   }
 
+  .linha-de-vinculo-nome {
+    white-space: normal;
+    overflow-wrap: anywhere;
+  }
+
   .linha-de-vinculo .pilula-de-status {
     grid-column: 2 / 3;
     justify-self: start;
