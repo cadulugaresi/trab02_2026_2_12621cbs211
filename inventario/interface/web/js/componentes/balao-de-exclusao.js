@@ -73,8 +73,12 @@ export function abrirBalaoDeExclusao({
   botaoDeExcluir.addEventListener("click", async () => {
     mensagemDeErro.hidden = true;
     marcarBotaoComoOcupado(botaoDeExcluir, textoEnquantoConfirma);
+    const posicaoDaAncora = listarBotoesParecidos(ancora).indexOf(ancora);
     try {
       await aoConfirmar();
+      if (!ancora.isConnected && posicaoDaAncora >= 0) {
+        focarNoBotaoQueFicouNoLugar(ancora, posicaoDaAncora);
+      }
       balao.fechar();
     } catch (erro) {
       liberarBotao(botaoDeExcluir);
@@ -85,4 +89,30 @@ export function abrirBalaoDeExclusao({
   });
 
   botaoDeCancelar.focus({ preventScroll: true });
+}
+
+function listarBotoesParecidos(ancora) {
+  const rotulo = ancora.getAttribute("aria-label");
+  if (rotulo === null) {
+    return [];
+  }
+  const acao = rotulo.split(" ")[0];
+  const botoesParecidos = [];
+  for (const botao of document.querySelectorAll(`button[aria-label^="${acao} "]`)) {
+    if (botao.closest("[inert]") === null) {
+      botoesParecidos.push(botao);
+    }
+  }
+  return botoesParecidos;
+}
+
+function focarNoBotaoQueFicouNoLugar(ancora, posicaoDaAncora) {
+  const botoesQueSobraram = listarBotoesParecidos(ancora);
+  if (botoesQueSobraram.length > 0) {
+    const posicao = Math.min(posicaoDaAncora, botoesQueSobraram.length - 1);
+    botoesQueSobraram[posicao].focus({ preventScroll: true });
+    return;
+  }
+  const areaEmVolta = document.querySelector(".janela") ?? document.getElementById("conteudo");
+  areaEmVolta.focus({ preventScroll: true });
 }
