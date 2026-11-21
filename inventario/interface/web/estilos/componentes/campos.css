@@ -36,7 +36,7 @@
 }
 
 .campo::placeholder {
-  color: var(--texto-apagado);
+  color: var(--texto-secundario);
   opacity: 1;
 }
 
@@ -85,7 +85,7 @@
 }
 
 .campo-gatilho[data-vazio] .campo-gatilho-texto {
-  color: var(--texto-apagado);
+  color: var(--texto-secundario);
 }
 
 .campo-gatilho-detalhe {

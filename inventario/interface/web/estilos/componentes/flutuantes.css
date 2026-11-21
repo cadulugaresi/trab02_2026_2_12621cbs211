@@ -100,7 +100,7 @@
 }
 
 .busca-do-menu-entrada::placeholder {
-  color: var(--texto-apagado);
+  color: var(--texto-secundario);
   opacity: 1;
 }
 
