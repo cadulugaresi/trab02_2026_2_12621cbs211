@@ -21,8 +21,8 @@ Todas as cores ficam em variáveis no `:root`. O modo escuro, se entrar, só tro
 | `--superficie` | `#FFFFFF` | janelas, balões, menus, painel lateral |
 | `--campo` | `#F1F1EF` | campos em pílula, faixa do segmentado |
 | `--tinta` | `#0A0A0A` | texto principal, botões pretos, contador, cartão preto do segmentado |
-| `--texto-secundario` | `#6E6D69` | textos de apoio, rótulos |
-| `--texto-apagado` | `#A3A29D` | placeholders, itens "já corrigida em" |
+| `--texto-secundario` | `#6E6D69` | textos de apoio, rótulos, placeholders (contraste de 4,6:1 sobre `--campo`) |
+| `--texto-apagado` | `#A3A29D` | itens "já corrigida em" (histórico, apagado de propósito), setas das linhas |
 | `--linha` | `rgba(0,0,0,0.08)` | divisórias finas |
 | `--sombra-flutuante` | `0 18px 48px rgba(0,0,0,0.12), 0 4px 12px rgba(0,0,0,0.06)` | janelas e balões |
 | `--veu` | `rgba(255,255,255,0.55)` + `backdrop-filter: blur(8px)` | fundo atrás de janelas e do menu aberto |
@@ -42,7 +42,6 @@ Bolinhas de estado (pequenas, ~7–8px):
 |---|---|---|---|---|
 | Status do ativo | Ativo | Em manutenção | Inativo | — |
 | Status de tratamento | Corrigida | Em tratamento | Aberta | Aceita |
-| Notificação do mapa | risco baixo | risco médio | risco alto | — |
 
 Valores: verde `#3B7A17`, amarelo `#C98A0B`, vermelho `#B42318`, cinza `#8A8A85`.
 
@@ -128,6 +127,7 @@ Usado para portas e RAM (r6-01):
 - **Excluir:** um balão sai do próprio botão Excluir: "Excluir Servidor web? Os vínculos e as dependências dele também serão removidos." Tem Cancelar e um botão Excluir vermelho (`#B42318`).
 - **Desvincular:** o "x" de um vínculo abre o mesmo balão, saindo do próprio "x": "Desvincular Log4Shell de Servidor web? O status de tratamento deste vínculo será perdido." Tem Cancelar e um botão Desvincular vermelho. Só depois de confirmar o vínculo é apagado. Vale para a janela do ativo e para a tela de Vínculos.
 - **Remover dependência:** o "x" de "Depende de" abre o mesmo balão: "Remover a dependência de Banco de dados? Servidor web deixará de depender deste ativo, e a fração 0,30 será perdida." Tem Cancelar e um botão Remover vermelho.
+- **Foco depois de confirmar:** quando o item some (desvincular ou remover dependência), o foco vai para o "x" do item que ficou no lugar dele (o seguinte, ou o anterior se era o último). Se não sobrar nenhum, o foco vai para a janela ou para a tela.
 - **Sucesso:** uma pílula preta sobe de baixo, perto do Cadastrar, com o texto "Ativo cadastrado", "Vulnerabilidade excluída" etc., e some sozinha em ~3s.
 - **Erro da API:** faixa `#7A1414` com texto branco no topo do formulário, mostrando a mensagem de `{"erro": ...}`. O campo relacionado, quando dá para saber qual é, fica em destaque.
 
@@ -137,6 +137,12 @@ Usado para portas e RAM (r6-01):
 
 - **Faixa de ícones:** sempre visível à esquerda, branca, com uma linha preta vertical marcando a tela ativa (r3-01).
 - **Painel lateral:** a faixa abre um painel com os nomes das telas. O painel cobre a faixa e começa junto da borda esquerda da tela, sem espaço reservado para a faixa. O fundo da página fica atrás do `--veu`. Não há contadores.
+- **Submenus do painel:** Ativos e Vulnerabilidades são grupos que começam fechados; clicar no nome abre as subopções logo abaixo, com uma linha fina à esquerda e uma seta que gira. Só um grupo fica aberto por vez. Início, Vínculos e Ranking de riscos têm uma tela só e continuam sendo links diretos.
+  - **Ativos:** Lista de ativos, Cadastrar ativo e Mapa de grafos.
+  - **Vulnerabilidades:** Lista de vulnerabilidades e Cadastrar vulnerabilidade.
+  - **Tela atual:** o grupo dela fica em preto e peso 500, e a subopção dela ganha o fundo `--campo`. A lista também vale para as janelas de detalhes abertas por cima dela.
+  - **Animação:** as subopções abrem e fecham em ~220ms com ease-out forte; com `prefers-reduced-motion`, a troca é direta. Fechadas, elas não recebem o foco do Tab.
+- **Faixa de ícones:** continua com os links diretos para as 5 telas, sem submenus.
 - **Cadastrar:**
   - pílula preta flutuando embaixo, no centro da tela, com um "+" num círculo branco
   - ao clicar, abre um balão que sai do botão, com "Novo ativo" e "Nova vulnerabilidade"
@@ -145,9 +151,9 @@ Usado para portas e RAM (r6-01):
 
 ### Celular
 
-- **Botão do meio embaixo:** abre o menu lateral; dentro dele, Cadastrar aparece em destaque.
+- **Botão do meio embaixo:** abre o menu lateral; dentro dele, Cadastrar aparece em destaque, com o círculo do "+" menor (24px) que no computador.
 - **Layout:** uma coluna.
-- **Janelas:** ocupam a tela toda.
+- **Janelas:** continuam sendo um cartão flutuante sobre o véu, como no computador, com uma margem pequena em volta (24px em cima e embaixo, 12px dos lados).
 
 ## 7. Telas
 
@@ -178,13 +184,13 @@ Organização de desktop inspirada em r2-01 e r2-02: título grande à esquerda,
    - **Todos iguais:** quando todos os setores têm a mesma quantidade (por exemplo, todos com zero), nenhuma barra fica vermelha ou verde.
 6. **Mais urgentes:** os 5 primeiros ativos do ranking de risco efetivo, nas mesmas linhas compactas do Ranking (posição, nome, barra e número), com o link "Ver ranking". Clicar num ativo abre os detalhes dele por cima da Início.
 7. **Prévia do mapa:** fica solta no fundo, sem borda, no canto superior direito da página, saindo pela borda da tela e se apagando aos poucos em direção ao conteúdo (máscara de transparência, sem gradiente de cor). É um pedaço do próprio mapa, com a mesma posição das bolinhas, em 80% do tamanho e sem ícones nem nomes; mostra a parte mais cheia do mapa. Ao passar o mouse, o mapa chega 12px para a esquerda e aparece "Abrir o mapa". No celular, fica no fim da página, ocupando a largura toda. Ao clicar, o mapa é puxado para o centro (ease-in-out forte, até ~500ms) e vira `/#/ativos/mapa`: o desenho sai do lugar da prévia e cresce até o lugar dele na tela do mapa, enquanto o título e a legenda aparecem. Com `prefers-reduced-motion`, a troca é direta.
-8. **Sem ranking (409):** os números, a meia lua e os setores continuam; em "Mais urgentes" aparece a mensagem da API, e a prévia fica sem as bolinhas de notificação.
+8. **Sem ranking (409):** os números, a meia lua e os setores continuam; em "Mais urgentes" aparece a mensagem da API, e a prévia fica sem as marcas dos maiores riscos.
 
 Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, Em tratamento e Aceita). Aceitar não elimina o risco.
 
 ### 7.2 Ativos: Lista
 
-- **Linha de cada ativo** (estilo app): ícone do tipo à esquerda; nome; uma linha pequena com ID, tipo, responsável e setor; pílula de status; seta à direita.
+- **Linha de cada ativo** (estilo app): ícone do tipo à esquerda; nome; uma linha pequena com ID, tipo, responsável e setor; pílula de status; seta à direita. No celular, a pílula fica à direita da linha pequena, na mesma altura dela, e a linha pequena quebra quando não cabe.
 - **Busca:** por nome.
 - **Filtros:**
   - **Tipo:** pílulas com ícone e nome; a selecionada fica preenchida de preto.
@@ -192,6 +198,7 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
   - **Setor:** pílulas só com contorno, com o nome do setor. Como a API não filtra por setor, esse filtro é aplicado no JavaScript, em cima da resposta.
   - **Compartilhados:** a Lista e o Mapa usam os mesmos filtros (busca, tipo, status e setor). Trocar de Lista para Mapa mantém o que estiver escolhido.
   - **Ordenação:** segmentado padrão com ID | Nome | Vulnerabilidades, usando os parâmetros `ordenar=id|nome|vulnerabilidades` da API.
+  - **No celular:** o nome do grupo (Tipo, Status e Setor) fica acima das pílulas, e as pílulas ficam menores (34px de altura, texto de 12px, ícone de 12px) para cada grupo caber numa linha só a partir de 390px de largura, sem rolar para o lado; em telas mais estreitas, o que não cabe desce para a linha seguinte. Vale também para o Mapa.
 - **Troca Lista | Mapa:** segmentado de troca de modo, no topo.
 - **Clique numa linha:** abre a janela de detalhes.
 
@@ -202,25 +209,22 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 - **Sem resultado:** "Nenhum ativo com esses filtros" com o botão "Limpar filtros".
 - **Bolinhas e linhas:** cada bolinha é um ativo, limpa, com o ícone do tipo; as linhas são as dependências (seta de quem depende para o ativo do qual depende, com espessura leve proporcional à fração).
 - **Tamanho:** cresce com o risco efetivo, mas com tamanho mínimo e máximo próximos (por exemplo, de 36px a 64px de diâmetro). A diferença é pequena de propósito.
-- **Bolinha de notificação:** no canto superior direito de cada ativo, como no iOS. A cor vem da posição do ativo no ranking de risco efetivo, dividido em terços pela quantidade de ativos. Com `n` ativos e a posição `p` (1 = maior risco):
-  - **Vermelha:** `p` até `ceil(n / 3)` (o primeiro terço).
-  - **Amarela:** `p` até `ceil(2n / 3)` (o terço do meio).
-  - **Verde:** o resto (o último terço).
-  - **Empate:** ativos com o mesmo risco efetivo recebem a mesma cor, a do primeiro deles no ranking.
-  - **Risco zero:** a bolinha é sempre verde, mesmo que caia num terço acima.
+- **Marca dos maiores riscos:** os 3 primeiros do ranking de risco efetivo ganham, no canto superior direito da bolinha, um círculo vermelho escuro (`--nivel-critico`, `#7A1414`) com a posição deles (1, 2 ou 3) em branco. Os outros ativos não têm marca: o tamanho da bolinha já mostra o risco.
+  - **Por que não verde, amarelo e vermelho:** as bolinhas coloridas por terço do ranking foram testadas e retiradas, porque usavam as mesmas cores do status do ativo (Ativo, Em manutenção, Inativo) e pareciam mostrar o status.
+  - **Risco zero:** um ativo com risco efetivo zero não recebe marca, mesmo estando entre os 3 primeiros.
 - **Clique numa bolinha:** abre os detalhes do ativo, por cima do mapa.
 - **Arrastar o mapa:** as bolinhas ficam fixas; o que se arrasta é o mapa todo. O mapa cresce com a quantidade de ativos (cerca de 190×190px de espaço por ativo no computador e 150×150px no celular) e, quando passa do tamanho da tela, arrastar o fundo mostra o resto. No computador o mapa cresce nas duas direções; no celular, só para os lados, e deslizar para cima ou para baixo continua rolando a página. Um arrasto que começa em cima de uma bolinha não abre o ativo. Com o teclado, focar uma bolinha fora da tela leva o mapa até ela. A dica "Arraste o fundo do mapa para ver o resto" só aparece quando dá para arrastar.
 - **Desenho:** SVG próprio com um layout de forças simples, sem biblioteca externa. O cálculo não usa sorteio, então a prévia da Início e o mapa saem iguais. As posições seguem a proporção do mapa (que depende da tela e da quantidade de ativos). As setas ficam em `--estado-cinza`, mais claras que os nomes. O desenho é centralizado sem ser esticado: um mapa cheio ocupa o espaço todo, e um grupo pequeno (como o resultado de uma busca) fica junto no meio, com cerca de 200px entre as bolinhas.
 - **Nomes:** embaixo de cada bolinha, com um contorno da cor do fundo para as setas não cortarem o texto.
-- **Legenda:** embaixo do mapa, explica o tamanho, as cores dos terços e o sentido das setas.
-- **Sem ranking (409):** aparece a mensagem da API acima do mapa, e as bolinhas ficam do mesmo tamanho e sem a bolinha de notificação.
+- **Legenda:** embaixo do mapa, explica o tamanho, a marca dos 3 maiores riscos e o sentido das setas.
+- **Sem ranking (409):** aparece a mensagem da API acima do mapa, e as bolinhas ficam do mesmo tamanho e sem a marca dos maiores riscos.
 
 ### 7.4 Janelas de detalhes
 
 - **Posição:** centralizadas, estilo janela do macOS, sobre o `--veu`.
 - **Como fechar:** Esc, clique fora, "x" ou o botão Voltar do navegador (a janela tem rota própria).
 - **Navegação interna:** não existe janela dentro de janela. Clicar numa vulnerabilidade dentro dos detalhes do ativo troca o conteúdo na mesma janela, com uma seta de voltar.
-- **Botões:** Editar e Excluir ficam no canto superior direito, ao lado do nome.
+- **Botões:** Editar e Excluir ficam no canto superior direito, ao lado do nome. No celular, continuam na mesma linha do nome, só com os ícones (lápis e lixeira, 44px), e o nome fica em 24px; o leitor de tela continua lendo "Editar" e "Excluir".
 
 **Detalhes do ativo:**
 - **Topo:** nome grande; tipo, setor e responsável pequenos embaixo.
@@ -230,6 +234,7 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 - **Colunas alinhadas:** o CVSS e a pílula de status ficam em colunas de largura fixa, para as pílulas se alinharem de uma linha para outra.
 - **Dependências:**
   - **Mini mapa:** só dos vizinhos. Quem depende do ativo fica à esquerda e os ativos dos quais ele depende ficam à direita, com as setas indo da esquerda para a direita. Clicar num vizinho abre os detalhes dele na mesma janela, com a seta de voltar.
+  - **Muitos vizinhos:** cada lado mostra até 6 vizinhos; quando há mais, o 7º lugar vira uma bolinha cinza "+N outros". As listas logo abaixo continuam mostrando todos.
   - **Listas:** "Dependem dele" à esquerda e "Depende de" à direita, na mesma ordem do mini mapa, cada item com o ícone do tipo, o nome e a fração.
   - **Adicionar:** o botão "Adicionar dependência" abre uma linha ali mesmo, com o menu com busca do ativo, o controle deslizante da fração e o aviso "A fração precisa ser menor que 0,3" (o valor restante é calculado).
   - **Remover:** cada item de "Depende de" tem um "x" para remover a dependência, que pede confirmação no balão (seção 5.7). A fração não é editada na janela.
@@ -242,7 +247,7 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 
 ### 7.5 Vulnerabilidades
 
-- **Lista:** cada linha tem ID, nome, CVSS e a bolinha do nível, com o nome do nível na cor dele, na ordem do ID.
+- **Lista:** cada linha tem ID, nome, CVSS e a bolinha do nível, com o nome do nível na cor dele, na ordem do ID. No celular: nome e ID em cima, e embaixo o nível à esquerda e o CVSS à direita, na mesma linha.
 - **Clique:** abre a janela de detalhes.
 - **Formulário:** Nome e o campo de CVSS (seção 5.4). O ID é criado pelo sistema, então não há campo de ID. Depois de salvar, abre a janela da vulnerabilidade salva, igual aos ativos.
 
@@ -259,7 +264,7 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 ### 7.7 Ranking de riscos
 
 - **Linha:** a posição bem grande à esquerda, como peça tipográfica; o nome com o ícone do tipo; uma barra horizontal com o risco próprio em preto e o herdado em cinza (o comprimento total é o efetivo); e o número do efetivo.
-- **Destaque:** os 3 primeiros têm nome e barra maiores, e o resto da lista fica mais compacto embaixo.
+- **Destaque:** os 3 primeiros têm nome e barra maiores, com o nome, o ícone do tipo e o número do risco efetivo em vermelho escuro (`--nivel-critico`, `#7A1414`), em todos os tamanhos de tela, e o resto da lista fica mais compacto embaixo.
 - **Escala:** a barra usa o maior risco efetivo como 100%.
 - **Legenda:** no topo, à direita: "Risco próprio" (preto), "Risco herdado" (cinza) e "Número: risco efetivo".
 - **Clique numa linha:** abre os detalhes do ativo por cima do Ranking.
@@ -304,8 +309,11 @@ Valores das skills emil-design-eng e animate:
 
 Larguras de referência: 1440, 1024, 768 e 390px.
 - **Desktop:** a Início usa várias colunas (a meia lua ao lado das barras de setores; a prévia do mapa solta no canto).
-- **Abaixo de 768px:** uma coluna, menu pelo botão do meio, janelas em tela cheia e meia lua só com a porcentagem.
-- **Toque:** áreas de toque com pelo menos 44px no celular.
+- **Abaixo de 768px:** uma coluna, menu pelo botão do meio, janelas como cartão flutuante e meia lua só com a porcentagem.
+- **Títulos de tela no celular:** 44px, com a contagem embaixo ("36 ativos") em 20px e um respiro maior no topo da página.
+- **Toque:** áreas de toque com pelo menos 44px no celular. Exceção pedida pelo Cadu: as pílulas de filtro têm 34px, para cada grupo caber numa linha só (o mínimo do WCAG é 24px).
+- **Janelas no celular:** o cartão nunca passa da altura da tela e rola por dentro, do topo até a última seção.
+- **Detalhes no celular:** os três números de risco ficam lado a lado em 32px, e os nomes das vulnerabilidades quebram de linha em vez de serem cortados.
 
 ## 10. API usada (não muda)
 
