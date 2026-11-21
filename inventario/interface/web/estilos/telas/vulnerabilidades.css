@@ -76,6 +76,7 @@
   }
 
   .linha-de-vulnerabilidade .linha-de-vinculo-nivel {
+    grid-column: 1;
     grid-row: 2;
   }
 
@@ -85,7 +86,9 @@
   }
 
   .linha-de-vulnerabilidade .linha-de-vulnerabilidade-cvss {
-    grid-row: 3;
+    grid-column: 1 / -1;
+    grid-row: 2;
+    justify-self: end;
   }
 
   .linha-de-vulnerabilidade .linha-de-ativo-seta {

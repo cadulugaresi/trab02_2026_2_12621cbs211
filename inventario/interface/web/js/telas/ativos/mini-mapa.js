@@ -11,13 +11,16 @@ const COLUNA_DO_CENTRO = LARGURA / 2;
 const COLUNA_DAS_DEPENDENCIAS = LARGURA - 90;
 const LIMITE_DO_ROTULO = 18;
 const ESPACO_DO_ULTIMO_ROTULO = 12;
+const MAXIMO_DE_VIZINHOS_POR_LADO = 6;
 
 export function criarMiniMapa({ ativoCentral, dependeDe, dependemDele }) {
-  const quantidadeDeLinhas = Math.max(dependeDe.length, dependemDele.length, 1);
+  const ladoEsquerdo = limitarVizinhos(dependemDele);
+  const ladoDireito = limitarVizinhos(dependeDe);
+  const quantidadeDeLinhas = Math.max(ladoEsquerdo.length, ladoDireito.length, 1);
   const alturaDosNos = quantidadeDeLinhas * ALTURA_POR_LINHA;
   const centro = { x: COLUNA_DO_CENTRO, y: alturaDosNos / 2 };
-  const vizinhosDaEsquerda = posicionarVizinhos(dependemDele, COLUNA_DOS_QUE_DEPENDEM, alturaDosNos);
-  const vizinhosDaDireita = posicionarVizinhos(dependeDe, COLUNA_DAS_DEPENDENCIAS, alturaDosNos);
+  const vizinhosDaEsquerda = posicionarVizinhos(ladoEsquerdo, COLUNA_DOS_QUE_DEPENDEM, alturaDosNos);
+  const vizinhosDaDireita = posicionarVizinhos(ladoDireito, COLUNA_DAS_DEPENDENCIAS, alturaDosNos);
   const identificadorDaSeta = gerarIdentificador("seta");
 
   const mapa = criarElementoSvg("svg", {
@@ -35,11 +38,27 @@ export function criarMiniMapa({ ativoCentral, dependeDe, dependemDele }) {
     mapa.append(criarLigacao(centro, vizinho.ponto, vizinho.fracao, identificadorDaSeta));
   }
   for (const vizinho of [...vizinhosDaEsquerda, ...vizinhosDaDireita]) {
-    mapa.append(criarNoVizinho(vizinho.ativo, vizinho.ponto));
+    if (vizinho.quantidadeDeOutros === undefined) {
+      mapa.append(criarNoVizinho(vizinho.ativo, vizinho.ponto));
+    } else {
+      mapa.append(criarNoDosOutros(vizinho.quantidadeDeOutros, vizinho.ponto));
+    }
   }
   mapa.append(criarNoCentral(ativoCentral, centro));
 
   return mapa;
+}
+
+function limitarVizinhos(vizinhos) {
+  if (vizinhos.length <= MAXIMO_DE_VIZINHOS_POR_LADO + 1) {
+    return vizinhos;
+  }
+  const vizinhosMostrados = vizinhos.slice(0, MAXIMO_DE_VIZINHOS_POR_LADO);
+  vizinhosMostrados.push({
+    fracao: 0,
+    quantidadeDeOutros: vizinhos.length - MAXIMO_DE_VIZINHOS_POR_LADO,
+  });
+  return vizinhosMostrados;
 }
 
 function posicionarVizinhos(vizinhos, coluna, alturaDosNos) {
@@ -96,6 +115,21 @@ function criarNoVizinho(ativo, ponto) {
       criarRotulo(ativo.nome, ponto),
     ],
   );
+}
+
+function criarNoDosOutros(quantidade, ponto) {
+  return criarElementoSvg("g", { class: "mini-mapa-no mini-mapa-no-dos-outros" }, [
+    criarElementoSvg("circle", { cx: String(ponto.x), cy: String(ponto.y), r: String(RAIO_DO_NO) }),
+    criarElementoSvg("text", {
+      class: "mini-mapa-quantidade-dos-outros",
+      x: String(ponto.x),
+      y: String(ponto.y),
+      "text-anchor": "middle",
+      "dominant-baseline": "central",
+      texto: `+${quantidade}`,
+    }),
+    criarRotulo("outros", ponto),
+  ]);
 }
 
 function criarNoCentral(ativo, ponto) {
