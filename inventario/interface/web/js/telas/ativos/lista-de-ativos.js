@@ -26,7 +26,10 @@ export function montarTelaDeAtivos(tela) {
   const filtros = lerFiltrosDeAtivos();
   const estadoDaOrdenacao = { ordenar: "id" };
   const faixa = criarFaixaDeErro();
-  const contagem = criarElemento("p", { classe: "texto-de-apoio", "aria-live": "polite" });
+  const contagem = criarElemento("p", {
+    classe: "texto-de-apoio contagem-da-tela",
+    "aria-live": "polite",
+  });
   const lista = criarElemento("ul", { classe: "lista-de-ativos", "aria-label": "Ativos" });
   const areaDosFiltros = criarElemento("div", { classe: "filtros-da-lista" });
   let opcoes = null;

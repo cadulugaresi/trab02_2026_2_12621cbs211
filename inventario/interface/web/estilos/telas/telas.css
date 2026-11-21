@@ -25,6 +25,28 @@
   min-width: 0;
 }
 
+@media (max-width: 767.98px) {
+  .cabecalho-de-tela {
+    gap: var(--espaco-1);
+  }
+
+  .cabecalho-de-tela .titulo-de-tela {
+    font-size: 44px;
+  }
+
+  .cabecalho-de-tela .contagem-da-tela {
+    font-size: 20px;
+  }
+
+  .cabecalho-com-acoes {
+    row-gap: var(--espaco-7);
+  }
+
+  .cabecalho-de-tela-textos {
+    gap: var(--espaco-1);
+  }
+}
+
 .estado-vazio {
   display: flex;
   flex-direction: column;

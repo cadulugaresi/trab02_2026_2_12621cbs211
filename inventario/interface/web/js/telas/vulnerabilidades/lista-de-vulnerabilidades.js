@@ -13,7 +13,10 @@ import {
 
 export function montarTelaDeVulnerabilidades(tela) {
   const faixa = criarFaixaDeErro();
-  const contagem = criarElemento("p", { classe: "texto-de-apoio", "aria-live": "polite" });
+  const contagem = criarElemento("p", {
+    classe: "texto-de-apoio contagem-da-tela",
+    "aria-live": "polite",
+  });
   const lista = criarElemento("ul", {
     classe: "lista-de-vulnerabilidades",
     "aria-label": "Vulnerabilidades",
