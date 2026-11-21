@@ -51,7 +51,7 @@ function posicionarVizinhos(vizinhos, coluna, alturaDosNos) {
   return vizinhosPosicionados;
 }
 
-function criarDefinicaoDaSeta(identificador) {
+export function criarDefinicaoDaSeta(identificador) {
   return criarElementoSvg("defs", {}, [
     criarElementoSvg(
       "marker",
