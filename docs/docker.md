@@ -236,13 +236,16 @@ Após remover o container com `docker rm` e criar um novo a partir da mesma imag
 ## 🫧 compose.yaml
 
 ```yaml
+name: trab02_2026_2_12621cbs211
+
 services:
   inventario:
     build: .
-    container_name: inventario
+    image: trab02_2026_2_12621cbs211
+    container_name: trab02_2026_2_12621cbs211
     restart: unless-stopped
     ports:
-      - "5000:5000"
+      - "2211:5000"
     volumes:
       - "dados:/app/dados"
     healthcheck:
@@ -258,9 +261,10 @@ volumes:
 
 ### Decisões
 
+- **Identificador `trab02_2026_2_12621cbs211`:** segue a padronização do card S5_20 (`trab02_2026_2_MATRICULA`, em letras minúsculas, sem pontos ou traços) e aparece em três lugares: no nome do projeto Compose (`name:`), no nome da imagem (`image:`) e no nome do container (`container_name:`). No servidor compartilhado da faculdade, isso evita conflito com os projetos de outros alunos: o volume também passa a se chamar `trab02_2026_2_12621cbs211_dados`, porque o Compose usa o nome do projeto como prefixo.
 - **`build: .`:** a imagem é construída a partir do Dockerfile do projeto, então o Compose sempre usa a versão atual do código.
 - **Sem `stdin_open` e `tty`:** essas opções existiam para manter o `input()` do menu aberto no container. O servidor da API não lê do teclado, então elas foram removidas, junto com o uso de `docker attach` e do atalho Ctrl + P, Ctrl + Q para se desconectar do menu.
-- **`ports: "5000:5000"`:** publica a porta no formato `PORTA_DO_COMPUTADOR:PORTA_DO_CONTAINER`. O container tem a própria rede, e sem essa linha nenhuma requisição de fora chegaria à API. O servidor escuta em `0.0.0.0`, e não em `localhost`, justamente para aceitar as requisições que chegam por essa porta publicada: dentro do container, `localhost` seria só o próprio container.
+- **`ports: "2211:5000"`:** publica a porta no formato `PORTA_DO_COMPUTADOR:PORTA_DO_CONTAINER`. A porta de fora segue a regra do card S5_20: 2000 somado aos três últimos dígitos da matrícula (2000 + 211 = 2211). Dentro do container, a API continua escutando na porta 5000. O container tem a própria rede, e sem essa linha nenhuma requisição de fora chegaria à API. O servidor escuta em `0.0.0.0`, e não em `localhost`, justamente para aceitar as requisições que chegam por essa porta publicada: dentro do container, `localhost` seria só o próprio container.
 - **Volume nomeado `dados` em `/app/dados`:** é a pasta onde o banco SQLite é criado. O volume é gerenciado pelo Docker e existe independentemente do container, então os dados sobrevivem quando o container é removido ou recriado.
 - **Política de reinício `unless-stopped`:** um servidor não termina sozinho em funcionamento normal. Se o processo principal parar, por uma exceção não tratada, por ter sido interrompido ou porque o Docker ou a máquina reiniciaram, o Docker inicia o container de novo. A exceção é quando o container é parado manualmente, o que permite desligá-lo de propósito para manutenção. É essa política que sustenta o requisito de manter a aplicação no ar por 24 horas. A política `on-failure` reinicia apenas quando o processo termina com código de erro, e um serviço que precisa ficar no ar não deve depender do motivo pelo qual parou. A política `always` não respeitaria uma parada manual depois de o Docker reiniciar.
 - **Healthcheck:** o mesmo teste do Dockerfile (requisição a `GET /saude`), com os parâmetros explícitos: verificação a cada 30 segundos, limite de 5 segundos por verificação, 3 falhas seguidas para marcar o container como `unhealthy` e 10 segundos de tolerância na inicialização. O healthcheck **não reinicia** o container: ele só informa o estado (`healthy` ou `unhealthy`) em `docker ps`. O reinício é feito pela política `unless-stopped`, quando o processo principal termina. As duas configurações se complementam: o healthcheck detecta uma API que está rodando mas não responde, e a política de reinício traz de volta uma API que parou.
@@ -270,6 +274,8 @@ volumes:
 ## ✨ Evidências do Docker Compose
 
 > As evidências da versão com o menu interativo (S4_17), feitas com `docker attach`, continuam registradas no histórico do Git deste arquivo.
+>
+> As evidências abaixo foram registradas antes da padronização do S5_20, quando o container se chamava `inventario` e a porta publicada era a 5000. Com o `compose.yaml` atual, os mesmos comandos usam o container `trab02_2026_2_12621cbs211` e o endereço `http://localhost:2211`.
 
 ### 1. Subida da aplicação
 

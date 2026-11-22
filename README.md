@@ -311,8 +311,8 @@ menu_principal                         (interface)     user picks option 4
 Requirement: Python 3.8 or higher installed. The external dependencies are `numpy` and `flask`, listed in `requirements.txt`.
 
 ```bash
-git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
-cd it-asset-vulnerability-manager
+git clone https://github.com/cadulugaresi/trab02_2026_2_12621cbs211.git
+cd trab02_2026_2_12621cbs211
 python3 -m pip install -r requirements.txt
 ```
 
@@ -333,7 +333,7 @@ curl http://localhost:5000/ativos
 
 ### Opening the web frontend
 
-With the API running (locally or with Docker Compose), open **http://localhost:5000** in the browser. The frontend has no separate server: Flask serves the page at `/` and its files at `/web/...`, on the same port as the API.
+With the API running locally, open **http://localhost:5000** in the browser (with Docker Compose, the address is **http://localhost:2211**). The frontend has no separate server: Flask serves the page at `/` and its files at `/web/...`, on the same port as the API.
 
 The server handles one request at a time (`threaded=False`, explained in `docs/docker.md`). Browsers open extra connections in advance and leave them idle, so `iniciar_api.py` closes any connection that stays idle for more than 1 second; without this, a single idle connection would hold the server and the page would stop loading. The frontend also sends its requests in a queue, one after another, with a 10-second time limit.
 
@@ -344,10 +344,12 @@ Requirement: Docker with Docker Compose.
 ```bash
 docker compose up -d --build
 docker compose ps
-curl http://localhost:5000/saude
+curl http://localhost:2211/saude
 ```
 
-The container runs the API and the web frontend (http://localhost:5000), keeps the database in the `dados` volume, restarts on its own if the process stops, and is marked `healthy` while `/saude` answers. The code, frontend included, is copied into the image when it is built: after changing any file, run `docker compose up -d --build` again, otherwise the container keeps the old version. Stop it with `docker compose down` (the volume, and therefore the data, is kept). Details in `docs/docker.md`.
+The container runs the API and the web frontend (http://localhost:2211), keeps the database in the `dados` volume, restarts on its own if the process stops, and is marked `healthy` while `/saude` answers. The code, frontend included, is copied into the image when it is built: after changing any file, run `docker compose up -d --build` again, otherwise the container keeps the old version. Stop it with `docker compose down` (the volume, and therefore the data, is kept). Details in `docs/docker.md`.
+
+The names follow the course standard (card S5_20): the Compose project, the image, and the container are all called `trab02_2026_2_12621cbs211`, and the external port is 2211 (2000 + the last three digits of the student ID). Inside the container, the API still listens on port 5000.
 
 ### Running the terminal menu
 

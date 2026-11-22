@@ -311,8 +311,8 @@ menu_principal                         (interface)     usuário escolhe a opçã
 Pré-requisito: Python 3.8 ou superior instalado. As dependências externas são o `numpy` e o `flask`, listados no `requirements.txt`.
 
 ```bash
-git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
-cd it-asset-vulnerability-manager
+git clone https://github.com/cadulugaresi/trab02_2026_2_12621cbs211.git
+cd trab02_2026_2_12621cbs211
 python3 -m pip install -r requirements.txt
 ```
 
@@ -333,7 +333,7 @@ curl http://localhost:5000/ativos
 
 ### Abrindo o frontend web
 
-Com a API no ar (localmente ou com o Docker Compose), abra **http://localhost:5000** no navegador. O frontend não tem um servidor separado: o Flask entrega a página em `/` e os arquivos dela em `/web/...`, na mesma porta da API.
+Com a API rodando localmente, abra **http://localhost:5000** no navegador (com o Docker Compose, o endereço é **http://localhost:2211**). O frontend não tem um servidor separado: o Flask entrega a página em `/` e os arquivos dela em `/web/...`, na mesma porta da API.
 
 O servidor atende uma requisição por vez (`threaded=False`, explicado no `docs/docker.md`). Os navegadores abrem conexões extras com antecedência e as deixam paradas, então o `iniciar_api.py` fecha qualquer conexão que fique parada por mais de 1 segundo; sem isso, uma única conexão parada prenderia o servidor e a página deixaria de carregar. O frontend também envia as requisições em fila, uma depois da outra, com tempo limite de 10 segundos.
 
@@ -344,10 +344,12 @@ Pré-requisito: Docker com Docker Compose.
 ```bash
 docker compose up -d --build
 docker compose ps
-curl http://localhost:5000/saude
+curl http://localhost:2211/saude
 ```
 
-O container roda a API e o frontend web (http://localhost:5000), guarda o banco no volume `dados`, reinicia sozinho se o processo parar e fica marcado como `healthy` enquanto o `/saude` responde. O código, inclusive o do frontend, é copiado para a imagem quando ela é construída: depois de alterar qualquer arquivo, rode `docker compose up -d --build` de novo, senão o container continua com a versão antiga. Para pará-lo, use `docker compose down` (o volume, e portanto os dados, é mantido). Detalhes em `docs/docker.md`.
+O container roda a API e o frontend web (http://localhost:2211), guarda o banco no volume `dados`, reinicia sozinho se o processo parar e fica marcado como `healthy` enquanto o `/saude` responde. O código, inclusive o do frontend, é copiado para a imagem quando ela é construída: depois de alterar qualquer arquivo, rode `docker compose up -d --build` de novo, senão o container continua com a versão antiga. Para pará-lo, use `docker compose down` (o volume, e portanto os dados, é mantido). Detalhes em `docs/docker.md`.
+
+Os nomes seguem a padronização da disciplina (card S5_20): o projeto Compose, a imagem e o container se chamam `trab02_2026_2_12621cbs211`, e a porta externa é a 2211 (2000 + os três últimos dígitos da matrícula). Dentro do container, a API continua escutando na porta 5000.
 
 ### Rodando o menu no terminal
 
