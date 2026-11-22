@@ -17,6 +17,16 @@ from inventario.interface.api.rotas_do_frontend import criar_rotas_do_frontend
 
 BYTES_MAXIMOS_POR_REQUISICAO = 64 * 1024
 
+CABECALHOS_DE_SEGURANCA = {
+    "Content-Security-Policy": (
+        "default-src 'self'; img-src 'self' data:; object-src 'none'; "
+        "base-uri 'none'; form-action 'none'; frame-ancestors 'none'"
+    ),
+    "X-Frame-Options": "DENY",
+    "X-Content-Type-Options": "nosniff",
+    "Referrer-Policy": "no-referrer",
+}
+
 MENSAGENS_DOS_ERROS_HTTP = {
     404: "Rota não encontrada.",
     405: "Método não permitido para esta rota.",
@@ -28,6 +38,12 @@ MENSAGENS_DOS_ERROS_HTTP = {
 def criar_app(repositorio, ativos, catalogo):
     app = Flask(__name__)
     app.config["MAX_CONTENT_LENGTH"] = BYTES_MAXIMOS_POR_REQUISICAO
+
+    @app.after_request
+    def colocar_cabecalhos_de_seguranca(resposta):
+        for nome, valor in CABECALHOS_DE_SEGURANCA.items():
+            resposta.headers[nome] = valor
+        return resposta
 
     @app.errorhandler(DadoInvalidoError)
     def responder_dado_invalido(erro):

@@ -1,6 +1,6 @@
 import unittest
 
-from inventario.interface.api import criar_app
+from inventario.interface.api import CABECALHOS_DE_SEGURANCA, criar_app
 from inventario.persistencia.banco_sqlite import RepositorioSQLite
 
 MENSAGEM_DE_ROTA_NAO_ENCONTRADA = {"erro": "Rota não encontrada."}
@@ -88,6 +88,42 @@ class TesteDasRotasDoFrontend(unittest.TestCase):
 
         self.assertEqual(saude.get_json(), {"status": "ok"})
         self.assertEqual(ativos.get_json(), [])
+
+
+class TesteDosCabecalhosDeSeguranca(unittest.TestCase):
+
+    def setUp(self):
+        self.repositorio = RepositorioSQLite(":memory:")
+        aplicacao = criar_app(self.repositorio, {}, {})
+        self.cliente = aplicacao.test_client()
+
+    def tearDown(self):
+        self.repositorio.conexao.close()
+
+    def conferir_cabecalhos_de_seguranca(self, caminho):
+        resposta = self.cliente.get(caminho)
+        resposta.close()
+        for nome, valor in CABECALHOS_DE_SEGURANCA.items():
+            self.assertEqual(resposta.headers.get(nome), valor)
+
+    def test_pagina_do_frontend_vem_com_os_cabecalhos_de_seguranca(self):
+        self.conferir_cabecalhos_de_seguranca("/")
+
+    def test_arquivo_do_frontend_vem_com_os_cabecalhos_de_seguranca(self):
+        self.conferir_cabecalhos_de_seguranca("/web/js/principal.js")
+
+    def test_json_da_api_vem_com_os_cabecalhos_de_seguranca(self):
+        self.conferir_cabecalhos_de_seguranca("/saude")
+
+    def test_resposta_de_erro_vem_com_os_cabecalhos_de_seguranca(self):
+        self.conferir_cabecalhos_de_seguranca("/rota-que-nao-existe")
+
+    def test_pagina_nao_pode_ser_mostrada_dentro_de_outro_site(self):
+        resposta = self.cliente.get("/")
+        resposta.close()
+
+        self.assertEqual(resposta.headers["X-Frame-Options"], "DENY")
+        self.assertIn("frame-ancestors 'none'", resposta.headers["Content-Security-Policy"])
 
 
 if __name__ == "__main__":
