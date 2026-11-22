@@ -289,6 +289,7 @@ menu_principal                         (interface)     user picks option 4
 │   ├── entrega_final.md
 │   ├── solid.md
 │   ├── docker.md
+│   ├── implantacao.md
 │   ├── referencias/
 │   └── exemplos/
 │       ├── exemplo_ativos.json
@@ -349,7 +350,7 @@ curl http://localhost:2211/saude
 
 The container runs the API and the web frontend (http://localhost:2211), keeps the database in the `dados` volume, restarts on its own if the process stops, and is marked `healthy` while `/saude` answers. The code, frontend included, is copied into the image when it is built: after changing any file, run `docker compose up -d --build` again, otherwise the container keeps the old version. Stop it with `docker compose down` (the volume, and therefore the data, is kept). Details in `docs/docker.md`.
 
-The names follow the course standard (card S5_20): the Compose project, the image, and the container are all called `trab02_2026_2_12621cbs211`, and the external port is 2211 (2000 + the last three digits of the student ID). Inside the container, the API still listens on port 5000.
+The names follow the course standard (card S5_20): the Compose project, the image, and the container are all called `trab02_2026_2_12621cbs211`, and the external port is 2211 (2000 + the last three digits of the student ID). Inside the container, the API still listens on port 5000. The step-by-step deployment on the course server, with the 24-hour evidence, is in `docs/implantacao.md` (in Portuguese).
 
 ### Running the terminal menu
 

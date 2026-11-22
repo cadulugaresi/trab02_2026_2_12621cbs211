@@ -289,6 +289,7 @@ menu_principal                         (interface)     usuário escolhe a opçã
 │   ├── entrega_final.md
 │   ├── solid.md
 │   ├── docker.md
+│   ├── implantacao.md
 │   ├── referencias/
 │   └── exemplos/
 │       ├── exemplo_ativos.json
@@ -349,7 +350,7 @@ curl http://localhost:2211/saude
 
 O container roda a API e o frontend web (http://localhost:2211), guarda o banco no volume `dados`, reinicia sozinho se o processo parar e fica marcado como `healthy` enquanto o `/saude` responde. O código, inclusive o do frontend, é copiado para a imagem quando ela é construída: depois de alterar qualquer arquivo, rode `docker compose up -d --build` de novo, senão o container continua com a versão antiga. Para pará-lo, use `docker compose down` (o volume, e portanto os dados, é mantido). Detalhes em `docs/docker.md`.
 
-Os nomes seguem a padronização da disciplina (card S5_20): o projeto Compose, a imagem e o container se chamam `trab02_2026_2_12621cbs211`, e a porta externa é a 2211 (2000 + os três últimos dígitos da matrícula). Dentro do container, a API continua escutando na porta 5000.
+Os nomes seguem a padronização da disciplina (card S5_20): o projeto Compose, a imagem e o container se chamam `trab02_2026_2_12621cbs211`, e a porta externa é a 2211 (2000 + os três últimos dígitos da matrícula). Dentro do container, a API continua escutando na porta 5000. O passo a passo da implantação no servidor da faculdade, com as evidências das 24 horas, está no `docs/implantacao.md`.
 
 ### Rodando o menu no terminal
 
