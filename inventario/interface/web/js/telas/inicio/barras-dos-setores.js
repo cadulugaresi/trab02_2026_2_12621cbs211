@@ -11,14 +11,13 @@ export function criarBarrasDosSetores(setores) {
   const itens = [];
   for (const setor of setores) {
     const proporcao = maiorQuantidade > 0 ? (setor.quantidade / maiorQuantidade) * 100 : 0;
+    const coluna = criarElemento("span", { classe: "barra-do-setor-coluna" });
+    coluna.style.height = `max(${MENOR_ALTURA_DA_BARRA}px, ${proporcao}%)`;
     itens.push(
       criarElemento("li", { classe: "barra-do-setor", "data-destaque": setor.destaque }, [
         criarElemento("span", { classe: "barra-do-setor-numero", texto: String(setor.quantidade) }),
         criarElemento("span", { classe: "barra-do-setor-trilho", "aria-hidden": "true" }, [
-          criarElemento("span", {
-            classe: "barra-do-setor-coluna",
-            style: `height: max(${MENOR_ALTURA_DA_BARRA}px, ${proporcao}%)`,
-          }),
+          coluna,
         ]),
         criarElemento("span", { classe: "barra-do-setor-nome", texto: setor.opcao.rotulo }),
       ]),

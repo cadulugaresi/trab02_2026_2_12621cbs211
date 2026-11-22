@@ -29,15 +29,14 @@ export function criarLinhaDoRanking(item, maiorRisco, emDestaque) {
 }
 
 function criarBarraDeRisco(item, maiorRisco) {
+  const parteDoRiscoProprio = criarElemento("span", { classe: "barra-de-risco-propria" });
+  parteDoRiscoProprio.style.width = `${calcularPorcentagem(item.risco_proprio, maiorRisco)}%`;
+  const parteDoRiscoHerdado = criarElemento("span", { classe: "barra-de-risco-herdada" });
+  parteDoRiscoHerdado.style.width = `${calcularPorcentagem(item.risco_herdado, maiorRisco)}%`;
+
   return criarElemento("span", { classe: "barra-de-risco" }, [
-    criarElemento("span", {
-      classe: "barra-de-risco-propria",
-      style: `width: ${calcularPorcentagem(item.risco_proprio, maiorRisco)}%`,
-    }),
-    criarElemento("span", {
-      classe: "barra-de-risco-herdada",
-      style: `width: ${calcularPorcentagem(item.risco_herdado, maiorRisco)}%`,
-    }),
+    parteDoRiscoProprio,
+    parteDoRiscoHerdado,
     criarElemento("span", {
       classe: "visualmente-oculto",
       texto: `Risco próprio ${formatarRisco(item.risco_proprio)}, herdado ${formatarRisco(

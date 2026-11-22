@@ -7,8 +7,8 @@ export function criarSegmentado({ rotulo, opcoes, valor, variacao = "padrao", ao
     classe: `segmentado segmentado-${variacao}`,
     role: "radiogroup",
     "aria-label": rotulo,
-    style: `--quantidade-de-opcoes: ${opcoes.length}`,
   });
+  elemento.style.setProperty("--quantidade-de-opcoes", String(opcoes.length));
   const cartao = criarElemento("span", { classe: "segmentado-cartao", "aria-hidden": "true" });
   const camadaEscolhida = criarElemento("div", {
     classe: "segmentado-camada-escolhida",
