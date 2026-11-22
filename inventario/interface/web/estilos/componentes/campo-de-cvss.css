@@ -1,0 +1,65 @@
+.campo-de-cvss {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-4);
+}
+
+.campo-cvss {
+  width: 112px;
+  flex: none;
+  font-size: 17px;
+  font-variant-numeric: tabular-nums;
+  text-align: center;
+}
+
+.campo-cvss:focus,
+.campo-cvss:focus-visible {
+  outline-offset: 2px;
+}
+
+.campo-cvss[data-nivel] {
+  color: var(--sobre-tinta);
+  font-weight: var(--peso-medio);
+  caret-color: var(--sobre-tinta);
+}
+
+.campo-cvss[data-nivel]::selection {
+  background: rgba(255, 255, 255, 0.3);
+  color: var(--sobre-tinta);
+}
+
+.campo-cvss[data-nivel="BAIXO"] {
+  background: var(--nivel-baixo);
+}
+
+.campo-cvss[data-nivel="MEDIO"] {
+  background: var(--nivel-medio);
+}
+
+.campo-cvss[data-nivel="ALTO"] {
+  background: var(--nivel-alto);
+}
+
+.campo-cvss[data-nivel="CRITICO"] {
+  background: var(--nivel-critico);
+}
+
+.nome-do-nivel {
+  font-weight: var(--peso-medio);
+}
+
+.nome-do-nivel[data-nivel="BAIXO"] {
+  color: var(--nivel-baixo);
+}
+
+.nome-do-nivel[data-nivel="MEDIO"] {
+  color: var(--nivel-medio);
+}
+
+.nome-do-nivel[data-nivel="ALTO"] {
+  color: var(--nivel-alto);
+}
+
+.nome-do-nivel[data-nivel="CRITICO"] {
+  color: var(--nivel-critico);
+}

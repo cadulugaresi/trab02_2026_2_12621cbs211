@@ -207,6 +207,15 @@ class TestValidarTextoObrigatorio(unittest.TestCase):
         with self.assertRaises(DadoInvalidoError):
             validar_texto_obrigatorio("")
 
+    def test_texto_com_120_caracteres_e_aceito(self):
+        validar_texto_obrigatorio("R" * 120)
+
+    def test_texto_com_mais_de_120_caracteres_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError) as contexto:
+            validar_texto_obrigatorio("R" * 121)
+
+        self.assertEqual(str(contexto.exception), "Este campo pode ter no máximo 120 caracteres.")
+
 
 class TestValidarFatorExposicao(unittest.TestCase):
 

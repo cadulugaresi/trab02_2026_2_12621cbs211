@@ -1,0 +1,141 @@
+.flutuante {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--camada-flutuante);
+  background: var(--superficie);
+  border-radius: var(--raio-flutuante);
+  box-shadow: var(--sombra-flutuante);
+  opacity: 0;
+  transform: scale(var(--escala-de-menu-fechado));
+  transition:
+    opacity var(--duracao-de-menu) var(--curva-de-saida),
+    transform var(--duracao-de-menu) var(--curva-de-saida);
+}
+
+.flutuante[data-visivel] {
+  opacity: 1;
+  transform: none;
+}
+
+.lista-de-opcoes {
+  max-height: min(320px, 50vh);
+  overflow-y: auto;
+  padding: var(--espaco-2);
+  overscroll-behavior: contain;
+}
+
+.lista-de-opcoes:focus-visible {
+  outline: none;
+}
+
+.opcao {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  min-height: 40px;
+  padding: 0 var(--espaco-3);
+  border-radius: var(--raio-opcao);
+  cursor: pointer;
+}
+
+.opcao[data-ativa] {
+  background: var(--campo);
+}
+
+.opcao[aria-selected="true"] {
+  font-weight: var(--peso-medio);
+}
+
+.opcao-texto {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.opcao-detalhe {
+  color: var(--texto-secundario);
+  font-size: var(--tamanho-apoio);
+  font-weight: var(--peso-normal);
+  font-variant-numeric: tabular-nums;
+}
+
+.opcao-marca {
+  width: 16px;
+  height: 16px;
+  stroke-width: 2;
+}
+
+.opcao-vazia {
+  padding: var(--espaco-3);
+  color: var(--texto-secundario);
+  font-size: var(--tamanho-apoio);
+}
+
+.busca-do-menu {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  height: 48px;
+  padding: 0 var(--espaco-4);
+  border-bottom: 1px solid var(--linha);
+  color: var(--texto-secundario);
+}
+
+.busca-do-menu .icone {
+  width: 18px;
+  height: 18px;
+}
+
+.busca-do-menu-entrada {
+  flex: 1;
+  min-width: 0;
+  height: 100%;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--tinta);
+}
+
+.busca-do-menu-entrada::placeholder {
+  color: var(--texto-secundario);
+  opacity: 1;
+}
+
+.busca-do-menu-entrada:focus-visible {
+  outline: none;
+}
+
+.dica {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: var(--camada-dica);
+  max-width: 280px;
+  padding: var(--espaco-3) 14px;
+  border-radius: var(--raio-bloco);
+  background: var(--superficie);
+  box-shadow: var(--sombra-flutuante);
+  color: var(--tinta);
+  font-size: var(--tamanho-apoio);
+  line-height: 1.5;
+  pointer-events: none;
+  opacity: 0;
+  transform: scale(var(--escala-de-janela-fechada));
+  transition:
+    opacity 150ms var(--curva-de-saida),
+    transform 150ms var(--curva-de-saida);
+}
+
+.dica[data-visivel] {
+  opacity: 1;
+  transform: none;
+}
+
+@media (max-width: 767.98px) {
+  .opcao {
+    min-height: 44px;
+  }
+}

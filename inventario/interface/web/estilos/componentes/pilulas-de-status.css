@@ -1,0 +1,48 @@
+.pilula-de-status {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  height: 28px;
+  padding: 0 var(--espaco-3);
+  border: 0;
+  border-radius: var(--raio-pilula);
+  background: transparent;
+  box-shadow: inset 0 0 0 1px var(--contorno);
+  color: var(--tinta);
+  font-size: var(--tamanho-apoio);
+  line-height: 1;
+  white-space: nowrap;
+}
+
+button.pilula-de-status {
+  cursor: pointer;
+  transition: transform var(--duracao-de-pressao) var(--curva-de-saida);
+}
+
+button.pilula-de-status:active {
+  transform: scale(var(--escala-ao-pressionar));
+}
+
+.pilula-de-status .seta {
+  width: 14px;
+  height: 14px;
+  margin-right: -2px;
+  color: var(--texto-secundario);
+  transition: transform var(--duracao-de-menu) var(--curva-de-saida);
+}
+
+.pilula-de-status[aria-expanded="true"] .seta {
+  transform: rotate(180deg);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  button.pilula-de-status:hover {
+    background: var(--campo);
+  }
+}
+
+@media (max-width: 767.98px) {
+  button.pilula-de-status {
+    height: 36px;
+  }
+}

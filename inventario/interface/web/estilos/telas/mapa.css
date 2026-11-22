@@ -1,0 +1,160 @@
+.aviso-do-mapa {
+  max-width: 72ch;
+  margin-bottom: var(--espaco-4);
+  color: var(--texto-secundario);
+  font-size: var(--tamanho-apoio);
+}
+
+.area-do-mapa {
+  min-height: 480px;
+  border-top: 1px solid var(--linha);
+  border-bottom: 1px solid var(--linha);
+}
+
+.mapa {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: hidden;
+  transform-origin: 0 0;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
+.mapa-ligacao {
+  stroke: var(--estado-cinza);
+  stroke-linecap: round;
+}
+
+.mapa .mini-mapa-ponta {
+  stroke: var(--estado-cinza);
+}
+
+.mapa-no {
+  cursor: pointer;
+  -webkit-user-drag: none;
+}
+
+.mapa-arrastavel {
+  cursor: grab;
+  touch-action: none;
+}
+
+.mapa-arrastavel-na-horizontal {
+  touch-action: pan-y;
+}
+
+.mapa-sendo-arrastado,
+.mapa-sendo-arrastado .mapa-no {
+  cursor: grabbing;
+}
+
+.mapa-no-fundo {
+  fill: var(--superficie);
+  stroke: var(--contorno);
+  stroke-width: 1;
+  transition: stroke var(--duracao-de-pressao) ease;
+}
+
+.mapa-icone,
+.mapa-rotulo {
+  pointer-events: none;
+}
+
+.mapa-icone {
+  color: var(--tinta);
+}
+
+.mapa-rotulo {
+  fill: var(--texto-secundario);
+  font-size: 12px;
+  paint-order: stroke;
+  stroke: var(--fundo);
+  stroke-width: 4px;
+  stroke-linejoin: round;
+  transition: fill var(--duracao-de-pressao) ease;
+}
+
+.mapa-marca-de-maior-risco {
+  pointer-events: none;
+}
+
+.mapa-marca-de-maior-risco circle {
+  fill: var(--nivel-critico);
+  stroke: var(--fundo);
+  stroke-width: 2;
+}
+
+.mapa-marca-de-maior-risco text {
+  fill: var(--sobre-tinta);
+  font-size: 11px;
+  font-weight: var(--peso-medio);
+  font-variant-numeric: tabular-nums;
+}
+
+.mapa-previa .mapa-no {
+  cursor: inherit;
+}
+
+.mapa-no-buscado .mapa-no-fundo {
+  stroke: var(--tinta);
+  stroke-width: 2;
+}
+
+.mapa-no-buscado .mapa-rotulo {
+  fill: var(--tinta);
+  font-weight: var(--peso-medio);
+}
+
+a.mapa-no:focus-visible {
+  outline: none;
+}
+
+a.mapa-no:focus-visible .mapa-no-fundo {
+  stroke: var(--foco);
+  stroke-width: 2;
+}
+
+.legenda-do-mapa {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  max-width: 72ch;
+  margin-top: var(--espaco-5);
+  color: var(--texto-secundario);
+  font-size: var(--tamanho-apoio);
+}
+
+.dica-do-mapa {
+  color: var(--tinta);
+}
+
+.legenda-do-mapa-maiores-riscos {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+.amostra-da-marca-de-maior-risco {
+  display: inline-grid;
+  place-items: center;
+  flex: none;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  background: var(--nivel-critico);
+  color: var(--sobre-tinta);
+  font-size: 11px;
+  font-weight: var(--peso-medio);
+  line-height: 1;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  a.mapa-no:hover .mapa-no-fundo {
+    stroke: var(--tinta);
+  }
+
+  a.mapa-no:hover .mapa-rotulo {
+    fill: var(--tinta);
+  }
+}

@@ -3,6 +3,7 @@ import math
 from inventario.dominio.excecoes import DadoInvalidoError
 
 MAIOR_INTEIRO_ACEITO = 2**63 - 1
+TAMANHO_MAXIMO_DE_TEXTO = 120
 
 
 def validar_numero(valor):
@@ -41,6 +42,10 @@ def validar_cvss(cvss):
 def validar_texto_obrigatorio(texto):
     if type(texto) is not str:
         raise DadoInvalidoError("Este campo precisa ser um texto.")
+    if len(texto) > TAMANHO_MAXIMO_DE_TEXTO:
+        raise DadoInvalidoError(
+            f"Este campo pode ter no máximo {TAMANHO_MAXIMO_DE_TEXTO} caracteres."
+        )
     if not texto.strip():
         raise DadoInvalidoError("Este campo não pode ser vazio.")
     if texto.strip().isnumeric():

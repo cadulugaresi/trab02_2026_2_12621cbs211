@@ -1,0 +1,130 @@
+.linha-de-campo {
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  min-width: 0;
+}
+
+.rotulo-de-campo {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-1);
+  min-height: 24px;
+  font-weight: var(--peso-medio);
+}
+
+.ajuda-de-campo {
+  font-size: var(--tamanho-apoio);
+  color: var(--texto-secundario);
+}
+
+.ajuda-de-campo[data-erro] {
+  color: var(--perigo);
+}
+
+.campo {
+  display: block;
+  width: 100%;
+  height: var(--altura-do-campo);
+  padding: 0 18px;
+  border: 0;
+  border-radius: var(--raio-pilula);
+  background: var(--campo);
+  color: var(--tinta);
+  font-size: var(--tamanho-corpo);
+  text-align: left;
+}
+
+.campo::placeholder {
+  color: var(--texto-secundario);
+  opacity: 1;
+}
+
+.campo:focus,
+.campo:focus-visible {
+  outline: 1.5px solid var(--foco);
+  outline-offset: 0;
+}
+
+.campo[aria-invalid="true"] {
+  outline: 1.5px solid var(--perigo);
+  outline-offset: 0;
+}
+
+.campo-com-unidade {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+}
+
+.campo-com-unidade .campo {
+  width: 140px;
+}
+
+.campo-de-numero {
+  font-variant-numeric: tabular-nums;
+}
+
+.unidade-do-campo {
+  color: var(--texto-secundario);
+}
+
+.campo-gatilho {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  cursor: pointer;
+}
+
+.campo-gatilho-texto {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.campo-gatilho[data-vazio] .campo-gatilho-texto {
+  color: var(--texto-secundario);
+}
+
+.campo-gatilho-detalhe {
+  color: var(--texto-secundario);
+  font-size: var(--tamanho-apoio);
+  font-variant-numeric: tabular-nums;
+}
+
+.campo-gatilho .seta {
+  width: 18px;
+  height: 18px;
+  color: var(--texto-secundario);
+  transition: transform var(--duracao-de-menu) var(--curva-de-saida);
+}
+
+.campo-gatilho[aria-expanded="true"] .seta {
+  transform: rotate(180deg);
+}
+
+.botao-de-ajuda {
+  display: inline-grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  padding: 0;
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--texto-secundario);
+  cursor: help;
+}
+
+.botao-de-ajuda .icone {
+  width: 17px;
+  height: 17px;
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .botao-de-ajuda:hover {
+    color: var(--tinta);
+  }
+}

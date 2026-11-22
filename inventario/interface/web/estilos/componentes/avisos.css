@@ -1,0 +1,93 @@
+.balao-de-exclusao {
+  width: 320px;
+  max-width: calc(100vw - var(--espaco-6));
+  display: flex;
+  flex-direction: column;
+  gap: var(--espaco-2);
+  padding: var(--espaco-5);
+}
+
+.balao-de-exclusao-pergunta {
+  font-weight: var(--peso-medio);
+  overflow-wrap: anywhere;
+}
+
+.balao-de-exclusao-erro {
+  color: var(--perigo);
+  font-size: var(--tamanho-apoio);
+}
+
+.balao-de-exclusao-botoes {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--espaco-2);
+  margin-top: var(--espaco-2);
+}
+
+.regiao-de-avisos {
+  position: fixed;
+  left: var(--largura-da-faixa);
+  right: 0;
+  bottom: calc(var(--espaco-6) + var(--altura-do-cadastrar) + var(--espaco-3));
+  z-index: var(--camada-avisos);
+  display: grid;
+  justify-items: center;
+  pointer-events: none;
+}
+
+.aviso-de-sucesso {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+  height: 44px;
+  padding: 0 var(--espaco-5) 0 var(--espaco-4);
+  border-radius: var(--raio-pilula);
+  background: var(--tinta);
+  color: var(--sobre-tinta);
+  font-size: var(--tamanho-controle);
+  font-weight: var(--peso-medio);
+  box-shadow: var(--sombra-do-botao-flutuante);
+  opacity: 0;
+  transform: translateY(var(--deslocamento-de-aviso-fechado));
+  transition:
+    opacity var(--duracao-de-aviso) var(--curva-de-saida),
+    transform var(--duracao-de-aviso) var(--curva-de-saida);
+}
+
+.aviso-de-sucesso[data-visivel] {
+  opacity: 1;
+  transform: none;
+}
+
+.aviso-de-sucesso .icone {
+  width: 18px;
+  height: 18px;
+  stroke-width: 2;
+}
+
+.faixa-de-erro {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--espaco-3);
+  padding: 14px var(--espaco-5);
+  border-radius: var(--raio-bloco);
+  background: var(--erro-fundo);
+  color: var(--erro-texto);
+  font-size: var(--tamanho-controle);
+}
+
+.faixa-de-erro .icone {
+  margin-top: 1px;
+}
+
+.faixa-de-erro-texto {
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 767.98px) {
+  .regiao-de-avisos {
+    left: 0;
+    bottom: calc(var(--espaco-5) + var(--altura-do-cadastrar) + var(--espaco-3));
+  }
+}

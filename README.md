@@ -2,7 +2,7 @@
 
 *[Ler em português](./docs/README.pt-br.md)*
 
-A Python application for registering and managing IT assets and their associated security vulnerabilities, with risk analysis based on linear algebra. It can be used through a command-line (CLI) menu or through an HTTP API, which runs in a Docker container. Built as a study project for a Cybersecurity course at UFU, applying clean code practices: expressive naming, single-responsibility functions, layered architecture, object-oriented programming, and error handling that doesn't leak internal details.
+A Python application for registering and managing IT assets and their associated security vulnerabilities, with risk analysis based on linear algebra. It can be used through a command-line (CLI) menu, through an HTTP API that runs in a Docker container, or through a web frontend served by that same API. Built as a study project for a Cybersecurity course at UFU, applying clean code practices: expressive naming, single-responsibility functions, layered architecture, object-oriented programming, and error handling that doesn't leak internal details.
 
 ## ✨ Features
 
@@ -87,6 +87,16 @@ curl -X POST http://localhost:5000/ativos \
   -d '{"tipo": "Notebook", "id": 10, "nome": "Notebook do Rafael", "setor": 1, "responsavel": "Rafael Torres", "status": 1, "sistema_operacional": "Linux", "tela": 14.0}'
 ```
 
+### Web Frontend
+The API also serves a web application at `/`, which uses the HTTP routes above:
+- **Home**: greeting, the most urgent open vulnerabilities, totals, the treatment status of the links, critical and high vulnerabilities per sector, the 5 assets with the highest risk, and a preview of the asset map
+- **Assets**: list with search and filters (type, status, and sector) and sorting, or a map of the dependencies between assets, with the same filters and a search that shows only the dependencies of the asset found
+- **Vulnerabilities**, **Links**, and **Risk ranking** screens, plus details windows and registration and editing forms
+- **Stack**: plain HTML, CSS, and JavaScript (ES modules), with no framework, build step, or CDN; the Inter font and the Lucide icons are kept inside the project
+- **Responsive and accessible**: layouts for computer, tablet, and phone (reference widths of 1440, 1024, 768, and 390px), keyboard navigation with a visible focus ring, and reduced motion when the system asks for it
+- **Security**: every text that comes from the API is shown with `textContent`, never `innerHTML`, so a name with HTML tags is displayed as plain text (no XSS). Every response from the server also carries security headers: `Content-Security-Policy` (only scripts and styles from the server itself), `X-Frame-Options: DENY` (the system cannot be shown inside another site, which blocks clickjacking), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: no-referrer`. The API rejects texts longer than 120 characters and requests larger than 64 KB
+- **Design decisions**: recorded in `PRODUCT.md` and `DESIGN.md`
+
 ### General
 - **Data persistence**: assets, the catalog, and the links are saved to a SQLite database (`inventario.db`), with one table per asset type and an associative `vinculos` table between assets and vulnerabilities, and reloaded on every run
 - **Swappable storage**: the services receive a `repositorio` as a parameter (dependency injection done by the entry points, `main.py` and `iniciar_api.py`) and never import the persistence layer; `RepositorioSQLite` is the storage in use, and `RepositorioJSON` (JSON files) is kept as a second implementation that offers the same operations, which is guaranteed by the contract test suite
@@ -100,6 +110,7 @@ curl -X POST http://localhost:5000/ativos \
 - Database: SQLite (no server to install; schema in `inventario/persistencia/esquema.sql`)
 - Linear algebra: `numpy` (listed in `requirements.txt`)
 - HTTP API: `flask` (listed in `requirements.txt`)
+- Web frontend: HTML, CSS, and JavaScript (ES modules), served by Flask itself, with no framework or build step
 - Tests: `unittest` and `pytest`; linting: `flake8` and `black`; CI with GitHub Actions
 - Container: Docker and Docker Compose, running the API with a volume for the database, a restart policy, and a health check on `/saude` (details in `docs/docker.md`)
 
@@ -156,6 +167,7 @@ flowchart TD
 
 - **Interface** (`inventario/interface/`): the only layer that talks to the outside world. The terminal menu uses `input` and `print`; the API receives HTTP requests and answers with JSON. Both read and convert the input and present results and error messages.
   - `api/`: the API package. `__init__.py` has `criar_app(repositorio, ativos, catalogo)`, which creates the Flask app, registers the error handlers (always JSON), and registers one Blueprint per resource (`rotas_de_ativos.py`, `rotas_de_vulnerabilidades.py`, `rotas_de_vinculos.py`, `rotas_de_dependencias.py`, `rotas_de_riscos.py`, `rotas_de_opcoes.py`, `rotas_de_saude.py`); `requisicoes.py` and `respostas.py` hold small helpers to read bodies and build responses
+  - `web/`: the web frontend (HTML, CSS, and JavaScript), served by `api/rotas_do_frontend.py`; it only talks to the system through the HTTP routes of the API
   - `menu.py`: `menu_principal`, `menu_listagem`, and `menu_vulnerabilidades`
   - `ativos.py`: asset registration, editing, and deletion screens (`cadastrar_ativo`, `editar_ativo`, `excluir_ativo`, `perguntar_ativo`...)
   - `vulnerabilidades.py`: catalog and link screens (`cadastrar_vulnerabilidade`, `editar_vulnerabilidade`, `vincular_a_um_ativo`, `mostrar_vulnerabilidade`...)
@@ -226,8 +238,15 @@ menu_principal                         (interface)     user picks option 4
 │   │   │   ├── rotas_de_riscos.py
 │   │   │   ├── rotas_de_opcoes.py
 │   │   │   ├── rotas_de_saude.py
+│   │   │   ├── rotas_do_frontend.py
 │   │   │   ├── requisicoes.py
 │   │   │   └── respostas.py
+│   │   ├── web/
+│   │   │   ├── index.html
+│   │   │   ├── js/
+│   │   │   ├── estilos/
+│   │   │   ├── fontes/
+│   │   │   └── icones/
 │   │   ├── menu.py
 │   │   ├── ativos.py
 │   │   ├── vulnerabilidades.py
@@ -257,6 +276,8 @@ menu_principal                         (interface)     user picks option 4
 │   ├── test_api.py
 │   ├── test_falha_de_persistencia.py
 │   ├── test_recurso_nao_encontrado.py
+│   ├── test_rotas_do_frontend.py
+│   ├── test_servidor_com_tempo_limite.py
 │   └── test_exemplos.py
 ├── docs/
 │   ├── README.pt-br.md
@@ -267,6 +288,8 @@ menu_principal                         (interface)     user picks option 4
 │   ├── relatorio_testes.md
 │   ├── entrega_final.md
 │   ├── solid.md
+│   ├── docker.md
+│   ├── referencias/
 │   └── exemplos/
 │       ├── exemplo_ativos.json
 │       └── exemplo_vulnerabilidades.json
@@ -274,6 +297,8 @@ menu_principal                         (interface)     user picks option 4
 ├── .flake8
 ├── pyproject.toml
 ├── .gitignore
+├── PRODUCT.md
+├── DESIGN.md
 └── README.md
 ```
 
@@ -286,8 +311,8 @@ menu_principal                         (interface)     user picks option 4
 Requirement: Python 3.8 or higher installed. The external dependencies are `numpy` and `flask`, listed in `requirements.txt`.
 
 ```bash
-git clone https://github.com/cadulugaresi/it-asset-vulnerability-manager.git
-cd it-asset-vulnerability-manager
+git clone https://github.com/cadulugaresi/trab02_2026_2_12621cbs211.git
+cd trab02_2026_2_12621cbs211
 python3 -m pip install -r requirements.txt
 ```
 
@@ -306,6 +331,12 @@ curl http://localhost:5000/saude
 curl http://localhost:5000/ativos
 ```
 
+### Opening the web frontend
+
+With the API running locally, open **http://localhost:5000** in the browser (with Docker Compose, the address is **http://localhost:2211**). The frontend has no separate server: Flask serves the page at `/` and its files at `/web/...`, on the same port as the API.
+
+The server handles one request at a time (`threaded=False`, explained in `docs/docker.md`). Browsers open extra connections in advance and leave them idle, so `iniciar_api.py` closes any connection that stays idle for more than 1 second; without this, a single idle connection would hold the server and the page would stop loading. The frontend also sends its requests in a queue, one after another, with a 10-second time limit.
+
 ### Running the API with Docker Compose
 
 Requirement: Docker with Docker Compose.
@@ -313,10 +344,12 @@ Requirement: Docker with Docker Compose.
 ```bash
 docker compose up -d --build
 docker compose ps
-curl http://localhost:5000/saude
+curl http://localhost:2211/saude
 ```
 
-The container runs the API, keeps the database in the `dados` volume, restarts on its own if the process stops, and is marked `healthy` while `/saude` answers. Stop it with `docker compose down` (the volume, and therefore the data, is kept). Details in `docs/docker.md`.
+The container runs the API and the web frontend (http://localhost:2211), keeps the database in the `dados` volume, restarts on its own if the process stops, and is marked `healthy` while `/saude` answers. The code, frontend included, is copied into the image when it is built: after changing any file, run `docker compose up -d --build` again, otherwise the container keeps the old version. Stop it with `docker compose down` (the volume, and therefore the data, is kept). Details in `docs/docker.md`.
+
+The names follow the course standard (card S5_20): the Compose project, the image, and the container are all called `trab02_2026_2_12621cbs211`, and the external port is 2211 (2000 + the last three digits of the student ID). Inside the container, the API still listens on port 5000.
 
 ### Running the terminal menu
 

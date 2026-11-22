@@ -1,0 +1,198 @@
+.legenda-do-ranking {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--espaco-2) var(--espaco-5);
+  color: var(--texto-secundario);
+  font-size: var(--tamanho-apoio);
+}
+
+.legenda-do-ranking li {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--espaco-2);
+}
+
+.amostra-da-barra {
+  width: 16px;
+  height: 6px;
+  border-radius: 3px;
+}
+
+.amostra-propria {
+  background: var(--tinta);
+}
+
+.amostra-herdada {
+  background: var(--estado-cinza);
+}
+
+.linha-do-ranking-link {
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr) minmax(0, 1.3fr) 88px;
+  align-items: center;
+  gap: var(--espaco-5);
+  min-height: 56px;
+  padding: var(--espaco-3) 0;
+  border-top: 1px solid var(--linha);
+  color: var(--tinta);
+  text-decoration: none;
+}
+
+.linha-do-ranking-posicao {
+  color: var(--texto-secundario);
+  font-size: 22px;
+  font-weight: var(--peso-fino);
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+}
+
+.linha-do-ranking-nome {
+  display: flex;
+  align-items: center;
+  gap: var(--espaco-3);
+  min-width: 0;
+}
+
+.linha-do-ranking-nome span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.linha-do-ranking-nome .icone {
+  flex: none;
+  color: var(--texto-secundario);
+}
+
+.barra-de-risco {
+  display: flex;
+  gap: 2px;
+  height: 6px;
+}
+
+.barra-de-risco-propria,
+.barra-de-risco-herdada {
+  border-radius: 3px;
+}
+
+.barra-de-risco-propria {
+  background: var(--tinta);
+}
+
+.barra-de-risco-herdada {
+  background: var(--estado-cinza);
+}
+
+.linha-do-ranking-valor {
+  font-size: 17px;
+  font-weight: var(--peso-leve);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.ranking-destaques .linha-do-ranking-link {
+  grid-template-columns: 112px minmax(0, 1fr) minmax(0, 1.3fr) 120px;
+  min-height: 128px;
+  padding: var(--espaco-5) 0;
+}
+
+.linha-do-ranking-destaque .linha-do-ranking-posicao {
+  color: var(--tinta);
+  font-size: 88px;
+  letter-spacing: -0.04em;
+}
+
+.linha-do-ranking-destaque .linha-do-ranking-nome {
+  font-size: 20px;
+}
+
+.linha-do-ranking-destaque .linha-do-ranking-nome span,
+.linha-do-ranking-destaque .linha-do-ranking-nome .icone,
+.linha-do-ranking-destaque .linha-do-ranking-valor {
+  color: var(--nivel-critico);
+}
+
+.linha-do-ranking-destaque .linha-do-ranking-nome .icone {
+  width: 24px;
+  height: 24px;
+}
+
+.linha-do-ranking-destaque .barra-de-risco {
+  height: 12px;
+}
+
+.linha-do-ranking-destaque .barra-de-risco-propria,
+.linha-do-ranking-destaque .barra-de-risco-herdada {
+  border-radius: 6px;
+}
+
+.linha-do-ranking-destaque .linha-do-ranking-valor {
+  font-size: 32px;
+  font-weight: var(--peso-fino);
+}
+
+.ranking-restante {
+  margin-top: var(--espaco-8);
+}
+
+.ranking-restante .linha-do-ranking:last-child .linha-do-ranking-link,
+.ranking-destaques:last-child .linha-do-ranking:last-child .linha-do-ranking-link {
+  border-bottom: 1px solid var(--linha);
+}
+
+@media (hover: hover) and (pointer: fine) {
+  .linha-do-ranking-link:hover .linha-do-ranking-nome span {
+    text-decoration: underline;
+    text-underline-offset: 4px;
+    text-decoration-thickness: 1px;
+  }
+}
+
+@media (max-width: 767.98px) {
+  .linha-do-ranking-link,
+  .ranking-destaques .linha-do-ranking-link {
+    grid-template-columns: 40px minmax(0, 1fr) auto;
+    grid-template-areas:
+      "posicao nome valor"
+      "posicao barra barra";
+    gap: var(--espaco-2) var(--espaco-3);
+  }
+
+  .ranking-destaques .linha-do-ranking-link {
+    grid-template-columns: 64px minmax(0, 1fr) auto;
+    min-height: 96px;
+  }
+
+  .linha-do-ranking-posicao {
+    grid-area: posicao;
+  }
+
+  .linha-do-ranking-nome {
+    grid-area: nome;
+  }
+
+  .barra-de-risco {
+    grid-area: barra;
+  }
+
+  .linha-do-ranking-valor {
+    grid-area: valor;
+  }
+
+  .linha-do-ranking-destaque .linha-do-ranking-posicao {
+    font-size: 56px;
+  }
+
+  .linha-do-ranking-destaque .linha-do-ranking-nome {
+    font-size: 17px;
+  }
+
+  .linha-do-ranking-destaque .linha-do-ranking-nome span {
+    white-space: normal;
+  }
+
+  .linha-do-ranking-destaque .linha-do-ranking-valor {
+    font-size: 24px;
+  }
+}
