@@ -1013,6 +1013,36 @@ class TesteDeInteirosAcimaDoLimite(TesteDaApi):
         self.conferir_erro_sem_alteracao(resposta, 400, self.mensagem_esperada, estado_antes)
 
 
+class TesteDeLimitesDeTamanho(TesteDaApi):
+
+    mensagem_de_texto_longo = "Este campo pode ter no máximo 120 caracteres."
+
+    def test_nome_de_ativo_com_mais_de_120_caracteres_devolve_400_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_notebook_com_campo_alterado("nome", "R" * 121)
+
+        self.conferir_erro_sem_alteracao(resposta, 400, self.mensagem_de_texto_longo, estado_antes)
+
+    def test_nome_de_vulnerabilidade_com_mais_de_120_caracteres_devolve_400_sem_alterar_nada(
+        self,
+    ):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_vulnerabilidade(nome="R" * 121)
+
+        self.conferir_erro_sem_alteracao(resposta, 400, self.mensagem_de_texto_longo, estado_antes)
+
+    def test_requisicao_acima_de_64_kb_devolve_413_sem_alterar_nada(self):
+        estado_antes = self.estado_da_memoria()
+
+        resposta = self.cadastrar_vulnerabilidade(nome="R" * 70_000)
+
+        self.conferir_erro_sem_alteracao(
+            resposta, 413, "A requisição passou do tamanho máximo aceito.", estado_antes
+        )
+
+
 class TesteDeErrosHttp(TesteDaApi):
 
     def test_rota_inexistente_devolve_404_em_json(self):
