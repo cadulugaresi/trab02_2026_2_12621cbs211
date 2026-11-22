@@ -66,20 +66,13 @@
   margin-bottom: var(--espaco-2);
 }
 
-.tela-provisoria {
+.tela-nao-encontrada {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: var(--espaco-4);
 }
 
-.tela-provisoria .texto-de-apoio {
+.tela-nao-encontrada .texto-de-apoio {
   font-size: var(--tamanho-corpo);
-}
-
-.tela-provisoria .icone {
-  width: 28px;
-  height: 28px;
-  margin-bottom: var(--espaco-2);
-  color: var(--texto-secundario);
 }

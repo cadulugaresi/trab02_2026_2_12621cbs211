@@ -4,11 +4,9 @@ import {
 } from "./telas/ativos/formulario-de-ativo.js";
 import { abrirJanelaDoAtivo } from "./telas/ativos/janela-do-ativo.js";
 import { montarTelaDeAtivos } from "./telas/ativos/lista-de-ativos.js";
-import { montarTelaDeComponentes } from "./telas/componentes.js";
 import { montarTelaDeInicio } from "./telas/inicio/tela-de-inicio.js";
-import { abrirJanelaDeExemplo } from "./telas/janela-de-exemplo.js";
 import { montarTelaDoMapa } from "./telas/mapa/tela-do-mapa.js";
-import { montarTelaNaoEncontrada } from "./telas/provisoria.js";
+import { montarTelaNaoEncontrada } from "./telas/tela-nao-encontrada.js";
 import { montarTelaDeRanking } from "./telas/ranking/tela-de-ranking.js";
 import { montarTelaDeVinculos } from "./telas/vinculos/tela-de-vinculos.js";
 import {
@@ -80,13 +78,6 @@ export const ROTAS = [
     serveDeFundo: true,
     montar: montarTelaDeRanking,
   },
-  {
-    caminho: "/componentes",
-    titulo: "Componentes",
-    serveDeFundo: true,
-    montar: montarTelaDeComponentes,
-  },
-  { caminho: "/componentes/janela", fundo: "/componentes", janela: abrirJanelaDeExemplo },
 ];
 
 export const ROTA_NAO_ENCONTRADA = {
