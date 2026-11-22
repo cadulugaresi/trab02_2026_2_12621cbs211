@@ -54,7 +54,16 @@ function converterOpcoesDaApi(opcoesDaApi) {
     statusDeTratamento: montarOpcoesDoEnum(opcoesDaApi.status_de_tratamento, STATUS_DE_TRATAMENTO),
     coresDeImpressora: montarOpcoesDoEnum(opcoesDaApi.cores, CORES_DE_IMPRESSORA),
     tecnologiasDeImpressora: montarOpcoesDoEnum(opcoesDaApi.tecnologias, TECNOLOGIAS_DE_IMPRESSORA),
+    sistemasOperacionais: converterSistemasOperacionais(opcoesDaApi.sistemas_operacionais),
   };
+}
+
+function converterSistemasOperacionais(sistemasDaApi) {
+  const sistemas = [];
+  for (const sistemaDaApi of sistemasDaApi) {
+    sistemas.push({ valor: sistemaDaApi.valor, rotulo: sistemaDaApi.valor });
+  }
+  return sistemas;
 }
 
 function converterTipos(tiposDaApi) {

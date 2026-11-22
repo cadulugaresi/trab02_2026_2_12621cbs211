@@ -31,8 +31,10 @@ import { rotuloDoTipo } from "./apresentacao-do-ativo.js";
 const MENOR_FATOR = 0.1;
 const MAIOR_FATOR = 2;
 const MENSAGEM_DE_ID_REPETIDO = "Já existe um ativo cadastrado com este ID.";
+const OPCAO_DE_OUTRO_SISTEMA_OPERACIONAL = { valor: "OUTRO", rotulo: "Outro" };
+
 const CAMPOS_DE_CADA_TIPO = {
-  Notebook: ["sistemaOperacional", "tela"],
+  Notebook: ["sistemaOperacional", "outroSistemaOperacional", "tela"],
   Servidor: ["ram", "armazenamento"],
   Roteador: ["portas", "velocidade"],
   Impressora: ["cor", "tecnologia"],
@@ -151,8 +153,20 @@ function criarCampos(opcoes, ativo) {
     grupoDosDetalhes,
   ]);
 
+  function mostrarCampoDoOutroSistemaOperacional() {
+    linhas.outroSistemaOperacional.elemento.hidden = !escolheuOutroSistemaOperacional(controles);
+  }
+
+  controles.sistemaOperacional.elemento.addEventListener("change", () => {
+    mostrarCampoDoOutroSistemaOperacional();
+    if (escolheuOutroSistemaOperacional(controles)) {
+      controles.outroSistemaOperacional.focus();
+    }
+  });
+
   mostrarAjudaDoFator();
   mostrarCamposDoTipo();
+  mostrarCampoDoOutroSistemaOperacional();
 
   function validar() {
     const erros = [];
@@ -218,6 +232,10 @@ function criarCampos(opcoes, ativo) {
 
 function criarControles(opcoes, ativo) {
   const valores = ativo ?? {};
+  const escolhaDoSistemaOperacional = descobrirEscolhaDoSistemaOperacional(
+    opcoes.sistemasOperacionais,
+    valores.sistema_operacional,
+  );
   return {
     id: criarCampoDeNumero({ nome: "id", inteiro: true, textoDeExemplo: "Ex.: 7" }),
     nome: criarCampoDeTexto({
@@ -251,11 +269,20 @@ function criarControles(opcoes, ativo) {
       valor: valores.fator_exposicao ?? 1,
       formatar: formatarNumero,
     }),
-    sistemaOperacional: criarCampoDeTexto({
-      nome: "sistema_operacional",
-      valor: valores.sistema_operacional ?? "",
-      textoDeExemplo: "Ex.: Linux",
-      tamanhoMaximo: 60,
+    sistemaOperacional: criarMenuSuspenso({
+      rotulo: "Sistema operacional",
+      opcoes: [...opcoes.sistemasOperacionais, OPCAO_DE_OUTRO_SISTEMA_OPERACIONAL],
+      valor: escolhaDoSistemaOperacional,
+      textoQuandoVazio: "Escolha o sistema operacional",
+    }),
+    outroSistemaOperacional: criarCampoDeTexto({
+      nome: "outro_sistema_operacional",
+      valor:
+        escolhaDoSistemaOperacional === OPCAO_DE_OUTRO_SISTEMA_OPERACIONAL.valor
+          ? valores.sistema_operacional
+          : "",
+      textoDeExemplo: "Ex.: Ubuntu",
+      tamanhoMaximo: 120,
     }),
     tela: criarCampoDeNumero({ nome: "tela", valor: valores.tela ?? null, unidade: "polegadas" }),
     ram: criarContador({ rotulo: "Memória RAM", valor: valores.ram ?? 8, unidade: "GB" }),
@@ -306,7 +333,12 @@ function criarLinhas(controles, ehEdicao) {
     }),
     sistemaOperacional: criarLinhaComValidacao({
       rotulo: "Sistema operacional",
-      controle: controles.sistemaOperacional,
+      controle: controles.sistemaOperacional.elemento,
+    }),
+    outroSistemaOperacional: criarLinhaComValidacao({
+      rotulo: "Qual sistema",
+      controle: controles.outroSistemaOperacional,
+      ajuda: "Nome do sistema operacional, como deve aparecer nas listas",
     }),
     tela: criarLinhaDeControleComposto("Tela", controles.tela),
     ram: criarLinhaDeControleComposto("Memória RAM", controles.ram),
@@ -328,6 +360,27 @@ function criarLinhas(controles, ehEdicao) {
     });
   }
   return linhas;
+}
+
+function descobrirEscolhaDoSistemaOperacional(sistemasOperacionais, sistemaOperacionalAtual) {
+  if (sistemaOperacionalAtual === undefined || sistemaOperacionalAtual === "") {
+    return null;
+  }
+  if (encontrarOpcao(sistemasOperacionais, sistemaOperacionalAtual) !== undefined) {
+    return sistemaOperacionalAtual;
+  }
+  return OPCAO_DE_OUTRO_SISTEMA_OPERACIONAL.valor;
+}
+
+function escolheuOutroSistemaOperacional(controles) {
+  return controles.sistemaOperacional.obterValor() === OPCAO_DE_OUTRO_SISTEMA_OPERACIONAL.valor;
+}
+
+function lerSistemaOperacionalEscolhido(controles) {
+  if (escolheuOutroSistemaOperacional(controles)) {
+    return controles.outroSistemaOperacional.value.trim();
+  }
+  return controles.sistemaOperacional.obterValor();
 }
 
 function criarLinhaDeControleComposto(rotulo, controleComposto) {
@@ -373,7 +426,14 @@ function criarEscolhaDeTipo(tipos, tipoInicial, aoEscolher) {
 
 function validarCamposDoTipo(erros, tipo, controles) {
   if (tipo === "Notebook") {
-    validarTextoObrigatorio(erros, "sistemaOperacional", controles.sistemaOperacional.value);
+    validarEscolha(erros, "sistemaOperacional", controles.sistemaOperacional.obterValor());
+    if (escolheuOutroSistemaOperacional(controles)) {
+      validarTextoObrigatorio(
+        erros,
+        "outroSistemaOperacional",
+        controles.outroSistemaOperacional.value,
+      );
+    }
     validarNumeroPositivo(erros, "tela", controles.tela.obterValor());
   } else if (tipo === "Servidor") {
     validarNumeroPositivo(erros, "armazenamento", controles.armazenamento.obterValor());
@@ -388,7 +448,7 @@ function validarCamposDoTipo(erros, tipo, controles) {
 function montarCamposDoTipo(tipo, controles) {
   if (tipo === "Notebook") {
     return {
-      sistema_operacional: controles.sistemaOperacional.value.trim(),
+      sistema_operacional: lerSistemaOperacionalEscolhido(controles),
       tela: controles.tela.obterValor(),
     };
   }
