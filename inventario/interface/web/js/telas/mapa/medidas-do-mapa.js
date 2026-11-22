@@ -7,6 +7,7 @@ const LARGURA_DA_FAIXA_DE_NAVEGACAO = 72;
 const MARGEM_DO_CONTEUDO_NO_COMPUTADOR = 64;
 const MARGEM_DO_CONTEUDO_NO_CELULAR = 20;
 const LARGURA_MAXIMA_DO_CONTEUDO = 1120;
+const TELA_GRANDE = "(min-width: 1600px)";
 
 export function medirMapa(larguraDaArea, quantidadeDeAtivos) {
   const ehCelular = larguraDaArea < LARGURA_DO_CELULAR;
@@ -45,6 +46,9 @@ export function estimarLarguraDaAreaDoMapa() {
   }
   const larguraLivre =
     larguraDaJanela - LARGURA_DA_FAIXA_DE_NAVEGACAO - 2 * MARGEM_DO_CONTEUDO_NO_COMPUTADOR;
+  if (window.matchMedia(TELA_GRANDE).matches) {
+    return larguraLivre;
+  }
   return Math.min(LARGURA_MAXIMA_DO_CONTEUDO, larguraLivre);
 }
 

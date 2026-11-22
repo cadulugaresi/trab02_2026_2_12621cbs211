@@ -49,6 +49,16 @@
   width: min(100%, 440px);
 }
 
+@media (min-width: 1600px) {
+  .grupos-de-filtro {
+    column-gap: var(--espaco-6);
+  }
+
+  .grupo-de-filtro-ordenacao {
+    width: 420px;
+  }
+}
+
 .lista-de-ativos > li + li {
   border-top: 1px solid var(--linha);
 }
@@ -416,4 +426,14 @@ a.mini-mapa-no:focus-visible circle {
     width: 44px;
     height: 44px;
   }
+}
+
+.aviso-sem-vulnerabilidades {
+  max-width: 52ch;
+  padding: var(--espaco-3) var(--espaco-4);
+  border-radius: var(--raio-bloco);
+  background: var(--campo);
+  color: var(--tinta);
+  font-size: var(--tamanho-apoio);
+  line-height: 1.45;
 }
