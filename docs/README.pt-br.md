@@ -61,7 +61,22 @@ python3 semear_demonstracao.py                         # API local, em http://lo
 python3 semear_demonstracao.py http://localhost:2211   # API no Docker
 ```
 
-Os dados entram pela própria API, passando pelas mesmas validações de um cadastro feito à mão. O script só carrega a demonstração num banco **vazio**: se já existir algum ativo, ele para sem cadastrar nada, para nunca misturar os dados fictícios com dados de verdade. Para manter a demonstração separada do seu banco, rode a API numa pasta própria:
+Os dados entram pela própria API, passando pelas mesmas validações de um cadastro feito à mão. O script só carrega a demonstração num banco **vazio**: se já existir algum ativo, ele para sem cadastrar nada, para nunca misturar os dados fictícios com dados de verdade.
+
+Se a API já tiver dados, comece com um banco vazio:
+
+**Com Docker:** o banco mora no volume do container, então é preciso apagá-lo e subir de novo.
+
+> ⚠️ O `-v` apaga o volume, e com ele **todos** os ativos, vulnerabilidades e vínculos já cadastrados no container.
+
+```bash
+docker compose down -v                                 # para o container e apaga o volume com o banco
+docker compose up -d --build                           # sobe de novo, com um banco vazio
+docker compose ps                                      # espere aparecer (healthy)
+python3 semear_demonstracao.py http://localhost:2211
+```
+
+**Sem Docker:** para não mexer no seu `inventario.db`, rode a API numa pasta própria, que ganha um banco novo:
 
 ```bash
 mkdir demonstracao
