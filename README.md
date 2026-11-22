@@ -61,7 +61,22 @@ python3 semear_demonstracao.py                         # local API, at http://lo
 python3 semear_demonstracao.py http://localhost:2211   # API in Docker
 ```
 
-The data goes in through the API itself, passing the same validations as a registration made by hand. The script only loads the demo into an **empty** database: if any asset already exists, it stops without registering anything, so the fictional data never mixes with real data. To keep the demo apart from your database, run the API in a folder of its own:
+The data goes in through the API itself, passing the same validations as a registration made by hand. The script only loads the demo into an **empty** database: if any asset already exists, it stops without registering anything, so the fictional data never mixes with real data.
+
+If the API already has data, start with an empty database:
+
+**With Docker:** the database lives in the container's volume, so it has to be deleted and the container started again.
+
+> ⚠️ The `-v` deletes the volume, and with it **all** the assets, vulnerabilities, and links already registered in the container.
+
+```bash
+docker compose down -v                                 # stops the container and deletes the volume with the database
+docker compose up -d --build                           # starts it again, with an empty database
+docker compose ps                                      # wait until it shows (healthy)
+python3 semear_demonstracao.py http://localhost:2211
+```
+
+**Without Docker:** to leave your `inventario.db` untouched, run the API in a folder of its own, which gets a new database:
 
 ```bash
 mkdir demonstracao
