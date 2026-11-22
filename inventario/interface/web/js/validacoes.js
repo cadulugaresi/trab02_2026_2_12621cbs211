@@ -1,7 +1,14 @@
+const TAMANHO_MAXIMO_DE_TEXTO = 120;
+
 export function validarTextoObrigatorio(erros, campo, texto) {
   const textoLimpo = texto.trim();
   if (textoLimpo === "") {
     erros.push({ campo, mensagem: "Este campo não pode ser vazio" });
+  } else if (texto.length > TAMANHO_MAXIMO_DE_TEXTO) {
+    erros.push({
+      campo,
+      mensagem: `Este campo pode ter no máximo ${TAMANHO_MAXIMO_DE_TEXTO} caracteres`,
+    });
   } else if (/^\d+$/.test(textoLimpo)) {
     erros.push({ campo, mensagem: "Este campo não pode ser composto apenas por números" });
   }

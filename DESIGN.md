@@ -104,6 +104,7 @@ Usado para portas e RAM (r6-01):
 ### 5.4 Campo de CVSS
 
 - **Fundo:** muda para a cor do nível enquanto se digita (tabela da seção 2).
+- **Ao clicar:** o número inteiro fica selecionado, como no contador, para o que for digitado substituir o valor. Sem isso, um valor como "10,0" ocupa os 4 caracteres do campo e não aceita mais nada.
 - **Número:** branco cheio, em negrito.
 - **Ao lado:** só o nome do nível ("Crítico"), em peso 500, na cor do nível.
 - **Sem régua de barras.**
@@ -230,7 +231,7 @@ Regra de "aberta" em todos os números: tudo que não está Corrigida (Aberta, E
 - **Topo:** nome grande; tipo, setor e responsável pequenos embaixo.
 - **Ficha:** logo abaixo, numa linha pequena em cinza, a pílula de status do ativo, o fator de exposição e os campos do tipo (ex.: "32 GB de RAM", "4 TB de armazenamento").
 - **Risco:** três números soltos (próprio, herdado e efetivo), em peso leve, cada um com o seu rótulo centralizado embaixo. Trocar o status de um vínculo ou desvincular recalcula os números ao vivo (seção 8).
-- **Vulnerabilidades vinculadas:** bolinha e nome do nível, nome, CVSS e pílula de status de tratamento, que pode ser trocada ali mesmo. Cada uma tem um "x" para desvincular, que pede confirmação no balão (seção 5.7). O nome é um link que abre os detalhes da vulnerabilidade na mesma janela, com a seta de voltar. Sem vulnerabilidades, aparece o botão "Vincular vulnerabilidade", que abre a tela de Vínculos com o ativo já escolhido (`/#/vinculos?ativo=<id>`).
+- **Vulnerabilidades vinculadas:** bolinha e nome do nível, nome, CVSS e pílula de status de tratamento, que pode ser trocada ali mesmo. Cada uma tem um "x" para desvincular, que pede confirmação no balão (seção 5.7). O nome é um link que abre os detalhes da vulnerabilidade na mesma janela, com a seta de voltar. Sem vulnerabilidades, aparece o botão "Vincular vulnerabilidade", que abre a tela de Vínculos com o ativo já escolhido (`/#/vinculos?ativo=<id>`). Se o catálogo ainda não tem nenhuma vulnerabilidade, o botão não sai da janela: aparece, logo abaixo dele, o aviso "Não há nenhuma vulnerabilidade cadastrada. Cadastre a vulnerabilidade primeiro e, depois, volte aqui para vinculá-la a este ativo.", num quadro discreto em `--campo` (não é um erro, é uma orientação).
 - **Colunas alinhadas:** o CVSS e a pílula de status ficam em colunas de largura fixa, para as pílulas se alinharem de uma linha para outra.
 - **Dependências:**
   - **Mini mapa:** só dos vizinhos. Quem depende do ativo fica à esquerda e os ativos dos quais ele depende ficam à direita, com as setas indo da esquerda para a direita. Clicar num vizinho abre os detalhes dele na mesma janela, com a seta de voltar.
@@ -283,6 +284,7 @@ São telas normais, não janelas.
 - **Campos próprios de cada tipo:**
   - **Contador:** portas e RAM.
   - **Campo de número comum:** velocidade, tela e armazenamento.
+  - **Sistema operacional:** menu com Windows, macOS, Linux (opções que vêm de `/opcoes`, do enum `SistemaOperacional` do backend) e Outro. Ao escolher Outro, aparece logo abaixo a linha "Qual sistema", com um campo de texto que recebe o foco e segue as regras dos outros textos (não pode ser vazio, nem só números, e tem no máximo 120 caracteres). O que fica salvo é o texto: "Linux" ou o nome digitado. Ao editar um notebook com um sistema fora da lista, o menu abre em Outro com o nome no campo.
 - **Fator de exposição:** controle deslizante de 0 a 2, começando no padrão do tipo (o valor vem de `/opcoes`), com o número ao lado.
 - **Setor e status:** menu que abre embaixo do campo.
 - **ID do ativo:** no Novo ativo, campo vazio e obrigatório, preenchido pelo usuário (número inteiro maior que zero), sem sugestão pronta. Se o ID já existir, a mensagem da API aparece na faixa vermelha e o campo fica em destaque. No Editar, o ID aparece só como texto, embaixo do título.
@@ -308,6 +310,7 @@ Valores das skills emil-design-eng e animate:
 ## 9. Responsivo
 
 Larguras de referência: 1440, 1024, 768 e 390px.
+- **Telas grandes (a partir de 1600px):** o conteúdo deixa de ter a largura máxima de 1120px e ocupa a tela toda: as linhas das listas vão até a direita, a troca Lista | Mapa e o segmentado de Vínculos ficam no canto direito, e os grupos de filtro (Tipo, Status, Setor e Ordenar por) ficam numa linha só a partir de 1920px. A Início também usa a largura toda. Os formulários continuam com no máximo 880px e as janelas continuam com o mesmo tamanho, porque campos muito largos ficam difíceis de ler. Abaixo de 1600px, nada muda.
 - **Desktop:** a Início usa várias colunas (a meia lua ao lado das barras de setores; a prévia do mapa solta no canto).
 - **Abaixo de 768px:** uma coluna, menu pelo botão do meio, janelas como cartão flutuante e meia lua só com a porcentagem.
 - **Títulos de tela no celular:** 44px, com a contagem embaixo ("36 ativos") em 20px e um respiro maior no topo da página.
@@ -318,7 +321,7 @@ Larguras de referência: 1440, 1024, 768 e 390px.
 ## 10. API usada (não muda)
 
 - `GET /saude`
-- `GET /opcoes`: tipos com o fator padrão; setores; status do ativo; status de tratamento; cores; tecnologias.
+- `GET /opcoes`: tipos com o fator padrão; setores; status do ativo; status de tratamento; cores; tecnologias; sistemas operacionais.
 - `GET /ativos?tipo=&status=&nome=&ordenar=id|nome|vulnerabilidades` · `POST /ativos` · `GET /ativos/<id>` · `PUT /ativos/<id>` · `DELETE /ativos/<id>`
 - `GET /ativos/<id>/vulnerabilidades` · `POST /ativos/<id>/vulnerabilidades` · `PUT /ativos/<id>/vulnerabilidades/<id_vuln>` · `DELETE /ativos/<id>/vulnerabilidades/<id_vuln>`
 - `GET /ativos/<id>/dependencias` · `POST /ativos/<id>/dependencias` · `PUT /ativos/<id>/dependencias/<id_dep>` · `DELETE /ativos/<id>/dependencias/<id_dep>`

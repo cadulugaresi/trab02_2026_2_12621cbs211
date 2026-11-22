@@ -32,6 +32,12 @@ class Tecnologia(Enum):
     LASER = 2
 
 
+class SistemaOperacional(Enum):
+    WINDOWS = "Windows"
+    MACOS = "macOS"
+    LINUX = "Linux"
+
+
 class StatusDaVuln(Enum):
     ABERTA = 1
     EM_TRATAMENTO = 2

@@ -1,4 +1,11 @@
-from inventario.dominio.enums import Cor, Setor, StatusDaVuln, StatusDoAtivo, Tecnologia
+from inventario.dominio.enums import (
+    Cor,
+    Setor,
+    SistemaOperacional,
+    StatusDaVuln,
+    StatusDoAtivo,
+    Tecnologia,
+)
 from inventario.dominio.excecoes import DadoInvalidoError
 from inventario.dominio.ativo import MAPA_DE_TIPOS
 
@@ -83,3 +90,18 @@ def validar_tecnologia(opcao_tec):
         return Tecnologia.LASER
     else:
         raise DadoInvalidoError("Tecnologia inválida. Tente novamente.")
+
+
+OPCAO_DE_OUTRO_SISTEMA_OPERACIONAL = "4"
+
+
+def validar_sistema_operacional(opcao_digitada):
+
+    if opcao_digitada == "1":
+        return SistemaOperacional.WINDOWS
+    elif opcao_digitada == "2":
+        return SistemaOperacional.MACOS
+    elif opcao_digitada == "3":
+        return SistemaOperacional.LINUX
+    else:
+        raise DadoInvalidoError("Sistema operacional inválido. Tente novamente.")

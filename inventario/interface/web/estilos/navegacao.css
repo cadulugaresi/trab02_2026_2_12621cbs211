@@ -8,6 +8,12 @@
   max-width: var(--largura-do-conteudo);
 }
 
+@media (min-width: 1600px) {
+  .tela {
+    max-width: none;
+  }
+}
+
 .faixa-de-navegacao {
   position: fixed;
   inset: 0 auto 0 0;

@@ -76,6 +76,8 @@ export function criarCampoDeCvss({ valor = null, aoMudar }) {
   }
 
   campo.addEventListener("input", atualizar);
+  campo.addEventListener("focus", () => campo.select());
+  campo.addEventListener("click", () => campo.select());
   campo.addEventListener("blur", () => {
     if (cvssAtual !== null) {
       campo.value = formatarCvss(cvssAtual);

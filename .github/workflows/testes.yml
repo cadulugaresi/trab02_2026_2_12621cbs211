@@ -25,7 +25,7 @@ jobs:
 
       - name: Rodar flake8 (linting)
         run: |
-          python3 -m flake8 main.py iniciar_api.py inventario
+          python3 -m flake8 main.py iniciar_api.py semear_demonstracao.py inventario
 
       - name: Rodar testes com unittest
         run: |

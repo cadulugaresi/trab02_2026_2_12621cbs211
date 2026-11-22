@@ -3,11 +3,12 @@ import {
   desvincularVulnerabilidade,
   excluirAtivo,
   listarAtivos,
+  listarVulnerabilidades,
   listarVulnerabilidadesDoAtivo,
 } from "../../api.js";
 import { mostrarAvisoDeSucesso } from "../../componentes/aviso-de-sucesso.js";
 import { abrirBalaoDeExclusao } from "../../componentes/balao-de-exclusao.js";
-import { criarBotao } from "../../componentes/botoes.js";
+import { criarBotao, liberarBotao, marcarBotaoComoOcupado } from "../../componentes/botoes.js";
 import { criarFaixaDeErro } from "../../componentes/faixa-de-erro.js";
 import { abrirJanela } from "../../componentes/janela.js";
 import { criarLinhaDeVinculo } from "../../componentes/linha-de-vinculo.js";
@@ -126,6 +127,41 @@ function criarFichaDoAtivo(ativo, opcoes) {
   return ficha;
 }
 
+const AVISO_SEM_VULNERABILIDADES_NO_CATALOGO =
+  "Não há nenhuma vulnerabilidade cadastrada. Cadastre a vulnerabilidade primeiro e, " +
+  "depois, volte aqui para vinculá-la a este ativo.";
+
+function criarBotaoDeVincular(ativo, mostrarFalha) {
+  const aviso = criarElemento("p", {
+    classe: "aviso-sem-vulnerabilidades",
+    role: "status",
+    hidden: true,
+  });
+  const botao = criarBotao({
+    texto: "Vincular vulnerabilidade",
+    variacao: "secundario",
+    icone: "mais",
+    pequeno: true,
+  });
+  botao.addEventListener("click", async () => {
+    marcarBotaoComoOcupado(botao, "Conferindo…");
+    try {
+      const catalogo = await listarVulnerabilidades();
+      if (catalogo.length === 0) {
+        aviso.textContent = AVISO_SEM_VULNERABILIDADES_NO_CATALOGO;
+        aviso.hidden = false;
+        return;
+      }
+      navegarPara(`/vinculos?ativo=${ativo.id}`);
+    } catch (erro) {
+      mostrarFalha(erro);
+    } finally {
+      liberarBotao(botao);
+    }
+  });
+  return [botao, aviso];
+}
+
 function criarSecaoDeVulnerabilidades({
   ativo,
   vulnerabilidades,
@@ -142,13 +178,7 @@ function criarSecaoDeVulnerabilidades({
         classe: "texto-de-apoio",
         texto: "Nenhuma vulnerabilidade vinculada a este ativo.",
       }),
-      criarBotao({
-        texto: "Vincular vulnerabilidade",
-        variacao: "secundario",
-        icone: "mais",
-        pequeno: true,
-        aoClicar: () => navegarPara(`/vinculos?ativo=${ativo.id}`),
-      }),
+      ...criarBotaoDeVincular(ativo, mostrarFalha),
     ],
   );
 

@@ -5,6 +5,7 @@ from contextlib import redirect_stdout
 from inventario.dominio.enums import (
     Cor,
     Setor,
+    SistemaOperacional,
     StatusDaVuln,
     StatusDoAtivo,
     Tecnologia,
@@ -16,6 +17,7 @@ from inventario.interface.entradas import (
     pedir_info,
     pedir_int,
     pedir_setor,
+    pedir_sistema_operacional,
     pedir_status,
     pedir_tecnologia,
     pedir_tipo,
@@ -56,6 +58,7 @@ from inventario.dominio.validacoes import (
 from inventario.interface.conversao_das_opcoes_do_menu import (
     validar_cor,
     validar_setor,
+    validar_sistema_operacional,
     validar_status,
     validar_tecnologia,
     validar_tipo,
@@ -143,6 +146,19 @@ class TestValidarSetor(unittest.TestCase):
     def test_setor_invalido_levanta_erro(self):
         with self.assertRaises(DadoInvalidoError):
             validar_setor("6")
+
+
+class TestValidarSistemaOperacional(unittest.TestCase):
+
+    def test_opcao_1_retorna_windows(self):
+        self.assertEqual(validar_sistema_operacional("1"), SistemaOperacional.WINDOWS)
+
+    def test_opcao_3_retorna_linux(self):
+        self.assertEqual(validar_sistema_operacional("3"), SistemaOperacional.LINUX)
+
+    def test_opcao_invalida_levanta_erro(self):
+        with self.assertRaises(DadoInvalidoError):
+            validar_sistema_operacional("5")
 
 
 class TestValidarStatus(unittest.TestCase):
@@ -768,10 +784,33 @@ class TestPedirIdDisponivel(unittest.TestCase):
 class TestCadastroNotebook(unittest.TestCase):
 
     def test_retorna_so_e_tela(self):
-        with patch("builtins.input", side_effect=["Linux", "15.6"]):
+        with patch("builtins.input", side_effect=["3", "15.6"]):
             so, tela = cadastro_notebook()
         self.assertEqual(so, "Linux")
         self.assertEqual(tela, 15.6)
+
+
+class TestPedirSistemaOperacional(unittest.TestCase):
+
+    def test_opcao_1_devolve_windows(self):
+        with patch("builtins.input", return_value="1"):
+            self.assertEqual(pedir_sistema_operacional("Digite: "), "Windows")
+
+    def test_opcao_2_devolve_macos(self):
+        with patch("builtins.input", return_value="2"):
+            self.assertEqual(pedir_sistema_operacional("Digite: "), "macOS")
+
+    def test_opcao_outro_devolve_o_nome_digitado(self):
+        with patch("builtins.input", side_effect=["4", "Ubuntu"]):
+            self.assertEqual(pedir_sistema_operacional("Digite: "), "Ubuntu")
+
+    def test_opcao_outro_pergunta_de_novo_quando_o_nome_e_so_numeros(self):
+        with patch("builtins.input", side_effect=["4", "123", "Ubuntu"]):
+            self.assertEqual(pedir_sistema_operacional("Digite: "), "Ubuntu")
+
+    def test_opcao_invalida_pergunta_de_novo(self):
+        with patch("builtins.input", side_effect=["9", "3"]):
+            self.assertEqual(pedir_sistema_operacional("Digite: "), "Linux")
 
 
 class TestCadastroServidor(unittest.TestCase):
@@ -808,7 +847,7 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
 
     def test_guarda_no_inventario(self):
         ativos = {}
-        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6", ""]
+        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "3", "15.6", ""]
         with patch("builtins.input", side_effect=respostas):
             ativo = cadastrar_ativo(self.repositorio, ativos)
         self.assertIs(ativos[5], ativo)
@@ -822,7 +861,7 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
 
     def test_cadastra_notebook(self):
         # Ordem: tipo, id, nome, setor, responsável, status, so, tela, fator de exposição
-        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "Linux", "15.6", ""]
+        respostas = ["1", "5", "Dell", "1", "Cadu", "1", "3", "15.6", ""]
         with patch("builtins.input", side_effect=respostas):
             ativo = cadastrar_ativo(self.repositorio, {})
         self.assertIsInstance(ativo, Notebook)
@@ -856,7 +895,7 @@ class TestCadastrarAtivo(TesteComArquivosTemporarios):
 class TestCadastrarAtivoComFatorDeExposicao(TesteComArquivosTemporarios):
 
     def cadastrar_notebook_com_fator(self, respostas_do_fator):
-        respostas = ["1", "5", "Dell", "1", "Rafael Torres", "1", "Linux", "15.6"]
+        respostas = ["1", "5", "Dell", "1", "Rafael Torres", "1", "3", "15.6"]
         respostas.extend(respostas_do_fator)
         with patch("builtins.input", side_effect=respostas):
             with patch("builtins.print"):
