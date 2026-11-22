@@ -94,6 +94,7 @@ The API also serves a web application at `/`, which uses the HTTP routes above:
 - **Vulnerabilities**, **Links**, and **Risk ranking** screens, plus details windows and registration and editing forms
 - **Stack**: plain HTML, CSS, and JavaScript (ES modules), with no framework, build step, or CDN; the Inter font and the Lucide icons are kept inside the project
 - **Responsive and accessible**: layouts for computer, tablet, and phone (reference widths of 1440, 1024, 768, and 390px), keyboard navigation with a visible focus ring, and reduced motion when the system asks for it
+- **Security**: every text that comes from the API is shown with `textContent`, never `innerHTML`, so a name with HTML tags is displayed as plain text (no XSS). Every response from the server also carries security headers: `Content-Security-Policy` (only scripts and styles from the server itself), `X-Frame-Options: DENY` (the system cannot be shown inside another site, which blocks clickjacking), `X-Content-Type-Options: nosniff`, and `Referrer-Policy: no-referrer`. The API rejects texts longer than 120 characters and requests larger than 64 KB
 - **Design decisions**: recorded in `PRODUCT.md` and `DESIGN.md`
 
 ### General

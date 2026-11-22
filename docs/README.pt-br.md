@@ -94,6 +94,7 @@ A API também serve uma aplicação web em `/`, que usa as rotas HTTP acima:
 - Telas de **Vulnerabilidades**, **Vínculos** e **Ranking de riscos**, além das janelas de detalhes e dos formulários de cadastro e edição
 - **Tecnologia**: HTML, CSS e JavaScript puros (módulos ES), sem framework, sem etapa de build e sem CDN; a fonte Inter e os ícones Lucide ficam dentro do projeto
 - **Responsivo e acessível**: layouts para computador, tablet e celular (larguras de referência de 1440, 1024, 768 e 390px), navegação por teclado com contorno de foco visível e movimento reduzido quando o sistema pede
+- **Segurança**: todo texto que vem da API é mostrado com `textContent`, nunca com `innerHTML`, então um nome com tags HTML aparece como texto comum (sem XSS). Toda resposta do servidor também leva cabeçalhos de segurança: `Content-Security-Policy` (só scripts e estilos do próprio servidor), `X-Frame-Options: DENY` (o sistema não pode ser mostrado dentro de outro site, o que bloqueia o clickjacking), `X-Content-Type-Options: nosniff` e `Referrer-Policy: no-referrer`. A API recusa textos com mais de 120 caracteres e requisições maiores que 64 KB
 - **Decisões de design**: registradas no `PRODUCT.md` e no `DESIGN.md`
 
 ### Geral
