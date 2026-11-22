@@ -20,7 +20,7 @@ export function criarElementoSvg(etiqueta, atributos = {}, filhos = []) {
   return elemento;
 }
 
-export function adicionarFilhos(elemento, filhos) {
+function adicionarFilhos(elemento, filhos) {
   for (const filho of filhos) {
     if (filho === null || filho === undefined || filho === false) {
       continue;

@@ -12,8 +12,8 @@ const FORMATO_DE_DUAS_CASAS = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2,
 });
 
-export const MENOR_CVSS = 0.1;
-export const MAIOR_CVSS = 10;
+const MENOR_CVSS = 0.1;
+const MAIOR_CVSS = 10;
 
 export function formatarCvss(cvss) {
   return FORMATO_DE_UMA_CASA.format(cvss);

@@ -22,14 +22,3 @@ export function criarFaixaDeErro() {
 
   return { elemento, mostrar, esconder };
 }
-
-export function destacarCampoComErro(campo) {
-  campo.setAttribute("aria-invalid", "true");
-  campo.focus({ preventScroll: true });
-}
-
-export function tirarDestaqueDosCampos(formulario) {
-  for (const campo of formulario.querySelectorAll('[aria-invalid="true"]')) {
-    campo.removeAttribute("aria-invalid");
-  }
-}

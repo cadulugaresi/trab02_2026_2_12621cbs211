@@ -4,7 +4,7 @@ const MENSAGEM_SEM_CONEXAO =
   "Não foi possível falar com o servidor. Confira se a API está rodando e tente de novo.";
 const MENSAGEM_DE_DEMORA = "O servidor demorou demais para responder. Tente de novo.";
 
-export class ErroDaApi extends Error {
+class ErroDaApi extends Error {
   constructor(mensagem, status) {
     super(mensagem);
     this.name = "ErroDaApi";
@@ -65,10 +65,6 @@ function montarCaminhoComFiltros(caminho, filtros) {
   return `${caminho}?${textoDosParametros}`;
 }
 
-export function verificarSaude() {
-  return requisitar("GET", "/saude");
-}
-
 export function buscarOpcoes() {
   return requisitar("GET", "/opcoes");
 }
@@ -114,19 +110,11 @@ export function desvincularVulnerabilidade(idAtivo, idVulnerabilidade) {
   return requisitar("DELETE", `/ativos/${idAtivo}/vulnerabilidades/${idVulnerabilidade}`);
 }
 
-export function listarDependenciasDoAtivo(idAtivo) {
-  return requisitar("GET", `/ativos/${idAtivo}/dependencias`);
-}
-
 export function cadastrarDependencia(idAtivo, idAtivoDoQualDepende, fracao) {
   return requisitar("POST", `/ativos/${idAtivo}/dependencias`, {
     id_ativo_do_qual_depende: idAtivoDoQualDepende,
     fracao: fracao,
   });
-}
-
-export function atualizarDependencia(idAtivo, idAtivoDoQualDepende, novosDados) {
-  return requisitar("PUT", `/ativos/${idAtivo}/dependencias/${idAtivoDoQualDepende}`, novosDados);
 }
 
 export function removerDependencia(idAtivo, idAtivoDoQualDepende) {

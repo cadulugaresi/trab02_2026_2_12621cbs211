@@ -1,5 +1,5 @@
-export const DIAMETRO_MINIMO = 36;
-export const DIAMETRO_MAXIMO = 64;
+const DIAMETRO_MINIMO = 36;
+const DIAMETRO_MAXIMO = 64;
 export const QUANTIDADE_DE_MAIORES_RISCOS = 3;
 
 export function indexarRankingPorId(ranking) {

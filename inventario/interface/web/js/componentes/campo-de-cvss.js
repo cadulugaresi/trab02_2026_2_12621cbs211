@@ -10,7 +10,7 @@ import { NIVEIS_DE_GRAVIDADE } from "../rotulos.js";
 import { mostrarAjuda } from "./campos.js";
 
 export const AJUDA_DO_CVSS = "Nota de 0,1 a 10. Quanto maior, mais grave";
-export const AVISO_DE_CVSS_FORA_DA_FAIXA = "Use de 0,1 a 10";
+const AVISO_DE_CVSS_FORA_DA_FAIXA = "Use de 0,1 a 10";
 export const EXPLICACAO_DO_CVSS =
   "O CVSS (Common Vulnerability Scoring System) é a nota de gravidade de uma vulnerabilidade. " +
   "Até 3,9 é baixa, de 4,0 a 6,9 é média, de 7,0 a 8,9 é alta e acima de 8,9 é crítica.";
