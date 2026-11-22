@@ -7,9 +7,11 @@ from inventario.dominio.validacoes import (
     validar_texto_obrigatorio,
 )
 from inventario.interface.conversao_das_opcoes_do_menu import (
+    OPCAO_DE_OUTRO_SISTEMA_OPERACIONAL,
     TIPOS_DE_ATIVOS,
     validar_cor,
     validar_setor,
+    validar_sistema_operacional,
     validar_status,
     validar_status_vulnerabilidade,
     validar_tecnologia,
@@ -87,6 +89,28 @@ def pedir_setor(mensagem):
             print(erro)
 
     return setor
+
+
+def pedir_sistema_operacional(mensagem):
+
+    sistema_operacional = None
+
+    while sistema_operacional is None:
+
+        try:
+            print("\nSistema operacional:\n")
+            print("WINDOWS - 1\nMACOS - 2\nLINUX - 3\nOUTRO - 4")
+
+            opcao_digitada = input(mensagem).strip()
+            if opcao_digitada == OPCAO_DE_OUTRO_SISTEMA_OPERACIONAL:
+                sistema_operacional = pedir_info("Digite o nome do sistema operacional: ")
+            else:
+                sistema_operacional = validar_sistema_operacional(opcao_digitada).value
+
+        except DadoInvalidoError as erro:
+            print(erro)
+
+    return sistema_operacional
 
 
 def pedir_float(mensagem):

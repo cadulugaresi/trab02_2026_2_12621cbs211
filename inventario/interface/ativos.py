@@ -13,6 +13,7 @@ from inventario.interface.entradas import (
     pedir_info,
     pedir_int,
     pedir_setor,
+    pedir_sistema_operacional,
     pedir_status,
     pedir_tecnologia,
     pedir_tipo,
@@ -44,7 +45,7 @@ def pedir_id_disponivel(ativos):
 
 def cadastro_notebook():
 
-    so = pedir_info("Digite o sistema operacional do ativo: ")
+    so = pedir_sistema_operacional("Digite a opção do sistema operacional: ")
     tela = pedir_float("Digite o tamanho da tela em polegadas: ")
 
     return so, tela
@@ -163,7 +164,9 @@ def editar_ativo(repositorio, ativos):
         elif opcao == "4":
 
             if isinstance(ativo_em_edicao, Notebook):
-                ativo_em_edicao.sistema_operacional = pedir_info("Novo SO: ")
+                ativo_em_edicao.sistema_operacional = pedir_sistema_operacional(
+                    "Digite a opção do novo sistema operacional: "
+                )
                 ativo_em_edicao.tela = pedir_float("Nova tela: ")
 
             elif isinstance(ativo_em_edicao, Roteador):

@@ -166,6 +166,11 @@ class TesteDasOpcoes(TesteDaApi):
                     {"valor": 1, "nome": "TINTA"},
                     {"valor": 2, "nome": "LASER"},
                 ],
+                "sistemas_operacionais": [
+                    {"valor": "Windows", "nome": "WINDOWS"},
+                    {"valor": "macOS", "nome": "MACOS"},
+                    {"valor": "Linux", "nome": "LINUX"},
+                ],
             },
         )
 

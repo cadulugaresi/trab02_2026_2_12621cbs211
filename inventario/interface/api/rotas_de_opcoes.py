@@ -1,7 +1,14 @@
 from flask import Blueprint
 
 from inventario.dominio.ativo import MAPA_DE_TIPOS
-from inventario.dominio.enums import Cor, Setor, StatusDaVuln, StatusDoAtivo, Tecnologia
+from inventario.dominio.enums import (
+    Cor,
+    Setor,
+    SistemaOperacional,
+    StatusDaVuln,
+    StatusDoAtivo,
+    Tecnologia,
+)
 
 
 def listar_opcoes_do_enum(enum):
@@ -29,6 +36,7 @@ def criar_rotas_de_opcoes():
             "status_de_tratamento": listar_opcoes_do_enum(StatusDaVuln),
             "cores": listar_opcoes_do_enum(Cor),
             "tecnologias": listar_opcoes_do_enum(Tecnologia),
+            "sistemas_operacionais": listar_opcoes_do_enum(SistemaOperacional),
         }
 
     return rotas
