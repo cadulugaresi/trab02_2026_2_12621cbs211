@@ -51,29 +51,29 @@ A opção 7 do menu principal mostra uma linha por ativo, na ordem do ranking, c
 ### API HTTP
 Uma API Flask expõe todas as operações do menu como um serviço HTTP na porta 5000, para que outros programas (como um frontend web) possam usar o sistema. As requisições e as respostas usam JSON, com as mesmas chaves que o `para_dicionario()` produz; as respostas de vulnerabilidade também trazem o nível de severidade (`"nivel": "CRITICO"`).
 
-| Método | Rota                                      | O que faz                                                                                                 |
-| ------ | ----------------------------------------- | --------------------------------------------------------------------------------------------------------- |
-| GET    | `/saude`                                  | Verificação de funcionamento: devolve `{"status": "ok"}`                                                  |
-| GET    | `/opcoes`                                 | Listas para os formulários: tipos (com o fator de exposição padrão), setores, status, cores e tecnologias |
-| GET    | `/ativos`                                 | Lista os ativos, com filtros e ordenação opcionais                                                        |
-| POST   | `/ativos`                                 | Cadastra um ativo de qualquer tipo (201)                                                                  |
-| GET    | `/ativos/<id>`                            | Devolve um ativo                                                                                          |
-| PUT    | `/ativos/<id>`                            | Edita um ativo, inclusive trocando o tipo                                                                 |
-| DELETE | `/ativos/<id>`                            | Exclui um ativo (204)                                                                                     |
-| GET    | `/ativos/<id>/vulnerabilidades`           | Vulnerabilidades de um ativo, com nome, CVSS, nível e status de tratamento                                |
-| POST   | `/ativos/<id>/vulnerabilidades`           | Vincula uma vulnerabilidade do catálogo a um ativo (201)                                                  |
-| PUT    | `/ativos/<id>/vulnerabilidades/<id_vuln>` | Atualiza o status de tratamento de um vínculo                                                             |
-| DELETE | `/ativos/<id>/vulnerabilidades/<id_vuln>` | Desvincula uma vulnerabilidade de um ativo (204)                                                          |
-| GET    | `/ativos/<id>/dependencias`               | Dependências de um ativo, com o nome do ativo do qual ele depende                                         |
-| POST   | `/ativos/<id>/dependencias`               | Adiciona uma dependência (201)                                                                            |
-| PUT    | `/ativos/<id>/dependencias/<id_dep>`      | Troca o ativo do qual depende e/ou a fração                                                               |
-| DELETE | `/ativos/<id>/dependencias/<id_dep>`      | Remove uma dependência (204)                                                                              |
-| GET    | `/vulnerabilidades`                       | Lista o catálogo de vulnerabilidades                                                                      |
-| POST   | `/vulnerabilidades`                       | Cadastra uma vulnerabilidade; o ID é gerado pelo servidor (201)                                           |
-| GET    | `/vulnerabilidades/<id>`                  | Devolve uma vulnerabilidade                                                                               |
-| PUT    | `/vulnerabilidades/<id>`                  | Edita o nome e/ou o CVSS                                                                                  |
-| DELETE | `/vulnerabilidades/<id>`                  | Exclui do catálogo e desvincula de todos os ativos (204)                                                  |
-| GET    | `/riscos`                                 | Ranking de risco com os riscos próprio, herdado e efetivo                                                 |
+| Método | Rota                                      | O que faz                                                                                                                        |
+| ------ | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
+| GET    | `/saude`                                  | Verificação de funcionamento: devolve `{"status": "ok"}`                                                                         |
+| GET    | `/opcoes`                                 | Listas para os formulários: tipos (com o fator de exposição padrão), setores, status, cores, tecnologias e sistemas operacionais |
+| GET    | `/ativos`                                 | Lista os ativos, com filtros e ordenação opcionais                                                                               |
+| POST   | `/ativos`                                 | Cadastra um ativo de qualquer tipo (201)                                                                                         |
+| GET    | `/ativos/<id>`                            | Devolve um ativo                                                                                                                 |
+| PUT    | `/ativos/<id>`                            | Edita um ativo, inclusive trocando o tipo                                                                                        |
+| DELETE | `/ativos/<id>`                            | Exclui um ativo (204)                                                                                                            |
+| GET    | `/ativos/<id>/vulnerabilidades`           | Vulnerabilidades de um ativo, com nome, CVSS, nível e status de tratamento                                                       |
+| POST   | `/ativos/<id>/vulnerabilidades`           | Vincula uma vulnerabilidade do catálogo a um ativo (201)                                                                         |
+| PUT    | `/ativos/<id>/vulnerabilidades/<id_vuln>` | Atualiza o status de tratamento de um vínculo                                                                                    |
+| DELETE | `/ativos/<id>/vulnerabilidades/<id_vuln>` | Desvincula uma vulnerabilidade de um ativo (204)                                                                                 |
+| GET    | `/ativos/<id>/dependencias`               | Dependências de um ativo, com o nome do ativo do qual ele depende                                                                |
+| POST   | `/ativos/<id>/dependencias`               | Adiciona uma dependência (201)                                                                                                   |
+| PUT    | `/ativos/<id>/dependencias/<id_dep>`      | Troca o ativo do qual depende e/ou a fração                                                                                      |
+| DELETE | `/ativos/<id>/dependencias/<id_dep>`      | Remove uma dependência (204)                                                                                                     |
+| GET    | `/vulnerabilidades`                       | Lista o catálogo de vulnerabilidades                                                                                             |
+| POST   | `/vulnerabilidades`                       | Cadastra uma vulnerabilidade; o ID é gerado pelo servidor (201)                                                                  |
+| GET    | `/vulnerabilidades/<id>`                  | Devolve uma vulnerabilidade                                                                                                      |
+| PUT    | `/vulnerabilidades/<id>`                  | Edita o nome e/ou o CVSS                                                                                                         |
+| DELETE | `/vulnerabilidades/<id>`                  | Exclui do catálogo e desvincula de todos os ativos (204)                                                                         |
+| GET    | `/riscos`                                 | Ranking de risco com os riscos próprio, herdado e efetivo                                                                        |
 
 O `GET /ativos` aceita filtros e ordenação na query string, que podem ser combinados: `tipo` (ex.: `Notebook`), `status` (ex.: `1`), `nome` (parte do nome, sem diferenciar maiúsculas) e `ordenar` (`id`, `nome` ou `vulnerabilidades`). Exemplo: `/ativos?tipo=Notebook&status=1&ordenar=nome`.
 
